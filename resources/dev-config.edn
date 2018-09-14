@@ -1,0 +1,4 @@
+{
+ koi.config/connection {:url "http://localhost:18000"}
+ koi.server/logfile-path "/tmp/koi-server.log"
+ }
