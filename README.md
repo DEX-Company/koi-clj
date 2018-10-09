@@ -1,8 +1,14 @@
 # Koi-clj 
 
-A Zeppelin notebook invoke service in Clojure
+A testbed for invokable services in Ocean. Implemented in Clojure
+
 ## Usage
 
+### Prerequisites:
+
+- Install jdk1.8+
+- Install [lein](https://leiningen.org)
+ 
 Steps:
 
 ``` bash 
