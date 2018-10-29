@@ -1,6 +1,6 @@
 # Koi-clj 
 
-A testbed for invokable services in Ocean. Implemented in Clojure
+An invokable Service Proxy for Ocean. Implemented in Clojure
 
 ## Usage
 
