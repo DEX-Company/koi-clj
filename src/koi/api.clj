@@ -125,10 +125,6 @@
                         svcuri (get @services serviceid)
                         valid-paths (get-in svcuri [:paths path method])
                         payload (json/read-str (String. (decode payload)))
-                        #_locpayload #_{:asseta {:purchasetoken "string"
-                                             :asseturi "http://localhost:3000/index.html"}
-                                    :svc {:purchasetoken "string"
-                                          :publickey "string"}}
                         svcuri2 (str svcuri path)
                         _ (println " svcuri path "  svcuri " - " svcuri2 " - val " valid-paths)]
                     (if (nil? valid-paths)
