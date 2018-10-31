@@ -18,7 +18,7 @@
       (is (= (:status response) 200))
       (let [resp2 (app (-> (mock/request :get "/services")))
             pb (-> resp2 :body parse-body)]
-        ;(is ())
         (is (map? pb))
         (is (map? (:services pb)))))))
+
 

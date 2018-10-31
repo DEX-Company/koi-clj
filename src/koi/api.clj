@@ -25,6 +25,9 @@
 
 (defn decode [to-decode]
   (.decode (Base64/getDecoder) to-decode))
+
+(defn encode [to-encode]
+  (.encodeToString (Base64/getEncoder) to-encode))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;
