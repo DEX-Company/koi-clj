@@ -1,9 +1,8 @@
-(defproject koi-clj "0.1.0-SNAPSHOT"
-  :description "Notebook service provider "
-  ;:url "https://github.com/oceanprotocol/koi"
+(defproject oceanprotocol/koi-clj "0.1.0-SNAPSHOT"
+  :description "Ocean Invoke API implementation in Clojure"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.9.0"]
+  :dependencies [[org.clojure/clojure "1.10.0"]
                  [org.clojure/data.json "0.2.6"]
 
                  ;;configuration
@@ -21,7 +20,7 @@
                  [cheshire "5.8.0"]
 
                  ;;swagger
-                 [metosin/compojure-api "2.0.0-alpha19"]
+                 [metosin/compojure-api "2.0.0-alpha28"]
 
                  ;;components
                  [mount "0.1.12"]
@@ -35,6 +34,21 @@
                  [metosin/ring-http-response "0.9.0"]
                  [metosin/muuntaja "0.5.0"]
                  [ring-cors "0.1.12"]
+                 ;;schema tools such as descriptions
+                 [metosin/spec-tools "0.8.2"]
+                 ;;should not be required post clojure 1.10
+                                        ;[org.clojure/spec.alpha "0.2.176"]
+                 [mount "0.1.15"]
+                 ;;this one's license is LGPL
+                 [lispyclouds/clj-docker-client "0.1.11"]
+
+                [clj-zeppelin "0.1.1-SNAPSHOT"]
+
+                 ;;openrefine
+                 ;[com.dex/invokerefine "0.0.1-SNAPSHOT"]
+                 [gmbh.dtap/refine-java "0.2.0-SNAPSHOT"]
+                 [org.apache.httpcomponents/httpclient "4.5.5"]
+
                  ]
 
   :source-paths ["src/"]
@@ -49,9 +63,7 @@
                        :jvm-opts ["-Dconfig.edn=resources/dev-config.edn"]
                        }
              :dev [:default :test]}
-  ;:uberjar-name "server.jar"
   :ring {
-         :handler koi.api/app
-         :init koi.server/start-server
+         :handler koi-clj.api/app
          }
 )
