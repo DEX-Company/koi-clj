@@ -7,14 +7,14 @@
 (defn parse-body [body]
   (cheshire/parse-string (slurp body) true))
 
-(deftest a
-  (testing "Test request to register and get services"
+(deftest openrefinetest
+  (testing "Test request to openrefine "
     (let [svc {:iri "https://petstore.swagger.io/v2/swagger.json"}
           response (app (-> (mock/request :post "/register")
                             (mock/content-type "application/json")
-                            (mock/body  (cheshire/generate-string svc))))
+                            (mock/body (cheshire/generate-string svc))))
           body     (parse-body (:body response))]
-      (is (not (empty? (:serviceid body))))
+      
       (is (= (:status response) 200))
       (let [resp2 (app (-> (mock/request :get "/services")))
             pb (-> resp2 :body parse-body)]

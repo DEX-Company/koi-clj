@@ -3,15 +3,13 @@
    [org.httpkit.client :as http]
    [cheshire.core :as che :refer :all]
    [clojure.spec.alpha :as sp]
-   [invoke.protocols :as prot :refer [invoke-sync invoke-async get-result get-status get-metadata]]
+   [invoke-spec.protocols :as prot :refer [invoke-sync invoke-async get-result get-status get-metadata]]
    [ring.util.http-response :refer [ok header created]]
    [ring.util.http-status :as status]
-   [ocnspec.scoring :as scoringspec]
-   [ocnspec.addition :as additionspec]
-   [ocnspec.openrefine :as ore]
+   [clj-openrefine.core :as ore]
    [spec-tools.json-schema :as jsc]
    [clojure.java.io :as io]
-   [ocnspec.asset :as oas]))
+   [invoke-spec.asset :as oas]))
 
 (def service-registry
   {;:run-notebook (scoringspec/new-scoring {})

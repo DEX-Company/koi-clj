@@ -45,8 +45,7 @@
                 [clj-zeppelin "0.1.1-SNAPSHOT"]
 
                  ;;openrefine
-                 ;[com.dex/invokerefine "0.0.1-SNAPSHOT"]
-                 [gmbh.dtap/refine-java "0.2.0-SNAPSHOT"]
+                 [oceanprotocol/clj-openrefine "0.1.0-SNAPSHOT"]
                  [org.apache.httpcomponents/httpclient "4.5.5"]
 
                  ]

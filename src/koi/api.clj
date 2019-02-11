@@ -21,11 +21,11 @@
    [spec-tools.json-schema :as jsc]
    [schema-tools.core :as st]
    [mount.core :as mount :refer [defstate]]
-   [invoke.protocols :as prot :refer [invoke-sync invoke-async get-result get-status get-metadata]]
-   [scoringsvc.zepl-docker :as zd :refer [zepl-component]]
+   [invoke-spec.protocols :as prot :refer [invoke-sync invoke-async get-result get-status get-metadata]]
+   ;[scoringsvc.zepl-docker :as zd :refer [zepl-component]]
    [clojure.java.io :as io]
-   [invoke.middleware :as mw]
-   [ocnspec.asset :as oas])
+   [koi.middleware :as mw]
+   [invoke-spec.asset :as oas])
   (:import [java.util UUID]))
 
 (def routes
@@ -39,13 +39,13 @@
                       {:summary "returns the metadata for calling invoke"
                        :responses {200 {:schema spec/any?}}
                        :handler (fn [_]
-                                  (ok svc-metadata))}}))
+                                  (ok mw/svc-metadata))}}))
 
            (context "/invoke" []
                     (sw/resource
                      {:post
                       {:summary "invoke the service  "
-                       :parameters {:body ::invoke-request}
+                       :parameters {:body spec/any?}
                        :responses {200 {:schema spec/any?}
                                    422 {:schema spec/any?}}
                        :handler mw/invoke-handler}}))))
