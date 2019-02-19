@@ -9,11 +9,13 @@
    [clj-openrefine.core :as ore]
    [spec-tools.json-schema :as jsc]
    [clojure.java.io :as io]
+   [koi.hashing :as h]
    [invoke-spec.asset :as oas]))
 
 (def service-registry
   {;:run-notebook (scoringspec/new-scoring {})
-   ;:addition (additionspec/new-addition {})
+                                        ;:addition (additionspec/new-addition {})
+   :hashing (h/new-hashing {})
    :openrefine (ore/new-openrefine {})})
 
 (def svc-metadata
@@ -31,24 +33,15 @@
   (get ast-metadata (keyword asset-id)
        {}))
 
-(def ast-url-map {(keyword "123456789012345678901234567890123456789012345678901234567890iris")
-                  "https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/d546eaee765268bf2f487608c537c05e22e4b221/iris.csv"})
+(def ast-url-map
+  {"1234567890123456789012345678901234567890123456789012345678901234"
+   "https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/d546eaee765268bf2f487608c537c05e22e4b221/iris.csv"})
 
 (defn get-asset-url
   [asset-id]
   (let [res (get ast-url-map asset-id)]
     (println " returning asset url " res " for " asset-id)
     res))
-
-(defn wrap-notebook-metadata
-  [input]
-  (let [svcep (:service-endpoint input) ]
-    (if (= :scoring svcep)
-      (let [nbmdata (get-in input [:asset-metadata :notebook :links])
-            k1 (-> nbmdata first :url slurp
-                   (che/parse-string keyword))]
-        (assoc input :notebook-metadata k1))
-      input)))
 
 (defn wrap-asset-metadata
   [input]
@@ -82,15 +75,11 @@
   (let [{:keys [operation params] :as args} (:body-params inp)]
     (println " operation " operation " - params " params )
     (if-let [ep (service-registry (keyword operation))]
-      (let [svc-metadata (get-metadata ep)]
-        (println " svc-metadata " svc-metadata)
-        (if (sp/valid? (:input svc-metadata) params)
-          (ok (invoke-sync ep
-                           (->> args
-                                wrap-asset-url
+      (ok (invoke-sync ep
+                       (->> args
+                            wrap-asset-url
                                         ; wrap-asset-metadata
                                         ; wrap-notebook-metadata
-                                )))
-          (do (println " invalid metadata ")
-              (status/status 422))))
-      (status/status 422))))
+                            )))
+      (do (println " invalid operation " operation)
+          (status/status 422)))))

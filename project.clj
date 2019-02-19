@@ -63,6 +63,6 @@
                        }
              :dev [:default :test]}
   :ring {
-         :handler koi-clj.api/app
+         :handler koi.api/app
          }
 )
