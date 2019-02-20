@@ -4,12 +4,13 @@
    [cheshire.core :as che :refer :all]
    [clojure.spec.alpha :as sp]
    [invoke-spec.protocols :as prot :refer [invoke-sync invoke-async get-result get-status get-metadata]]
-   [ring.util.http-response :refer [ok header created]]
+   [ring.util.http-response :as http-response :refer [ok header created unprocessable-entity]]
    [ring.util.http-status :as status]
    [clj-openrefine.core :as ore]
    [spec-tools.json-schema :as jsc]
    [clojure.java.io :as io]
    [koi.hashing :as h]
+   [scjsv.core :as jsv]
    [invoke-spec.asset :as oas]))
 
 (def service-registry
@@ -26,6 +27,9 @@
     (mapv svcmd [;:scoring
                  ;:addition
                  :openrefine])))
+
+(def operation-schema-validator
+  {:hashing (jsv/validator (jsc/transform ::h/params))})
 
 (def ast-metadata {})
 (defn get-asset-metadata
@@ -75,11 +79,11 @@
   (let [{:keys [operation params] :as args} (:body-params inp)]
     (println " operation " operation " - params " params )
     (if-let [ep (service-registry (keyword operation))]
-      (ok (invoke-sync ep
-                       (->> args
-                            wrap-asset-url
-                                        ; wrap-asset-metadata
-                                        ; wrap-notebook-metadata
-                            )))
+      (let [validator (operation-schema-validator (keyword operation))]
+        (if (and validator params (nil? (validator params)))
+          (ok (invoke-sync ep
+                           (->> args
+                                wrap-asset-url)))
+          (http-response/bad-request (str " invalid request: " (if params (clojure.string/join (validator params)) " params is not present") " - " ))))
       (do (println " invalid operation " operation)
-          (status/status 422)))))
+          (unprocessable-entity (str "operation " operation " is not supported")))))) 
