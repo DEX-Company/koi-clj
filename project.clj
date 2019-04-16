@@ -48,6 +48,8 @@
                  [oceanprotocol/clj-openrefine "0.1.0-SNAPSHOT"]
                  [org.apache.httpcomponents/httpclient "4.5.5"]
 
+                 ;;json schema
+                 [metosin/scjsv "0.5.0"]
                  ]
 
   :source-paths ["src/"]

@@ -28,22 +28,51 @@
   (:import [java.util UUID]))
 
 (s/def ::operation string?)
+(s/def ::jobid string?)
 (s/def ::params map?)
 (s/def ::payload (s/keys ::req-un [::operation params]))
 
 (def routes
   (context "/" []
-           :tags ["invoke ocean service"]
-           :coercion :spec
+    :tags ["Invoke ocean service"]
+    :coercion :spec
 
-           (context "/invokesync" []
-                    (sw/resource
-                     {:post
-                      {:summary "invoke the service  "
-                       :parameters {:body ::payload}
-                       :responses {200 {:schema spec/any?}
-                                   422 {:schema spec/any?}}
-                       :handler mw/invoke-handler}}))))
+    ;;create a DID for each operation
+    ;;create a schema for each operation
+    (context "/invoke/:did" []
+             :path-params [did :- string?]
+
+      (sw/resource
+       {:post
+        {:summary "Run an sync operation"
+         :parameters {:body ::params
+                     ; :path-params ::oas/asset-did
+                      }
+         :responses {200 {:schema spec/any?}}
+         :handler mw/invoke-handler}}))
+
+    (context "/invokeasync/:did" []
+             :path-params [did :- string?]
+      (sw/resource
+       {
+        :post
+        {:summary "Run an async operation"
+         :parameters {:body ::params}
+         :responses {200 {:schema spec/any?}}
+         :handler (partial mw/invoke-handler true)}}))
+
+    (context "/jobs/:jobid" []
+      :path-params [jobid :- int?]
+      (sw/resource
+       {:get
+        {:summary "get the status of a job"
+         :responses {200 {:schema spec/any?}
+                     422 {:schema spec/any?}
+                     500 {:schema spec/any?}}
+         :handler mw/result-handler}})))
+  )
+
+
 
 (def app
   (api
@@ -51,6 +80,6 @@
     {:ui "/"
      :spec "/swagger1.json"
      :data {:info {:title "invoke-api "
-                   :description "Demonstrating Invoke with Ocean "}
-            :tags [{:name "invoke service", :description "invoke multiple Ocean services"}]}}}
+                   :description "Invoke with Ocean "}
+            :tags [{:name "invoke service", :description "invoke Ocean services"}]}}}
    routes))

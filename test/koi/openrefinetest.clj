@@ -6,7 +6,7 @@
              [koi.middleware :as mw]
              ))
 
-(deftest refine-test
+#_(deftest refine-test
   (let [adid "1234567890123456789012345678901234567890123456789012345678901234"
         aurl "https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/d546eaee765268bf2f487608c537c05e22e4b221/iris.csv"
         asset-urls {adid aurl}]
