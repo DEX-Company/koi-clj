@@ -13,13 +13,15 @@
    [spec-tools.json-schema :as jsc]
    [clojure.java.io :as io]
    [koi.hashing :as h]
+   [koi.hashing-asset :as ha]
    [scjsv.core :as jsv]
    [invoke-spec.asset :as oas]))
 
 (def jobids (atom 0))
 (def jobs (atom {}))
 (def service-registry
-  {:hashing (h/new-hashing jobs jobids)})
+  {:hashing (h/new-hashing jobs jobids)
+   :assethashing (ha/new-hashing jobs jobids)})
 
 (defn invoke-handler
   ([inp] (invoke-handler false inp))
