@@ -25,27 +25,28 @@ The default configuration expects surfer to be running on `http://localhost:8080
 
 Default operations supported are
 
-- hashing
-  - accepts a string asset. Input payload: 
+#### hashing
 
-### DID field
+  - accepts a string asset.  
+  - returns hash of the input
 
-`hashing` 
-
-### params field
+Input payload:
+- DID field: `hashing` 
+- params field
 ```json
 {"to-hash":"stringtohash"}
 ```
+  
+#### assethashing
 
-  - returns hash of the input
-- assethashing
   - accepts an ocean asset, defined by a DID
+  - returns an ocean asset DID, the content of which is the hash of the input asset.
+  
+Example:
 
-### DID field
+- DID field: `assethashing` 
 
-`assethashing` 
-
-### params field
+- params field
 
 Note that the asset did must exist on Surfer.
  
@@ -53,7 +54,7 @@ Note that the asset did must exist on Surfer.
 {"to-hash":{"did":"45a8cebe88ad5d8161e19bf2f201af772ad3c6613be9d60f7663a8c33646b203"}}
 ```
 
-  - returns an ocean asset DID, the content of which is the hash of the input asset.
+  
 
 ## License
 
