@@ -6,7 +6,6 @@
             invoke-async
             get-params]]
    [clojure.java.io :as io]
-   [invoke-spec.asset :as oas]
    [spec-tools.json-schema :as jsc]))
 
 (sp/def ::did (sp/and string? #(= 64 (count %))))

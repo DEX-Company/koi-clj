@@ -7,7 +7,6 @@
             invoke-async
             get-params]]
    [clojure.java.io :as io]
-   [invoke-spec.asset :as oas]
    [aero.core :refer (read-config)]
    [spec-tools.json-schema :as jsc]))
 

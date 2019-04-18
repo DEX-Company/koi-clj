@@ -21,10 +21,9 @@
    [spec-tools.json-schema :as jsc]
    [schema-tools.core :as st]
    [mount.core :as mount :refer [defstate]]
-   [invoke-spec.protocols :as prot :refer [invoke-sync invoke-async get-result get-status get-metadata]]
    [clojure.java.io :as io]
    [koi.middleware :as mw]
-   [invoke-spec.asset :as oas])
+   )
   (:import [java.util UUID]))
 
 (s/def ::operation string?)

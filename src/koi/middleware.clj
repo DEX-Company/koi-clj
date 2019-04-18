@@ -9,13 +9,12 @@
             get-params]]
    [ring.util.http-response :as http-response :refer [ok header created unprocessable-entity]]
    [ring.util.http-status :as status]
-   [clj-openrefine.core :as ore]
    [spec-tools.json-schema :as jsc]
    [clojure.java.io :as io]
    [koi.hashing :as h]
    [koi.hashing-asset :as ha]
    [scjsv.core :as jsv]
-   [invoke-spec.asset :as oas]))
+   ))
 
 (def jobids (atom 0))
 (def jobs (atom {}))
