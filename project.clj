@@ -1,4 +1,4 @@
-(defproject oceanprotocol/koi-clj "0.1.0-SNAPSHOT"
+(defproject sg.dex/koi-clj "0.1.0-SNAPSHOT"
   :description "Ocean Invoke API implementation in Clojure"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
@@ -42,29 +42,46 @@
                  ;;this one's license is LGPL
                  [lispyclouds/clj-docker-client "0.1.11"]
 
-                [clj-zeppelin "0.1.1-SNAPSHOT"]
+                 ;;[clj-zeppelin "0.1.1-SNAPSHOT"]
 
                  ;;openrefine
-                 [oceanprotocol/clj-openrefine "0.1.0-SNAPSHOT"]
+                 ;;[oceanprotocol/clj-openrefine "0.1.0-SNAPSHOT"]
                  [org.apache.httpcomponents/httpclient "4.5.5"]
 
                  ;;json schema
                  [metosin/scjsv "0.5.0"]
+                 ;;starfish
+                 [sg.dex/starfish-clj "0.0.1-SNAPSHOT"]
+
+                 ;;configuration management
+                 [aero "1.1.3"]
                  ]
+  :repositories [["sonatype" {:url "http://40.119.210.85:8081/repository/Dex"
+                              ;; If a repository contains releases only setting
+                              ;; :snapshots to false will speed up dependencies.
+                              :snapshots true
+                              ;; Disable signing releases deployed to this repo.
+                              ;; (Not recommended.)
+                              :sign-releases false
+                              ;; You can also set the policies for how to handle
+                              ;; :checksum failures to :fail, :warn, or :ignore.
+                              :checksum :warn
+                              ;; How often should this repository be checked for
+                              ;; snapshot updates? (:daily, :always, or :never)
+                              :update :always
+                              ;; You can also apply them to releases only:
+                              :releases {:checksum :fail :update :always}}]]
 
   :source-paths ["src/"]
   :test-paths ["test/"]
-
   :profiles {:test {;:jvm-opts ["-Dconfig.edn=resources/test-config.edn"]
                     :dependencies [[ring/ring-mock "0.3.2"]]
                     }
              ;:prod {:jvm-opts ["-Dconfig.edn=resources/prod-config.edn"]}
              :default {:dependencies [[javax.servlet/javax.servlet-api "3.1.0"]]
-                       :plugins [[lein-ring "0.12.0"]]
+                       :plugins [[lein-ring "0.12.5"] ]
                        :jvm-opts ["-Dconfig.edn=resources/dev-config.edn"]
                        }
              :dev [:default :test]}
-  :ring {
-         :handler koi.api/app
-         }
+  :ring { :handler koi.api/app }
 )

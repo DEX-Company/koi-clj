@@ -8,6 +8,7 @@
             get-params]]
    [clojure.java.io :as io]
    [invoke-spec.asset :as oas]
+   [aero.core :refer (read-config)]
    [spec-tools.json-schema :as jsc]))
 
 (sp/def ::did (sp/and string? #(= 64 (count %))))
@@ -24,7 +25,10 @@
 (sp/def ::params (sp/keys :req-un [::to-hash]))
 (sp/valid? ::params {:to-hash {:did "1234567890123456789012345678901234567890123456789012345678901234"}})
 
-(def surfer (s/surfer "http://localhost:8080/"))
+(def surfer-url (:surfer-url (read-config (clojure.java.io/resource "config.edn"))))
+
+(def surfer (s/surfer surfer-url))
+
 (defn register-asset
   ([content] (register-asset surfer content))
   ([surfer content]
