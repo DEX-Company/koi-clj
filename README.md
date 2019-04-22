@@ -57,7 +57,7 @@ Note that the asset did must exist on Surfer.
 
 ## License
 
-Copyright © 2018 Ocean Protocol
+Copyright © 2019 DEX
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
