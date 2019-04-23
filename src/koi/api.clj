@@ -44,9 +44,7 @@
       (sw/resource
        {:post
         {:summary "Run an sync operation"
-         :parameters {:body ::params
-                     ; :path-params ::oas/asset-did
-                      }
+         :parameters {:body ::params}
          :responses {200 {:schema spec/any?}}
          :handler mw/invoke-handler}}))
 
@@ -68,10 +66,7 @@
          :responses {200 {:schema spec/any?}
                      422 {:schema spec/any?}
                      500 {:schema spec/any?}}
-         :handler mw/result-handler}})))
-  )
-
-
+         :handler mw/result-handler}}))))
 
 (def app
   (api

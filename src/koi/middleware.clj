@@ -23,30 +23,32 @@
    :assethashing (ha/new-hashing jobs jobids)})
 
 (defn invoke-handler
+  "this method handles API calls to /invoke. The first argument is a boolean value, if true,
+  responds with a job id. Else it returns synchronously."
   ([inp] (invoke-handler false inp))
   ([async? inp]
    (let [params (:body-params inp)
          {:keys [did]} (:route-params inp)]
      (println" - args " params " did " did)
-     (try
-       (if-let [ep (service-registry (keyword did))]
-         (let [validator (get-params ep) ]
-           (println " valid? " (sp/valid? validator params))
-           (if (and validator params (sp/valid? validator params))
-             (do
-               (println " valid request, making invoke request with " params)
-               (ok (if async? 
-                     (invoke-async ep params)
-                     (invoke-sync ep params))))
-             (do
-               (println " invalid request, sending error in invoke request with " params)
-               (http-response/bad-request (str " invalid request: " (if params (clojure.string/join (validator params)) " params is not present") " - " )))))
-         (do (println " invalid operation did " did)
-             (unprocessable-entity (str "operation did " did " is not supported"))))
-       (catch Exception e
-         (do
-           (println (str " got error in invoke " e))
-           (clojure.stacktrace/print-stack-trace e))))))) 
+     (if-let [ep (service-registry (keyword did))]
+       (let [validator (get-params ep) ]
+         (println " valid? " (sp/valid? validator params))
+         (if (and validator params (sp/valid? validator params))
+           (do
+             (println " valid request, making invoke request with " params)
+             (ok (try (if async? 
+                        (invoke-async ep params)
+                        (invoke-sync ep params))
+                      (catch Exception e
+                        (do
+                          (println (str " got error in invoke " e))
+                          (clojure.stacktrace/print-stack-trace e)
+                          (http-response/internal-server-error " server error executing operation "))))))
+           (do
+             (println " invalid request, sending error in invoke request with " params)
+             (http-response/bad-request (str " invalid request: " (if params (clojure.string/join (validator params)) " params is not present") " - " )))))
+       (do (println " invalid operation did " did)
+           (unprocessable-entity (str "operation did " did " is not supported"))))))) 
 
 (defn result-handler
   ([inp]
