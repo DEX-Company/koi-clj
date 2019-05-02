@@ -45,7 +45,8 @@
        {:post
         {:summary "Run an sync operation"
          :parameters {:body ::params}
-         :responses {200 {:schema spec/any?}}
+         :responses {200 {:schema spec/any?}
+                     201 {:schema spec/any?}}
          :handler mw/invoke-handler}}))
 
     (context "/invokeasync/:did" []
@@ -55,7 +56,8 @@
         :post
         {:summary "Run an async operation"
          :parameters {:body ::params}
-         :responses {200 {:schema spec/any?}}
+         :responses {200 {:schema spec/any?}
+                     201 {:schema spec/any?}}
          :handler (partial mw/invoke-handler true)}}))
 
     (context "/jobs/:jobid" []

@@ -1,4 +1,4 @@
-(ns koi.hashing-asset
+(ns koi.failing_asset
   (:require
    [clojure.spec.alpha :as sp]
    [starfish.core :as s]
@@ -6,25 +6,22 @@
     :refer [invoke-sync
             invoke-async
             get-params]]
-   [koi.invokespec :as ispec]
    [clojure.java.io :as io]
-   [koi.utils :as utils :refer [register-asset get-asset-content surfer]]
+   [koi.invokespec :as ispec]
    [aero.core :refer (read-config)]
-   [spec-tools.json-schema :as jsc])
-  (:import [sg.dex.crypto Hash]))
+   [spec-tools.json-schema :as jsc]))
 
 (sp/def ::to-hash ::ispec/asset)
 
 (sp/def ::params (sp/keys :req-un [::to-hash]))
 (sp/valid? ::params {:to-hash {:did "1234567890123456789012345678901234567890123456789012345678901234"}})
 
-
 (defn process
   [did]
-  (let [cont (get-asset-content surfer did)
+  (let [cont (get-asset-content did)
         _ (println " called hashing with content "  cont)
-        res (Hash/keccak256String cont)
-        reg-asset-id (register-asset surfer res)]
+        res (str (hash cont))
+        reg-asset-id (register-asset res)]
     {:results {:hash_value {:did reg-asset-id}}}))
 
 (deftype HashingAsset [jobs jobids]

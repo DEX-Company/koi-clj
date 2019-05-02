@@ -13,6 +13,7 @@
    [clojure.java.io :as io]
    [koi.hashing :as h]
    [koi.hashing-asset :as ha]
+   [koi.prime-num :as p]
    [scjsv.core :as jsv]
    ))
 
@@ -20,7 +21,8 @@
 (def jobs (atom {}))
 (def service-registry
   {:hashing (h/new-hashing jobs jobids)
-   :assethashing (ha/new-hashing jobs jobids)})
+   :assethashing (ha/new-hashing jobs jobids)
+   :primes (p/new-primes jobs jobids)})
 
 (defn invoke-handler
   "this method handles API calls to /invoke. The first argument is a boolean value, if true,
@@ -36,14 +38,25 @@
          (if (and validator params (sp/valid? validator params))
            (do
              (println " valid request, making invoke request with " params)
-             (ok (try (if async? 
-                        (invoke-async ep params)
-                        (invoke-sync ep params))
-                      (catch Exception e
-                        (do
-                          (println (str " got error in invoke " e))
-                          (clojure.stacktrace/print-stack-trace e)
-                          (http-response/internal-server-error " server error executing operation "))))))
+             (if async?
+               (try
+                 (let [invres (invoke-async ep params)]
+                   (println " result of invoke start " invres)
+                   (created "url" (generate-string invres)))
+                 (catch Exception e
+                   (do
+                     (println (str " got error in invoke " e))
+                     (clojure.stacktrace/print-stack-trace e)
+                     (http-response/internal-server-error " server error executing operation "))))
+               (try 
+                 (ok (invoke-sync ep params))
+                 (catch Exception e
+                   (do
+                     (println (str " got error in invoke " e))
+                     (clojure.stacktrace/print-stack-trace e)
+                     (http-response/internal-server-error " server error executing operation ")))
+                 ))
+             )
            (do
              (println " invalid request, sending error in invoke request with " params)
              (http-response/bad-request (str " invalid request: " (if params (clojure.string/join (validator params)) " params is not present") " - " )))))

@@ -4,7 +4,9 @@
              [ring.util.http-response :as http-response :refer [ok header created unprocessable-entity
                                                                 bad-request]]
              [ring.mock.request :as mock]
-             [koi.api :as api :refer [app]]))
+             [koi.api :as api :refer [app]])
+  (:import [sg.dex.crypto Hash])
+  )
 
 (defn parse-body [body]
   (cheshire/parse-string (slurp body) true))
@@ -12,7 +14,7 @@
 (deftest testerrorresponses
   (testing "Test request to hash operation"
     (let [input "stringtohash"
-          hashval (str (hash input))
+          hashval (Hash/keccak256String input)
           response (app (-> (mock/request :post "/invoke/hashing")
                             (mock/content-type "application/json")
                             (mock/body (cheshire/generate-string {:to-hash input}))))
