@@ -1,4 +1,4 @@
-(ns koi.failing_asset
+(ns koi.failing-asset
   (:require
    [clojure.spec.alpha :as sp]
    [starfish.core :as s]
@@ -11,35 +11,27 @@
    [aero.core :refer (read-config)]
    [spec-tools.json-schema :as jsc]))
 
-(sp/def ::to-hash ::ispec/asset)
-
-(sp/def ::params (sp/keys :req-un [::to-hash]))
-(sp/valid? ::params {:to-hash {:did "1234567890123456789012345678901234567890123456789012345678901234"}})
+(sp/def ::dummy string?)
+(sp/def ::params (sp/keys :req-un [::dummy]))
 
 (defn process
-  [did]
-  (let [cont (get-asset-content did)
-        _ (println " called hashing with content "  cont)
-        res (str (hash cont))
-        reg-asset-id (register-asset res)]
-    {:results {:hash_value {:did reg-asset-id}}}))
+  [dummy]
+  (throw (Exception. "test exception")))
 
-(deftype HashingAsset [jobs jobids]
+(deftype FailingAsset [jobs jobids]
 
   prot/PSyncInvoke
   (invoke-sync [_ args]
-    (let [to-hash (:to-hash args)
-          did (:did to-hash)]
-      (process did)))
+    (let [d (:dummy args)]
+      (process d)))
 
   prot/PAsyncInvoke
   (invoke-async [_ args]
-    (let [to-hash (:to-hash args)
-          did (:did to-hash)
+    (let [d (:dummy args)
           jobid (swap! jobids inc)]
       (doto (Thread. (fn []
                        (swap! jobs assoc jobid {:status :accepted})
-                       (try (let [res (process did)]
+                       (try (let [res (process d)]
                               (swap! jobs assoc jobid
                                      {:status :completed
                                       :results (:results res)}))
@@ -55,6 +47,6 @@
   (get-params [_]
     ::params))
 
-(defn new-hashing
+(defn new-failing
   [jobs jobids]
-  (HashingAsset. jobs jobids))
+  (FailingAsset. jobs jobids))

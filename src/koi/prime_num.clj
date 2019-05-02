@@ -13,7 +13,6 @@
    [spec-tools.json-schema :as jsc]))
 
 (sp/def ::first-n string?)
-
 (sp/def ::params (sp/keys :req-un [::first-n]))
 
 (defn sieve-primes [n]

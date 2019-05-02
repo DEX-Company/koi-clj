@@ -13,6 +13,7 @@
    [clojure.java.io :as io]
    [koi.hashing :as h]
    [koi.hashing-asset :as ha]
+   [koi.failing-asset :as f]
    [koi.prime-num :as p]
    [scjsv.core :as jsv]
    ))
@@ -22,7 +23,9 @@
 (def service-registry
   {:hashing (h/new-hashing jobs jobids)
    :assethashing (ha/new-hashing jobs jobids)
-   :primes (p/new-primes jobs jobids)})
+   :primes (p/new-primes jobs jobids)
+   :fail (f/new-failing jobs jobids)
+   })
 
 (defn invoke-handler
   "this method handles API calls to /invoke. The first argument is a boolean value, if true,
@@ -31,10 +34,8 @@
   ([async? inp]
    (let [params (:body-params inp)
          {:keys [did]} (:route-params inp)]
-     (println" - args " params " did " did)
      (if-let [ep (service-registry (keyword did))]
        (let [validator (get-params ep) ]
-         (println " valid? " (sp/valid? validator params))
          (if (and validator params (sp/valid? validator params))
            (do
              (println " valid request, making invoke request with " params)
@@ -42,7 +43,7 @@
                (try
                  (let [invres (invoke-async ep params)]
                    (println " result of invoke start " invres)
-                   (created "url" (generate-string invres)))
+                   (created "url" invres))
                  (catch Exception e
                    (do
                      (println (str " got error in invoke " e))
