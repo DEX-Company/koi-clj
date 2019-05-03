@@ -6,8 +6,9 @@
 
 (def config (read-config (clojure.java.io/resource "config.edn")))
 (def surfer-url (:surfer-url config))
-
-(def surfer (s/surfer surfer-url (s/remote-account (:username config) (:password config))))
+(def did (s/random-did))
+(def surfer (s/remote-agent did (s/default-ddo surfer-url)
+                            (:username config) (:password config)))
 
 (defn register-asset
   ([surfer content]
