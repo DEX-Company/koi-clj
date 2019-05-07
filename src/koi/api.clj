@@ -71,11 +71,14 @@
          :handler mw/result-handler}}))))
 
 (def app
-  (api
-   {:swagger
-    {:ui "/"
-     :spec "/swagger1.json"
-     :data {:info {:title "invoke-api "
-                   :description "Invoke with Ocean "}
-            :tags [{:name "invoke service", :description "invoke Ocean services"}]}}}
-   routes))
+  (do
+    (mount/start-with-states {#'koi.middleware/service-registry
+                              {:start mw/valid-assetid-svc-registry}})
+    (api
+     {:swagger
+      {:ui "/"
+       :spec "/swagger1.json"
+       :data {:info {:title "invoke-api "
+                     :description "Invoke with Ocean "}
+              :tags [{:name "invoke service", :description "invoke Ocean services"}]}}}
+     routes)))

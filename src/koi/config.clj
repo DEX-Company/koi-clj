@@ -1,15 +1,20 @@
 (ns koi.config
   (:require 
-   [koi.hashing :as h]
-   [koi.hashing-asset :as ha]
-   [mount.core :refer [defstate]]))
+   [starfish.core :as s]
+   [aero.core :refer (read-config)]
+   ))
 
-(def jobids (atom 0))
-(def jobs (atom {}))
 
-(defn default-service-registry
-  []
-  {:hashing (h/new-hashing jobs jobids)
-   :assethashing (ha/new-hashing jobs jobids)})
+(defn get-config
+  ([] (get-config (clojure.java.io/resource "config.edn")))
+  ([config-resource]
+   (read-config config-resource)))
 
-(defstate ^:dynamic service-registry :start (default-service-registry))
+(defn default-surfer
+  ([] (default-surfer (get-config)))
+  ([config]
+   (let [surfer-url (:surfer-url config)
+         did (s/random-did)]
+     (s/remote-agent did (s/default-ddo surfer-url)
+                     (:username config) (:password config)))))
+

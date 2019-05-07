@@ -2,6 +2,7 @@
   (:require 
    [org.httpkit.client :as http]
    [cheshire.core :as che :refer :all]
+   [starfish.core :as s]
    [clojure.spec.alpha :as sp]
    [koi.protocols :as prot 
     :refer [invoke-sync
@@ -9,23 +10,44 @@
             get-params]]
    [ring.util.http-response :as http-response :refer [ok header created unprocessable-entity]]
    [ring.util.http-status :as status]
-   [spec-tools.json-schema :as jsc]
    [clojure.java.io :as io]
+
+   [mount.core :refer [defstate]]
    [koi.hashing :as h]
    [koi.hashing-asset :as ha]
    [koi.failing-asset :as f]
    [koi.prime-num :as p]
-   [scjsv.core :as jsv]
-   ))
+   [koi.utils :refer [surfer]]
+   [koi.config :as config :refer [get-config default-surfer]]))
 
 (def jobids (atom 0))
 (def jobs (atom {}))
-(def service-registry
+
+(defn default-service-registry
+  []
   {:hashing (h/new-hashing jobs jobids)
    :assethashing (ha/new-hashing jobs jobids)
    :primes (p/new-primes jobs jobids)
    :fail (f/new-failing jobs jobids)
    })
+
+(defstate service-registry :start (default-service-registry))
+
+(defn register-prime-operation
+  [sfr]
+  (let [prime-metadata (->> (clojure.java.io/resource "prime_asset_metadata.json")
+                            slurp che/parse-string)
+        ast (s/memory-asset prime-metadata "abc")
+        remote-asset (s/register sfr ast)
+        res (s/asset-id remote-asset)]
+    res))
+
+(defn valid-assetid-svc-registry
+  []
+  (let [svcreg (default-service-registry)
+        prime-assetid (keyword (register-prime-operation surfer))]
+    (println "registering prime asset id as " prime-assetid)
+    (assoc svcreg prime-assetid (:primes svcreg))))
 
 (defn invoke-handler
   "this method handles API calls to /invoke. The first argument is a boolean value, if true,

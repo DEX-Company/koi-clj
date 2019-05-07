@@ -1,16 +1,27 @@
 (ns koi.apitest
-  (:require  [clojure.test :as t :refer [deftest is testing]]
+  (:require  [clojure.test :as t :refer [deftest is testing use-fixtures]]
+             [starfish.core :as s]
              [cheshire.core :as cheshire]
              [ring.util.http-response :as http-response :refer [ok header created unprocessable-entity
                                                                 internal-server-error
                                                                 bad-request]]
              [ring.mock.request :as mock]
-             [koi.api :as api :refer [app]])
-  (:import [sg.dex.crypto Hash])
-  )
+             [clojure.walk :refer [keywordize-keys]]
+             [koi.utils :refer [surfer]]
+             [koi.middleware :as mw :refer [service-registry ]]
+             [koi.api :as api :refer [app]]
+             [mount.core :as mount])
+  (:import [sg.dex.crypto Hash]))
 
 (defn parse-body [body]
   (cheshire/parse-string (slurp body) true))
+
+(defn my-test-fixture [f]
+  (mount/start)
+  (f)
+  (mount/stop))
+
+(use-fixtures :once my-test-fixture)
 
 (deftest testerrorresponses
   (testing "Test request to hash operation"
@@ -46,8 +57,20 @@
           jobid     (:jobid (parse-body (:body response)))
           jobres (app (-> (mock/request :get (str "/jobs/" jobid))
                           (mock/content-type "application/json")))
-          job-body (parse-body (:body jobres))
-          ]
+          job-body (parse-body (:body jobres))]
       (is (= (:status response) (:status (created))))
       (is (= (:status jobres) (:status (ok))))
       (is (every? #{:status :errorcode :description} (keys job-body))))))
+
+(deftest oper-registration
+  (testing "primes operation "
+    (do 
+        (let [prime-metadata (->> (clojure.java.io/resource "prime_asset_metadata.json")
+                                  slurp
+                                  cheshire/parse-string)
+              ast (s/memory-asset prime-metadata "abc")
+              remote-asset (s/register surfer ast)
+              res (s/asset-id remote-asset)
+              rem-metadata (s/metadata remote-asset)]
+          (is (=  (s/asset-id ast) res))))))
+

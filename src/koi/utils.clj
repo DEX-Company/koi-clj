@@ -1,14 +1,11 @@
 (ns koi.utils
   (:require
    [starfish.core :as s]
-   [aero.core :refer (read-config)]
+   [clojure.walk :refer [keywordize-keys stringify-keys]]
+   [koi.config :as config :refer [get-config default-surfer]]
+   [mount.core :refer [defstate]]
+   [cheshire.core :as ch]
    [clojure.java.io :as io]))
-
-(def config (read-config (clojure.java.io/resource "config.edn")))
-(def surfer-url (:surfer-url config))
-(def did (s/random-did))
-(def surfer (s/remote-agent did (s/default-ddo surfer-url)
-                            (:username config) (:password config)))
 
 (defn register-asset
   ([surfer content]
@@ -23,3 +20,8 @@
         (s/get-asset surfer)
         (s/content)
         s/to-string)))
+
+(def prime-metadata 
+  (->> (clojure.java.io/resource "prime_asset_metadata.json") slurp))
+
+(defstate surfer :start (default-surfer))
