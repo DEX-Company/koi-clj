@@ -33,21 +33,30 @@
 
 (defstate service-registry :start (default-service-registry))
 
-(defn register-prime-operation
-  [sfr]
-  (let [prime-metadata (->> (clojure.java.io/resource "prime_asset_metadata.json")
+(defn register-operation
+  [sfr asset-metadata-resource]
+  (let [prime-metadata (->> asset-metadata-resource
                             slurp che/parse-string)
         ast (s/memory-asset prime-metadata "abc")
         remote-asset (s/register sfr ast)
         res (s/asset-id remote-asset)]
-    res))
+    (keyword res)))
+
+(defn register-operations
+  [sfr]
+  (let [prime-metadata (clojure.java.io/resource "prime_asset_metadata.json")
+        hashing-metadata (clojure.java.io/resource "hashing_asset_metadata.json")]
+    (mapv (partial register-operation sfr)
+          [prime-metadata hashing-metadata])))
 
 (defn valid-assetid-svc-registry
   []
   (let [svcreg (default-service-registry)
-        prime-assetid (keyword (register-prime-operation surfer))]
-    (println "registering prime asset id as " prime-assetid)
-    (assoc svcreg prime-assetid (:primes svcreg))))
+        regd-ids (register-operations surfer)]
+    (println "registering primes, hashing, asset ids as " regd-ids)
+    (assoc svcreg
+           (first regd-ids) (:primes svcreg)
+           (second regd-ids) (:assethashing svcreg))))
 
 (defn invoke-handler
   "this method handles API calls to /invoke. The first argument is a boolean value, if true,

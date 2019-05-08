@@ -18,11 +18,9 @@
 (sp/def ::params (sp/keys :req-un [::to-hash]))
 (sp/valid? ::params {:to-hash {:did "1234567890123456789012345678901234567890123456789012345678901234"}})
 
-
 (defn process
   [did]
   (let [cont (get-asset-content surfer did)
-        _ (println " called hashing with content "  cont)
         res (Hash/keccak256String cont)
         reg-asset-id (register-asset surfer res)]
     {:results {:hash_value {:did reg-asset-id}}}))
