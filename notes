@@ -1,8 +1,0 @@
-icheck prov:value
-what is the format for references (e.g. op:asdf")
-names of params and result needs to be represented.
-add relevant stuff from prov standard and add here.
-specify that it should have at least entity, activity section.
-and then each section.
-then attributes for each use case, which is publish/invoke,
-ioperation metadata: choose to state deterministic or not. (optional).
