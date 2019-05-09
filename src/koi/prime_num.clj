@@ -3,6 +3,10 @@
    [clojure.spec.alpha :as sp]
    [starfish.core :as s]
    [koi.utils :as utils :refer [register-asset get-asset-content surfer]]
+   [taoensso.timbre :as timbre
+    :refer [log  trace  debug  info  warn  error  fatal  report
+            logf tracef debugf infof warnf errorf fatalf reportf
+            spy get-env]]
    [koi.protocols :as prot 
     :refer [invoke-sync
             invoke-async
@@ -38,7 +42,7 @@
 
 (defn first-n
   [n]
-  (let [_ (println " called get primes "  n)
+  (let [_ (info " called get primes with argument "  n)
         res (clojure.string/join "\n" (sieve-primes (Integer/parseInt n)))
         reg-asset-id (register-asset surfer res)]
     {:results {:primes {:did reg-asset-id}}}))
@@ -52,10 +56,9 @@
 
   prot/PAsyncInvoke
   (invoke-async [_ args]
-    (println " invoke args "(:first-n args))
     (let [n (:first-n args)
           jobid (swap! jobids inc)
-          _ (println " jobid " jobid)]
+          _ (info " jobid for async prime job " jobid)]
       (doto (Thread. (fn []
                        (swap! jobs assoc jobid {:status :scheduled})
                        (try (Thread/sleep 10000)
@@ -66,7 +69,7 @@
                                      {:status :succeeded
                                       :results (:results res)}))
                             (catch Exception e
-                              (println " got exception " e )
+                              (error " got exception running prime job " e )
                               (clojure.stacktrace/print-stack-trace e)
                               (let [resp {:status :failed
                                           :errorcode 8005

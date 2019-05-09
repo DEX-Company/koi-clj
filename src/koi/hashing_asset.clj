@@ -2,6 +2,10 @@
   (:require
    [clojure.spec.alpha :as sp]
    [starfish.core :as s]
+   [taoensso.timbre :as timbre
+    :refer [log  trace  debug  info  warn  error  fatal  report
+            logf tracef debugf infof warnf errorf fatalf reportf
+            spy get-env]]
    [koi.protocols :as prot 
     :refer [invoke-sync
             invoke-async
@@ -45,6 +49,7 @@
                                      {:status :completed
                                       :results (:results res)}))
                             (catch Exception e
+                              (error " Caught exception running async job " (.getMessage e))
                               (swap! jobs assoc jobid
                                      {:status :error
                                       :errorcode 8005

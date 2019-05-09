@@ -73,4 +73,3 @@
               res (s/asset-id remote-asset)
               rem-metadata (s/metadata remote-asset)]
           (is (=  (s/asset-id ast) res))))))
-

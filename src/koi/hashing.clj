@@ -6,6 +6,9 @@
             invoke-async
             get-params]]
    [koi.invokespec :as ispec]
+   [taoensso.timbre :as timbre
+    :refer [log  trace  debug  info  warn  error  fatal  report
+            logf tracef debugf infof warnf errorf fatalf reportf]]
    [clojure.java.io :as io]
    [spec-tools.json-schema :as jsc])
   (:import [sg.dex.crypto Hash]))
@@ -21,7 +24,7 @@
   prot/PSyncInvoke
   (invoke-sync [_ args]
     (let [to-hash (:to-hash args)]
-      (println " called hashing with " to-hash)
+      (info " called hashing with " to-hash)
       (Hash/keccak256String to-hash)))
 
   prot/PAsyncInvoke

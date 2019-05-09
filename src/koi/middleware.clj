@@ -18,6 +18,10 @@
    [koi.failing-asset :as f]
    [koi.prime-num :as p]
    [koi.utils :refer [surfer]]
+   [taoensso.timbre :as timbre
+    :refer [log  trace  debug  info  warn  error  fatal  report
+            logf tracef debugf infof warnf errorf fatalf reportf
+            spy get-env]]
    [koi.config :as config :refer [get-config default-surfer]]))
 
 (def jobids (atom 0))
@@ -53,7 +57,7 @@
   []
   (let [svcreg (default-service-registry)
         regd-ids (register-operations surfer)]
-    (println "registering primes, hashing, asset ids as " regd-ids)
+    (info "registering primes, hashing, asset ids as " regd-ids)
     (assoc svcreg
            (first regd-ids) (:primes svcreg)
            (second regd-ids) (:assethashing svcreg))))
@@ -69,39 +73,37 @@
        (let [validator (get-params ep) ]
          (if (and validator params (sp/valid? validator params))
            (do
-             (println " valid request, making invoke request with " params)
+             (info " valid request, making invoke request with " params)
              (if async?
                (try
                  (let [invres (invoke-async ep params)]
-                   (println " result of invoke start " invres)
+                   (info " result of invoke start " invres)
                    (created "url" invres))
                  (catch Exception e
                    (do
-                     (println (str " got error in invoke " e))
+                     (error (str " got error in invoke " e))
                      (clojure.stacktrace/print-stack-trace e)
                      (http-response/internal-server-error " server error executing operation "))))
                (try 
                  (ok (invoke-sync ep params))
                  (catch Exception e
                    (do
-                     (println (str " got error in invoke " e))
+                     (error (str " got error in invoke " e))
                      (clojure.stacktrace/print-stack-trace e)
-                     (http-response/internal-server-error " server error executing operation ")))
-                 ))
-             )
+                     (http-response/internal-server-error " server error executing operation "))))))
            (do
-             (println " invalid request, sending error in invoke request with " params)
+             (error " invalid request, sending error in invoke request with " params)
              (http-response/bad-request (str " invalid request: " (if params (clojure.string/join (validator params)) " params is not present") " - " )))))
-       (do (println " invalid operation did " did)
+       (do (error " invalid operation did " did)
            (unprocessable-entity (str "operation did " did " is not supported"))))))) 
 
 (defn result-handler
   ([inp]
    (let [{:keys [jobid]} (:route-params inp)]
      (try
-       (println " result-handler " jobid " " @jobs)
+       (info " result-handler " jobid " " @jobs)
        (ok (get @jobs (Integer/parseInt jobid)))
        (catch Exception e
          (do
-           (println (str " got error in getting job results " e))
+           (error (str " got error in getting job results " e))
            (clojure.stacktrace/print-stack-trace e)))))))
