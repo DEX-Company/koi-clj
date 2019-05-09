@@ -49,9 +49,11 @@
 (defn register-operations
   [sfr]
   (let [prime-metadata (clojure.java.io/resource "prime_asset_metadata.json")
-        hashing-metadata (clojure.java.io/resource "hashing_asset_metadata.json")]
+        hashing-metadata (clojure.java.io/resource "hashing_asset_metadata.json")
+        payload-hashing-metadata (clojure.java.io/resource "hashing_metadata.json")]
     (mapv (partial register-operation sfr)
-          [prime-metadata hashing-metadata])))
+          [prime-metadata hashing-metadata
+           payload-hashing-metadata])))
 
 (defn valid-assetid-svc-registry
   []
@@ -60,7 +62,8 @@
     (info "registering primes, hashing, asset ids as " regd-ids)
     (assoc svcreg
            (first regd-ids) (:primes svcreg)
-           (second regd-ids) (:assethashing svcreg))))
+           (second regd-ids) (:assethashing svcreg)
+           (last regd-ids) (:hashing svcreg))))
 
 (defn invoke-handler
   "this method handles API calls to /invoke. The first argument is a boolean value, if true,

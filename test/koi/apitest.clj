@@ -6,8 +6,8 @@
                                                                 internal-server-error
                                                                 bad-request]]
              [ring.mock.request :as mock]
+             [koi.utils :as utils :refer [register-asset get-asset-content surfer keccak512]]
              [clojure.walk :refer [keywordize-keys]]
-             [koi.utils :refer [surfer]]
              [koi.middleware :as mw :refer [service-registry ]]
              [koi.api :as api :refer [app]]
              [mount.core :as mount])
@@ -31,7 +31,8 @@
                             (mock/content-type "application/json")
                             (mock/body (cheshire/generate-string {:to-hash input}))))
           body     (parse-body (:body response))]
-      (is (= hashval body))
+      (is (= hashval (:keccak256 body)))
+      (is (every? #{"keccak256" "keccak512"} (keys body)))
       (is (= (:status response) (:status (ok))))))
   (testing "Test request to nonexisting operation"
     ;;fakehashing isn't a valid operation did
@@ -61,6 +62,7 @@
       (is (= (:status response) (:status (created))))
       (is (= (:status jobres) (:status (ok))))
       (is (every? #{:status :errorcode :description} (keys job-body))))))
+
 
 (deftest oper-registration
   (testing "primes operation "

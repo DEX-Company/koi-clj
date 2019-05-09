@@ -11,10 +11,8 @@
 	"type":"operation",
  "operation":{
      "modes":["sync","async"],
-		 "params":{"to-hash":{"type":"asset",
+		 "params":{"to-hash":{"type":"json",
                           "position":0,
-                          "required":true},
-               "algorithm":{"type":"json",
-                                 "position":1,
-                                 "required":false}},
-		"results":{"hash_value":{"type":"asset"}}}}
+                          "required":true}},
+		 "results":{"keccak256":{"type":"json"},
+                "keccak512":{"type":"json"}}}}

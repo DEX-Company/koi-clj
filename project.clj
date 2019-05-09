@@ -53,6 +53,7 @@
 
                  ;;configuration management
                  [aero "1.1.3"]
+                 [ring/ring-mock "0.3.2"]
                  ]
 
   :source-paths ["src/"]
@@ -60,14 +61,13 @@
   :profiles {:test {;:jvm-opts ["-Dconfig.edn=resources/test-config.edn"]
                     :dependencies [[ring/ring-mock "0.3.2"]]
                     }
-             :dev {:dependencies [;;mocking 
-                                  [ring/ring-mock "0.3.2"]]}
+             ;:dev {:dependencies [;;mocking [ring/ring-mock "0.3.2"]]}
              ;:prod {:jvm-opts ["-Dconfig.edn=resources/prod-config.edn"]}
              :default {:dependencies [[javax.servlet/javax.servlet-api "3.1.0"]]
                        :plugins [[lein-ring "0.12.5"] ]
                        :jvm-opts ["-Dconfig.edn=resources/dev-config.edn"]
                        }
-            ; :dev [:default :test]
+             :dev [:default :test]
              }
   :ring { :handler koi.api/app }
 )
