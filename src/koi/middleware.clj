@@ -46,20 +46,22 @@
         res (s/asset-id remote-asset)]
     (keyword res)))
 
+(def example-metadata
+  ["prime_asset_metadata.json" "hashing_asset_metadata.json"
+   "hashing_metadata.json"])
+
 (defn register-operations
   [sfr]
-  (let [prime-metadata (clojure.java.io/resource "prime_asset_metadata.json")
-        hashing-metadata (clojure.java.io/resource "hashing_asset_metadata.json")
-        payload-hashing-metadata (clojure.java.io/resource "hashing_metadata.json")]
-    (mapv (partial register-operation sfr)
-          [prime-metadata hashing-metadata
-           payload-hashing-metadata])))
+  (let [regd-ids 
+        (mapv (partial register-operation sfr)
+              (mapv clojure.java.io/resource example-metadata))]
+    (info "registering " (clojure.string/join "\n " (mapv #(str %1 "->" %2) example-metadata regd-ids )))
+    regd-ids))
 
 (defn valid-assetid-svc-registry
   []
   (let [svcreg (default-service-registry)
         regd-ids (register-operations surfer)]
-    (info "registering primes, hashing, asset ids as " regd-ids)
     (assoc svcreg
            (first regd-ids) (:primes svcreg)
            (second regd-ids) (:assethashing svcreg)
