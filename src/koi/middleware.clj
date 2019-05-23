@@ -15,6 +15,7 @@
    [mount.core :refer [defstate]]
    [koi.hashing :as h]
    [koi.hashing-asset :as ha]
+   [cemerick.friend :as friend]
    [koi.failing-asset :as f]
    [koi.prime-num :as p]
    [koi.utils :refer [surfer]]
@@ -67,13 +68,21 @@
            (second regd-ids) (:assethashing svcreg)
            (last regd-ids) (:hashing svcreg))))
 
+(defn get-current-userid
+  "Gets the current user ID from a request, or nil if not registered / logged in"
+  ([request]
+   (let [auth (friend/current-authentication request)
+         username (:identity auth)]
+     (info " got bearer token " username " - auth " auth)
+     username)))
+
 (defn invoke-handler
   "this method handles API calls to /invoke. The first argument is a boolean value, if true,
   responds with a job id. Else it returns synchronously."
   ([inp] (invoke-handler false inp))
   ([async? inp]
    (let [params (:body-params inp)
-         {:keys [did]} (:route-params inp)]
+         {:keys [did]} (:route-params inp) ]
      (if-let [ep (service-registry (keyword did))]
        (let [validator (get-params ep) ]
          (if (and validator params (sp/valid? validator params))

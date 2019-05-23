@@ -32,7 +32,7 @@
 (s/def ::payload (s/keys ::req-un [::operation params]))
 
 (def routes
-  (context "/" []
+  (context "/api/v1" []
     :tags ["Invoke ocean service"]
     :coercion :spec
 

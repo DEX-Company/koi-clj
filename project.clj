@@ -49,11 +49,14 @@
                  ;;json schema
                  [metosin/scjsv "0.5.0"]
                  ;;starfish
-                 [sg.dex/starfish-clj "0.0.1"]
+                 [sg.dex/starfish-clj "0.0.5"]
 
                  ;;configuration management
                  [aero "1.1.3"]
                  [ring/ring-mock "0.3.2"]
+
+                 ;;auth
+                 [com.cemerick/friend "0.2.3"]
                  ]
 
   :source-paths ["src/"]

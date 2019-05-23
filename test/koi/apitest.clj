@@ -23,46 +23,56 @@
 
 (use-fixtures :once my-test-fixture)
 
+(def iripath "/api/v1")
 (deftest testerrorresponses
   (testing "Test request to hash operation"
     (let [input "stringtohash"
           hashval (Hash/keccak256String input)
-          response (app (-> (mock/request :post "/invoke/hashing")
+          response (app (-> (mock/request :post (str iripath "/invoke/hashing"))
                             (mock/content-type "application/json")
                             (mock/body (cheshire/generate-string {:to-hash input}))))
           body     (parse-body (:body response))]
-      (is (= hashval (:keccak256 body)))
-      (is (every? #{"keccak256" "keccak512"} (keys body)))
+      (is (= hashval (-> body :results :keccak256)))
+      (is (every? #{:keccak256 :keccak512} (keys (:results body))))
       (is (= (:status response) (:status (ok))))))
   (testing "Test request to nonexisting operation"
     ;;fakehashing isn't a valid operation did
-    (let [response (app (-> (mock/request :post "/invoke/fakehashing")
+    (let [response (app (-> (mock/request :post (str iripath "/invoke/fakehashing"))
                             (mock/content-type "application/json")
                             (mock/body (cheshire/generate-string {:to-hash "abc"}))))]
       (is (= (:status response) (:status (unprocessable-entity))))))
   (testing "Test bad params to valid operation"
-    (let [response (app (-> (mock/request :post "/invoke/hashing")
+    (let [response (app (-> (mock/request :post (str iripath "/invoke/hashing"))
                             (mock/content-type "application/json")
                             ;;hashing needs to-hash as an argument
                             (mock/body (cheshire/generate-string {:abc "def"}))))]
       (is (= (:status response) (:status (bad-request))))))
   (testing "Test failing operation"
-    (let [response (app (-> (mock/request :post "/invoke/fail")
+    (let [response (app (-> (mock/request :post (str iripath "/invoke/fail"))
                             (mock/content-type "application/json")
                             (mock/body (cheshire/generate-string {:dummy "def"}))))]
       (is (= (:status response) (:status (internal-server-error))))))
   (testing "Test async failing operation"
-    (let [response (app (-> (mock/request :post "/invokeasync/fail")
+    (let [response (app (-> (mock/request :post (str iripath "/invokeasync/fail"))
                             (mock/content-type "application/json")
                             (mock/body (cheshire/generate-string {:dummy "def"}))))
           jobid     (:jobid (parse-body (:body response)))
-          jobres (app (-> (mock/request :get (str "/jobs/" jobid))
+          jobres (app (-> (mock/request :get (str iripath "/jobs/" jobid))
                           (mock/content-type "application/json")))
           job-body (parse-body (:body jobres))]
       (is (= (:status response) (:status (created))))
       (is (= (:status jobres) (:status (ok))))
       (is (every? #{:status :errorcode :description} (keys job-body))))))
 
+#_(let [input "stringtohash"
+      hashval (Hash/keccak256String input)
+        response (app (-> (mock/request :post (str iripath "/invoke/hashing"))
+                        (mock/content-type "application/json")
+                        (mock/header "Authorization" "Bearer abcd")
+                        (mock/body (cheshire/generate-string {:to-hash input}))))
+     ; body     (parse-body (:body response))
+      ]
+  response)
 
 (deftest oper-registration
   (testing "primes operation "

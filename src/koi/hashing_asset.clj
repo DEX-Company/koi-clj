@@ -45,7 +45,7 @@
     (let [to-hash (:to-hash args)
           alg (:algorithm args)
           did (:did to-hash)]
-      (process did)))
+      (process alg did)))
 
   prot/PAsyncInvoke
   (invoke-async [_ args]
