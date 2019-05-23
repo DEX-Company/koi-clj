@@ -2,6 +2,7 @@
   (:require 
    [taoensso.timbre :as timbre
     :refer [log  trace  debug  info  warn  error  fatal  report]]
+   [ring.adapter.jetty :refer [run-jetty]]
    [compojure.api.sweet :as sw :refer [api context
                                        undocumented
                                        GET PUT POST DELETE]]
@@ -22,9 +23,9 @@
    [schema-tools.core :as st]
    [mount.core :as mount :refer [defstate]]
    [clojure.java.io :as io]
-   [koi.middleware :as mw]
-   )
-  (:import [java.util UUID]))
+   [koi.middleware :as mw])
+  (:import [java.util UUID])
+  (:gen-class))
 
 (s/def ::operation string?)
 (s/def ::jobid string?)
@@ -82,3 +83,6 @@
                      :description "Invoke with Ocean "}
               :tags [{:name "invoke service", :description "invoke Ocean services"}]}}}
      routes)))
+
+(defn -main [& args]
+  (run-jetty app {:port (Integer/valueOf (or (System/getenv "port") "3000"))}))

@@ -71,6 +71,9 @@
                        :jvm-opts ["-Dconfig.edn=resources/dev-config.edn"]
                        }
              :dev [:default :test]
-             }
+             :uberjar{:aot :all 
+                      :main koi.api}}
+
+  :plugins [[lein-ring "0.12.1"]]
   :ring { :handler koi.api/app }
 )
