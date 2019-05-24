@@ -1,8 +1,11 @@
 # Koi-clj 
 
-An invokable Service Proxy for Ocean. Implemented in Clojure
+A reference implementation of Invokable services for Ocean, implemented in Clojure. It implements four operations.
 
 ## Usage
+
+For development, you will need to run the latest copy of [Barge](https://github.com/DEX-Company/barge). Starting the default Barge would give you koi-clj running on port 3000.
+
 
 ### Prerequisites:
 
@@ -19,7 +22,7 @@ Navigate to localhost:3000
 
 ### Surfer
 
-The default configuration expects surfer to be running on `http://localhost:8080/`. To change this, change resources/config.edn
+The default configuration expects Surfer to be running on `http://localhost:8080/`. To change this, change resources/config.edn
 
 ### Executing an operation
 
@@ -47,8 +50,11 @@ Example:
 - DID field: `assethashing` 
 
 - params field
+```json
+{"to-hash":{"did":"asset_id_of_content_to_hash"}}
+```
 
-Note that the asset did must exist on Surfer.
+Note that the asset did must exist on Ocean.
  
 ```json
 {"to-hash":{"did":"45a8cebe88ad5d8161e19bf2f201af772ad3c6613be9d60f7663a8c33646b203"}}
@@ -60,5 +66,4 @@ Note that the asset did must exist on Surfer.
 
 Copyright © 2019 DEX
 
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+Distributed under the Apache License version 2.0.
