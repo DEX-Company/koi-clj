@@ -3,7 +3,7 @@
 CURL_CMD="curl -w httpcode=%{http_code}"
 
 # See retry options https://stackoverflow.com/a/42873372/845843
-CURL_MAX_CONNECTION_TIMEOUT="--retry-max-time 40 --retry-connrefused --retry 10 "
+CURL_MAX_CONNECTION_TIMEOUT="--retry-max-time 480 --retry-connrefused --retry 10 "
 
 # perform curl operation
 CURL_RETURN_CODE=0
