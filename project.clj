@@ -26,7 +26,7 @@
                  [mount "0.1.12"]
 
                  ;;crypto
-                 [mvxcvi/clj-pgp "0.9.0"]
+                 ;[mvxcvi/clj-pgp "0.9.0"]
                                   ;;ring utilities
                  [ring "1.6.3"]
                  [metosin/ring-http-response "0.9.0"]
@@ -38,7 +38,7 @@
                                         ;[org.clojure/spec.alpha "0.2.176"]
                  [mount "0.1.15"]
                  ;;this one's license is LGPL
-                 [lispyclouds/clj-docker-client "0.1.11"]
+                 ;[lispyclouds/clj-docker-client "0.1.11"]
 
                  ;;[clj-zeppelin "0.1.1-SNAPSHOT"]
 
@@ -49,14 +49,21 @@
                  ;;json schema
                  [metosin/scjsv "0.5.0"]
                  ;;starfish
-                 [sg.dex/starfish-clj "0.0.5"]
+                 [sg.dex/starfish-clj "0.0.5" :exclusions [com.fasterxml.jackson.core/jackson-annotations
+                                                           com.oceanprotocol/keeper-contracts
+                                                           commons-codec
+                                                           org.bouncycastle/bcprov-jdk15on]]
 
                  ;;configuration management
                  [aero "1.1.3"]
                  [ring/ring-mock "0.3.2"]
 
                  ;;auth
-                 [com.cemerick/friend "0.2.3"]
+                 [buddy/buddy-auth "2.1.0" :exclusions [org.clojure/clojure org.bouncycastle/bcprov-jdk15on]]
+                 [org.bouncycastle/bcprov-jdk15on "1.61"]
+                 
+                 ;[buddy/buddy-hashers "1.3.0" :exclusions [org.clojure/clojure]]
+                 ;[com.cemerick/friend "0.2.3"]
                  ]
 
   :source-paths ["src/"]

@@ -1,4 +1,4 @@
-(ns koi.middleware
+(ns koi.op-handler
   (:require 
    [org.httpkit.client :as http]
    [cheshire.core :as che :refer :all]
@@ -15,7 +15,7 @@
    [mount.core :refer [defstate]]
    [koi.hashing :as h]
    [koi.hashing-asset :as ha]
-   [cemerick.friend :as friend]
+   ;[cemerick.friend :as friend]
    [koi.failing-asset :as f]
    [koi.prime-num :as p]
    [koi.utils :refer [surfer]]
@@ -68,7 +68,7 @@
            (second regd-ids) (:assethashing svcreg)
            (last regd-ids) (:hashing svcreg))))
 
-(defn get-current-userid
+#_(defn get-current-userid
   "Gets the current user ID from a request, or nil if not registered / logged in"
   ([request]
    (let [auth (friend/current-authentication request)
