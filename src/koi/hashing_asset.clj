@@ -12,53 +12,55 @@
             get-params]]
    [koi.invokespec :as ispec]
    [clojure.java.io :as io]
-   [koi.utils :as utils :refer [register-asset get-asset-content surfer keccak512]]
+   [koi.utils :as utils :refer [put-asset get-asset-content get-asset remote-agent keccak512
+                                process]]
    [aero.core :refer (read-config)]
    [spec-tools.json-schema :as jsc])
   (:import [sg.dex.crypto Hash]
-           [sg.dex.starfish.util Hex]
+           [java.util UUID]
+           [sg.dex.starfish.util Hex JSON]
            [org.bouncycastle.jcajce.provider.digest Keccak$Digest512 ]))
 
 (sp/def ::to-hash ::ispec/asset)
+
 
 (sp/def ::params (sp/keys :req-un [::to-hash]))
 (sp/valid? ::params {:to-hash {:did "1234567890123456789012345678901234567890123456789012345678901234"}})
 
 
-
-(defn process
-  [alg did]
-  (let [cont (get-asset-content surfer did)
-        res (cond (= alg "keccak256")
-                  (Hash/keccak256String cont)
-                  (= alg "keccak512")
-                  (keccak512 cont)
-                  :default 
-                  (Hash/keccak256String cont))
-        reg-asset-id (register-asset surfer res)]
-    {:results {:hash_value {:did reg-asset-id}}}))
+(defn compute-hash
+  [agent {:keys [to-hash algorithm]}]
+  (let [ast (get-asset agent to-hash)
+        cont (-> ast s/content s/to-string)]
+    (fn []
+      (let [hashval (cond (= algorithm "keccak256")
+                      (Hash/keccak256String cont)
+                      (= algorithm "keccak512")
+                      (keccak512 cont)
+                      :default 
+                      (Hash/keccak256String cont))
+            res {:dependencies [ast]
+                 :results [{:param-name :hash-value
+                            :type :asset
+                            :content hashval}]}]
+        (info " result of execfn " res)
+        res))))
 
 (deftype HashingAsset [jobs jobids]
 
   prot/PSyncInvoke
   (invoke-sync [_ args]
-    (let [to-hash (:to-hash args)
-          alg (:algorithm args)
-          did (:did to-hash)]
-      (process alg did)))
+    (process args compute-hash))
 
   prot/PAsyncInvoke
   (invoke-async [_ args]
-    (let [to-hash (:to-hash args)
-          alg (:algorithm args)
-          did (:did to-hash)
-          jobid (swap! jobids inc)]
+    (let [jobid (swap! jobids inc)]
       (doto (Thread.
              (fn []
                (swap! jobs assoc jobid {:status :accepted})
-               (try (let [res (process alg did)]
+               (try (let [res (process args compute-hash)]
                       (swap! jobs assoc jobid
-                             {:status :completed
+                             {:status :succeeded
                               :results (:results res)}))
                     (catch Exception e
                       (error " Caught exception running async job " (.getMessage e))

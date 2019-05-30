@@ -49,7 +49,7 @@
                  ;;json schema
                  [metosin/scjsv "0.5.0"]
                  ;;starfish
-                 [sg.dex/starfish-clj "0.0.5" :exclusions [com.fasterxml.jackson.core/jackson-annotations
+                 [sg.dex/starfish-clj "0.0.6-SNAPSHOT" :exclusions [com.fasterxml.jackson.core/jackson-annotations
                                                            com.oceanprotocol/keeper-contracts
                                                            commons-codec
                                                            org.bouncycastle/bcprov-jdk15on]]
@@ -62,8 +62,6 @@
                  [buddy/buddy-auth "2.1.0" :exclusions [org.clojure/clojure org.bouncycastle/bcprov-jdk15on]]
                  [org.bouncycastle/bcprov-jdk15on "1.61"]
                  
-                 ;[buddy/buddy-hashers "1.3.0" :exclusions [org.clojure/clojure]]
-                 ;[com.cemerick/friend "0.2.3"]
                  ]
 
   :source-paths ["src/"]
@@ -81,6 +79,6 @@
              :uberjar{:aot :all 
                       :main koi.api}}
 
-  :plugins [[lein-ring "0.12.1"]]
+  ;:plugins [[lein-ring "0.12.1"]]
   :ring { :handler koi.api/app }
 )

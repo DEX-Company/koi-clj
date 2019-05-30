@@ -1,5 +1,5 @@
 {
- :surfer-url #or [#env SURFER_URL "http://localhost:8080/" ]
+ :agent-url #or [#env AGENT_URL "http://localhost:8080/" ]
  :username "Aladdin"
  :password "OpenSesame"
  }

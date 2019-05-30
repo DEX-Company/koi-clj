@@ -2,7 +2,7 @@
   (:require
    [clojure.spec.alpha :as sp]
    [starfish.core :as s]
-   [koi.utils :as utils :refer [register-asset get-asset-content surfer]]
+   [koi.utils :as utils :refer [put-asset get-asset-content remote-agent process]]
    [taoensso.timbre :as timbre
     :refer [log  trace  debug  info  warn  error  fatal  report
             logf tracef debugf infof warnf errorf fatalf reportf
@@ -40,31 +40,35 @@
         new-primes
         (recur next-p (into marked mults) new-primes)))))
 
-(defn first-n
-  [n]
-  (let [_ (info " called get primes with argument "  n)
-        res (clojure.string/join "\n" (sieve-primes (Integer/parseInt n)))
-        reg-asset-id (register-asset surfer res)]
-    {:results {:primes {:did reg-asset-id}}}))
+(defn compute-primes
+  [agent {:keys [first-n]}]
+  (fn []
+    (let [list-of-primes (sieve-primes (cond (int? first-n) first-n
+                                             :default (Integer/parseInt first-n)))
+          primes-str (clojure.string/join "\n" list-of-primes)
+          res {:dependencies []
+               :results [{:param-name :primes
+                          :type :asset
+                          :content primes-str}]}]
+      (info " result of execfn " res)
+      res)))
 
 (deftype PrimeNumbers [jobs jobids]
 
   prot/PSyncInvoke
   (invoke-sync [_ args]
-    (let [till (:first-n args)]
-      (first-n till)))
+    (process args compute-primes))
 
   prot/PAsyncInvoke
   (invoke-async [_ args]
-    (let [n (:first-n args)
-          jobid (swap! jobids inc)
+    (let [jobid (swap! jobids inc)
           _ (info " jobid for async prime job " jobid)]
       (doto (Thread. (fn []
                        (swap! jobs assoc jobid {:status :scheduled})
                        (try (Thread/sleep 10000)
                             (catch Exception e))
                        (swap! jobs assoc jobid {:status :running})
-                       (try (let [res (first-n n)]
+                       (try (let [res (process args compute-primes)]
                               (swap! jobs assoc jobid
                                      {:status :succeeded
                                       :results (:results res)}))

@@ -45,7 +45,7 @@
 
            (context "/auth" []
 
-                    (GET "/" {:as request}
+                    (POST "/token" {:as request}
                          :tags ["Auth"]
                          :return ::auth-response
                          :header-params [authorization :- ::auth-header]
@@ -56,27 +56,25 @@
                          `username` however we will accept a valid username or email as a value for this key."
                          (auth-credentials-response request)))
 
-
-           ;;create a DID for each operation
-           ;;create a schema for each operation
            (context "/invoke/:did" []
                     :path-params [did :- string?]
+                    :middleware [token-auth-mw authenticated-mw]
                     (sw/resource
                      {:post
                       {:summary "Run an sync operation"
                        :parameters {:body ::params}
-                       :middleware [token-auth-mw authenticated-mw]
                        :responses {200 {:schema spec/any?}
+                                   500 {:schema spec/any?}
                                    201 {:schema spec/any?}}
                        :handler oph/invoke-handler}}))
 
            (context "/invokeasync/:did" []
                     :path-params [did :- string?]
+                    :middleware [token-auth-mw authenticated-mw]
                     (sw/resource
                      {
                       :post
                       {:summary "Run an async operation"
-                       :middleware [token-auth-mw authenticated-mw]
                        :parameters {:body ::params}
                        :responses {200 {:schema spec/any?}
                                    201 {:schema spec/any?}}
@@ -84,10 +82,10 @@
 
            (context "/jobs/:jobid" []
                     :path-params [jobid :- int?]
+                    :middleware [token-auth-mw authenticated-mw]
                     (sw/resource
                      {:get
                       {:summary "get the status of a job"
-                       :middleware [token-auth-mw authenticated-mw]
                        :responses {200 {:schema spec/any?}
                                    422 {:schema spec/any?}
                                    500 {:schema spec/any?}}

@@ -10,11 +10,12 @@
   ([config-resource]
    (read-config config-resource)))
 
-(defn default-surfer
-  ([] (default-surfer (get-config)))
+(defn get-remote-agent
+  ([] (get-remote-agent (get-config)))
   ([config]
-   (let [surfer-url (:surfer-url config)
-         did (s/random-did)]
-     (s/remote-agent did (s/default-ddo surfer-url)
-                     (:username config) (:password config)))))
+   (let [agent-url (:agent-url config)
+         did (s/random-did)
+         ddo (s/create-ddo agent-url)]
+     {:did did :ddo ddo :agent
+      (s/remote-agent did ddo (:username config) (:password config))})))
 

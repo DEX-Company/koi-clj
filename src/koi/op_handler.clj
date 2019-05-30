@@ -18,12 +18,12 @@
    ;[cemerick.friend :as friend]
    [koi.failing-asset :as f]
    [koi.prime-num :as p]
-   [koi.utils :refer [surfer]]
+   [koi.utils :refer [remote-agent]]
    [taoensso.timbre :as timbre
     :refer [log  trace  debug  info  warn  error  fatal  report
             logf tracef debugf infof warnf errorf fatalf reportf
             spy get-env]]
-   [koi.config :as config :refer [get-config default-surfer]]))
+   [koi.config :as config :refer [get-config]]))
 
 (def jobids (atom 0))
 (def jobs (atom {}))
@@ -62,19 +62,11 @@
 (defn valid-assetid-svc-registry
   []
   (let [svcreg (default-service-registry)
-        regd-ids (register-operations surfer)]
+        regd-ids (register-operations (:agent remote-agent))]
     (assoc svcreg
            (first regd-ids) (:primes svcreg)
            (second regd-ids) (:assethashing svcreg)
            (last regd-ids) (:hashing svcreg))))
-
-#_(defn get-current-userid
-  "Gets the current user ID from a request, or nil if not registered / logged in"
-  ([request]
-   (let [auth (friend/current-authentication request)
-         username (:identity auth)]
-     (info " got bearer token " username " - auth " auth)
-     username)))
 
 (defn invoke-handler
   "this method handles API calls to /invoke. The first argument is a boolean value, if true,
@@ -98,8 +90,10 @@
                      (error (str " got error in invoke " e))
                      (clojure.stacktrace/print-stack-trace e)
                      (http-response/internal-server-error " server error executing operation "))))
-               (try 
-                 (ok (invoke-sync ep params))
+               (try
+                 (let [invres (invoke-sync ep params)]
+                   (info " result of invoke resp: " invres)
+                   (ok invres))
                  (catch Exception e
                    (do
                      (error (str " got error in invoke " e))

@@ -6,7 +6,7 @@
             invoke-async
             get-params]]
    [koi.invokespec :as ispec]
-   [koi.utils :as utils :refer [register-asset get-asset-content surfer keccak512]]
+   [koi.utils :as utils :refer [get-asset-content keccak512]]
    [taoensso.timbre :as timbre
     :refer [log  trace  debug  info  warn  error  fatal  report
             logf tracef debugf infof warnf errorf fatalf reportf]]
