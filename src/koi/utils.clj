@@ -2,6 +2,10 @@
   (:require
    [starfish.core :as s]
    [clojure.walk :refer [keywordize-keys stringify-keys]]
+   [taoensso.timbre :as timbre
+    :refer [log  trace  debug  info  warn  error  fatal  report
+            logf tracef debugf infof warnf errorf fatalf reportf
+            spy get-env]]
    [koi.config :as config :refer [get-config get-remote-agent]]
    [mount.core :refer [defstate]]
    [cheshire.core :as ch]
@@ -79,3 +83,24 @@
                                         reg-asset-id}})))
                  (apply merge))]
     {:results res }))
+
+(defn async-handler
+  [jobids jobs exec-fn]
+  (let [jobid (swap! jobids inc)]
+    (doto (Thread.
+           (fn []
+             (swap! jobs assoc jobid {:status :accepted})
+             (try (let [res (exec-fn)]
+                    (swap! jobs assoc jobid
+                           {:status :succeeded
+                            :results (:results res)}))
+                  (catch Exception e
+                    (error " Caught exception running async job " (.getMessage e))
+                    (swap! jobs assoc jobid
+                           {:status :error
+                            :errorcode 8005
+                            :description (str "Got exception " (.getMessage e))})))))
+      .start)
+    {:jobid jobid}))
+
+

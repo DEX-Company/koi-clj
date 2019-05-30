@@ -18,6 +18,7 @@
    ;[cemerick.friend :as friend]
    [koi.failing-asset :as f]
    [koi.prime-num :as p]
+   [koi.predict-iris :as iris]
    [koi.utils :refer [remote-agent]]
    [taoensso.timbre :as timbre
     :refer [log  trace  debug  info  warn  error  fatal  report
@@ -33,6 +34,7 @@
   {:hashing (h/new-hashing jobs jobids)
    :assethashing (ha/new-hashing jobs jobids)
    :primes (p/new-primes jobs jobids)
+   :irisprediction (iris/new-iris-predictor jobs jobids)
    :fail (f/new-failing jobs jobids)
    })
 
@@ -49,8 +51,9 @@
 
 (def example-metadata
   ["prime_asset_metadata.json" "hashing_asset_metadata.json"
-   "hashing_metadata.json"])
+   "hashing_metadata.json" "irisprediction_metadata.json"])
 
+(def example-dids [:primes :assethashing :hashing :irisprediction ])
 (defn register-operations
   [sfr]
   (let [regd-ids 
@@ -63,10 +66,7 @@
   []
   (let [svcreg (default-service-registry)
         regd-ids (register-operations (:agent remote-agent))]
-    (assoc svcreg
-           (first regd-ids) (:primes svcreg)
-           (second regd-ids) (:assethashing svcreg)
-           (last regd-ids) (:hashing svcreg))))
+    (merge svcreg (zipmap regd-ids (mapv svcreg example-dids)))))
 
 (defn invoke-handler
   "this method handles API calls to /invoke. The first argument is a boolean value, if true,
