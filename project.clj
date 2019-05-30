@@ -49,7 +49,7 @@
                  ;;json schema
                  [metosin/scjsv "0.5.0"]
                  ;;starfish
-                 [sg.dex/starfish-clj "0.0.6-SNAPSHOT" :exclusions [com.fasterxml.jackson.core/jackson-annotations
+                 [sg.dex/starfish-clj "0.0.1-SNAPSHOT" :exclusions [com.fasterxml.jackson.core/jackson-annotations
                                                            com.oceanprotocol/keeper-contracts
                                                            commons-codec
                                                            org.bouncycastle/bcprov-jdk15on]]
