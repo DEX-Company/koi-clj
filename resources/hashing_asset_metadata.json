@@ -17,4 +17,4 @@
                "algorithm":{"type":"json",
                                  "position":1,
                                  "required":false}},
-		"results":{"hash_value":{"type":"asset"}}}}
+		"results":{"hash-value":{"type":"asset"}}}}
