@@ -40,7 +40,7 @@
                  :results [{:param-name :predictions
                             :type :asset
                             :content predictions}]}]
-        (info " result of predict-class " res)
+        ;(info " result of predict-class " res)
         res))))
 
 (deftype PredictIrisClass [jobs jobids]
