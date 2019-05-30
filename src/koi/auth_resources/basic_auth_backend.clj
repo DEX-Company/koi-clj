@@ -22,7 +22,7 @@
    field do double duty."
   [request {:keys [username password]}]
   (let [user-info (get-user-info username)]
-    (println " received basic auth request "[username password])
+    ;(println " received basic auth request "[username password])
     (when user-info 
       (:user-data user-info))))
 

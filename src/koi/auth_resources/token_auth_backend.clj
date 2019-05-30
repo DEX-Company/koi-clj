@@ -15,7 +15,6 @@
                          :authfn (fn[k cur-token ]
                                    (let [valid-tokens (-> generated-tokens deref vals set)
                                          resp (valid-tokens cur-token)]
-                                     (println " received token " cur-token)
                                      ;resp
                                      cur-token
                                      ))}))
