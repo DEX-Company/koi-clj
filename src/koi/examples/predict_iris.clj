@@ -1,4 +1,4 @@
-(ns koi.predict-iris
+(ns koi.examples.predict-iris
   (:require
    [clojure.spec.alpha :as sp]
    [starfish.core :as s]

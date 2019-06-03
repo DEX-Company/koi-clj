@@ -13,12 +13,12 @@
    [clojure.java.io :as io]
 
    [mount.core :refer [defstate]]
-   [koi.hashing :as h]
-   [koi.hashing-asset :as ha]
+   [koi.examples.hashing :as h]
+   [koi.examples.hashing-asset :as ha]
    ;[cemerick.friend :as friend]
-   [koi.failing-asset :as f]
-   [koi.prime-num :as p]
-   [koi.predict-iris :as iris]
+   [koi.examples.failing-asset :as f]
+   [koi.examples.prime-num :as p]
+   [koi.examples.predict-iris :as iris]
    [koi.utils :refer [remote-agent]]
    [taoensso.timbre :as timbre
     :refer [log  trace  debug  info  warn  error  fatal  report

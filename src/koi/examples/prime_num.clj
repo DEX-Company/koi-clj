@@ -1,4 +1,4 @@
-(ns koi.prime-num
+(ns koi.examples.prime-num
   (:require
    [clojure.spec.alpha :as sp]
    [starfish.core :as s]

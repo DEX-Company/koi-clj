@@ -1,4 +1,4 @@
-(ns koi.failing-asset
+(ns koi.examples.failing-asset
   (:require
    [clojure.spec.alpha :as sp]
    [starfish.core :as s]
