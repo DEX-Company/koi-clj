@@ -1,0 +1,15 @@
+{"dateCreated":"2019-05-07T08:17:31.521445Z",
+	"size":"3",
+	"contentType":"application/octet-stream",
+	"contentHash":"4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c46",
+	"tags":["translation"],
+	"license":"CC-BY",
+	"author":"German Translator  Inc",
+	"name":"translate german sentences to english",
+	"description":"translate german sentences to english",
+	"inLanguage":"en",
+	"type":"operation",
+ "operation":{
+     "modes":["sync","async"],
+		 "params":{"dataset":{"type":"asset"}},
+		 "results":{"translations":{"type":"asset"}}}}

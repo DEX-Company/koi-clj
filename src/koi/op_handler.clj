@@ -15,9 +15,9 @@
    [mount.core :refer [defstate]]
    [koi.examples.hashing :as h]
    [koi.examples.hashing-asset :as ha]
-   ;[cemerick.friend :as friend]
    [koi.examples.failing-asset :as f]
    [koi.examples.prime-num :as p]
+   [koi.examples.translate-german-to-en :as trans]
    [koi.examples.predict-iris :as iris]
    [koi.utils :refer [remote-agent]]
    [taoensso.timbre :as timbre
@@ -35,6 +35,7 @@
    :assethashing (ha/new-hashing jobs jobids)
    :primes (p/new-primes jobs jobids)
    :irisprediction (iris/new-iris-predictor jobs jobids)
+   :translation (trans/new-german-en-translator jobs jobids)
    :fail (f/new-failing jobs jobids)
    })
 
@@ -51,9 +52,10 @@
 
 (def example-metadata
   ["prime_asset_metadata.json" "hashing_asset_metadata.json"
-   "hashing_metadata.json" "irisprediction_metadata.json"])
+   "hashing_metadata.json" "irisprediction_metadata.json"
+   "translate_german_to_en_metadata.json"])
 
-(def example-dids [:primes :assethashing :hashing :irisprediction ])
+(def example-dids [:primes :assethashing :hashing :irisprediction :translation])
 (defn register-operations
   [sfr]
   (let [regd-ids 

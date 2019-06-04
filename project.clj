@@ -25,31 +25,19 @@
                  ;;components
                  [mount "0.1.12"]
 
-                 ;;crypto
-                 ;[mvxcvi/clj-pgp "0.9.0"]
-                                  ;;ring utilities
                  [ring "1.6.3"]
                  [metosin/ring-http-response "0.9.0"]
                  [metosin/muuntaja "0.5.0"]
                  [ring-cors "0.1.12"]
                  ;;schema tools such as descriptions
                  [metosin/spec-tools "0.8.2"]
-                 ;;should not be required post clojure 1.10
-                                        ;[org.clojure/spec.alpha "0.2.176"]
                  [mount "0.1.15"]
-                 ;;this one's license is LGPL
-                 ;[lispyclouds/clj-docker-client "0.1.11"]
-
-                 ;;[clj-zeppelin "0.1.1-SNAPSHOT"]
-
-                 ;;openrefine
-                 ;;[oceanprotocol/clj-openrefine "0.1.0-SNAPSHOT"]
                  [org.apache.httpcomponents/httpclient "4.5.5" :exclusions [commons-logging]]
 
                  ;;json schema
                  [metosin/scjsv "0.5.0"]
                  ;;starfish
-                 [sg.dex/starfish-clj "0.0.6-SNAPSHOT" :exclusions [com.fasterxml.jackson.core/jackson-annotations
+                 [sg.dex/starfish-clj "0.5.0" :exclusions [com.fasterxml.jackson.core/jackson-annotations
                                                            com.oceanprotocol/keeper-contracts
                                                            commons-codec
                                                            org.bouncycastle/bcprov-jdk15on]]
@@ -69,7 +57,6 @@
   :profiles {:test {;:jvm-opts ["-Dconfig.edn=resources/test-config.edn"]
                     :dependencies [[ring/ring-mock "0.3.2"]]
                     }
-             ;:dev {:dependencies [;;mocking [ring/ring-mock "0.3.2"]]}
              ;:prod {:jvm-opts ["-Dconfig.edn=resources/prod-config.edn"]}
              :default {:dependencies [[javax.servlet/javax.servlet-api "3.1.0"]]
                        :plugins [[lein-ring "0.12.5"] ]
@@ -79,6 +66,5 @@
              :uberjar{:aot :all 
                       :main koi.api}}
 
-  ;:plugins [[lein-ring "0.12.1"]]
   :ring { :handler koi.api/app }
 )
