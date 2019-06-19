@@ -1,4 +1,4 @@
-(ns koi.hashing-asset
+(ns koi.examples.hashing-asset
   (:require
    [clojure.spec.alpha :as sp]
    [starfish.core :as s]

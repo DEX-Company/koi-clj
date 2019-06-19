@@ -1,4 +1,4 @@
-(ns koi.hashing
+(ns koi.examples.hashing
   (:require
    [clojure.spec.alpha :as sp]
    [koi.protocols :as prot 
