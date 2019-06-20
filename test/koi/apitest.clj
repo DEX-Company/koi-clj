@@ -134,3 +134,27 @@
               res (s/asset-id remote-asset)
               rem-metadata (s/metadata remote-asset)]
           (is (=  (s/asset-id ast) res))))))
+
+(deftest filterrows 
+  (testing "Test request to filter rows"
+    (let [ifn (fn [max-ec](let [dset (slurp "https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/d546eaee765268bf2f487608c537c05e22e4b221/iris.csv")
+                      dset (str dset ",,,,,\n,,,,,\n")
+                      ast (s/memory-asset {"test" "dataset"} dset)
+                      remid (put-asset (:agent remote-agent) ast)
+
+                      response (app (-> (mock/request :post (str iripath "/invoke/filter-rows"))
+                                        (mock/content-type "application/json")
+                                        (mock/header "Authorization" (str "token " @token))
+                                        (mock/body (cheshire/generate-string {:dataset {:did remid}
+                                                                              :max-empty-columns max-ec}))))
+                      body     (parse-body (:body response))
+                      ret-dset (s/to-string (s/content (s/get-asset (:agent remote-agent) (-> body :results :filtered-dataset :did))))
+                      dset-rows (clojure.string/split ret-dset #"\n")]
+                            (count dset-rows)))]
+      ;;added 2 rows that are empty
+      ;;if max-empty-columns is 1, it should remove the 2 rows
+      (is (= 151 (ifn 1)))
+
+      ;;if max-empty-columns is 6, it should keep the 2 rows
+      (is (= 153 (ifn 6)))
+      )))

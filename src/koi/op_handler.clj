@@ -19,6 +19,7 @@
    [koi.examples.prime-num :as p]
    [koi.examples.translate-german-to-en :as trans]
    [koi.examples.predict-iris :as iris]
+   [koi.examples.filter-empty-rows :as filterrows]
    [koi.utils :refer [remote-agent]]
    [taoensso.timbre :as timbre
     :refer [log  trace  debug  info  warn  error  fatal  report
@@ -37,6 +38,7 @@
    :irisprediction (iris/new-iris-predictor jobs jobids)
    :translation (trans/new-german-en-translator jobs jobids)
    :fail (f/new-failing jobs jobids)
+   :filter-rows (filterrows/new-filter-rows jobs jobids)
    })
 
 (defstate service-registry :start (default-service-registry))
@@ -53,9 +55,10 @@
 (def example-metadata
   ["prime_asset_metadata.json" "hashing_asset_metadata.json"
    "hashing_metadata.json" "irisprediction_metadata.json"
-   "translate_german_to_en_metadata.json"])
+   "translate_german_to_en_metadata.json"
+   "filter_rows_metadata.json"])
 
-(def example-dids [:primes :assethashing :hashing :irisprediction :translation])
+(def example-dids [:primes :assethashing :hashing :irisprediction :translation :filter-rows])
 (defn register-operations
   [sfr]
   (let [regd-ids 
