@@ -70,17 +70,22 @@
         to-exec (execfn agent params)
         {:keys [dependencies results]} (to-exec)
         res (->> results
-                 (filter (fn[{:keys [type]}] (= :asset type)))
-                 (mapv (fn[{:keys [param-name content] :as c}]
-                         (let [metadata (invoke-metadata (name param-name) dependencies (JSON/toString params))
-                               asset (s/asset (s/memory-asset metadata content))
-                               reg-asset-id (put-asset agent asset)]
-                           {param-name {:did
-                                        ;;(str (:did remote-agent) "/" reg-asset-id)
-                                        ;;when the caller uses universal resolver, put this back
-                                        ;;else the caller cannot find the asset thanks to non-unique DIDs for
-                                        ;;Surfer
-                                        reg-asset-id}})))
+                 ;(filter (fn[{:keys [type]}] (= :asset type)))
+                 (mapv (fn[{:keys [param-name content type
+                                   metadata] :or {metadata {}} :as c}]
+                         (if (= type :asset)
+                           (let [inv-metadata (invoke-metadata (name param-name) dependencies (JSON/toString params))
+                                 asset (s/asset (s/memory-asset (merge metadata
+                                                                       inv-metadata)
+                                                                content))
+                                 reg-asset-id (put-asset agent asset)]
+                             {param-name {:did
+                                          ;;(str (:did remote-agent) "/" reg-asset-id)
+                                          ;;when the caller uses universal resolver, put this back
+                                          ;;else the caller cannot find the asset thanks to non-unique DIDs for
+                                          ;;Surfer
+                                          reg-asset-id}})
+                           {param-name content})))
                  (apply merge))]
     {:results res }))
 

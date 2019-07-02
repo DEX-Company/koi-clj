@@ -1,4 +1,4 @@
-(defproject sg.dex/koi-clj "0.1.3"
+(defproject sg.dex/koi-clj "0.1.4"
   :description "Ocean Invoke API implementation in Clojure"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
@@ -49,7 +49,10 @@
                  ;;auth
                  [buddy/buddy-auth "2.1.0" :exclusions [org.clojure/clojure org.bouncycastle/bcprov-jdk15on]]
                  [org.bouncycastle/bcprov-jdk15on "1.61"]
-                 
+
+                 ;;csv manipulation
+                 [net.mikera/core.matrix "0.58.0"]
+                 [org.clojure/data.csv "0.1.4"]
                  ]
 
   :source-paths ["src/"]

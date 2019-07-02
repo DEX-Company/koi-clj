@@ -1,5 +1,5 @@
 {
- :agent-url #or [#env AGENT_URL "http://localhost:8080/" ]
+ :agent-url #or [#env AGENT_URL "http://52.187.164.74:8080" ]
  :username "Aladdin"
  :password "OpenSesame"
  }

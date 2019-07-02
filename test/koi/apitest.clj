@@ -10,6 +10,9 @@
              [clojure.walk :refer [keywordize-keys]]
              [koi.op-handler :as oph :refer [service-registry ]]
              [koi.api :as api :refer [app]]
+             [clojure.data.json :as json]
+             [clojure.zip :as zip]
+             [clojure.java.io :as io]
              [mount.core :as mount])
   (:import [sg.dex.crypto Hash]))
 
@@ -134,3 +137,86 @@
               res (s/asset-id remote-asset)
               rem-metadata (s/metadata remote-asset)]
           (is (=  (s/asset-id ast) res))))))
+
+(deftest filterrows 
+  (testing "Test request to filter rows"
+    (let [ifn (fn [max-ec](let [dset (slurp "https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/d546eaee765268bf2f487608c537c05e22e4b221/iris.csv")
+                      dset (str dset ",,,,,\n,,,,,\n")
+                      ast (s/memory-asset {"test" "dataset"} dset)
+                      remid (put-asset (:agent remote-agent) ast)
+
+                      response (app (-> (mock/request :post (str iripath "/invoke/filter-rows"))
+                                        (mock/content-type "application/json")
+                                        (mock/header "Authorization" (str "token " @token))
+                                        (mock/body (cheshire/generate-string {:dataset {:did remid}
+                                                                              :max-empty-columns max-ec}))))
+                      body     (parse-body (:body response))
+                      ret-dset (s/to-string (s/content (s/get-asset (:agent remote-agent) (-> body :results :filtered-dataset :did))))
+                      dset-rows (clojure.string/split ret-dset #"\n")]
+                            (count dset-rows)))]
+      ;;added 2 rows that are empty
+      ;;if max-empty-columns is 1, it should remove the 2 rows
+      (is (= 151 (ifn 1)))
+
+      ;;if max-empty-columns is 6, it should keep the 2 rows
+      (is (= 153 (ifn 6)))
+      )))
+
+(deftest workshop-join
+  (testing "Test request to join car and workshop data"
+    (let [vpath (io/resource "car.json")
+          wpath (io/resource "maint.json")
+          veh-dset (s/memory-asset {"abc" "123"} (slurp "https://raw.githubusercontent.com/DEX-Company/sgcarmart-datacleaning/master/car_datasets/SJR8961K-content.json?token=AAAVX5AY5YMZGS2Q6QASUZK5EPX6K"))
+          w-dset (s/memory-asset {"workshop" "dataset"} (slurp "https://raw.githubusercontent.com/DEX-Company/sgcarmart-datacleaning/master/car_datasets/maintenance.json?token=AAAVX5DSCGLGERBS652LFCS5EPYAY"))
+          veh-id (put-asset (:agent remote-agent) veh-dset)
+          w-id (put-asset (:agent remote-agent) w-dset)
+
+          response (app (-> (mock/request :post (str iripath "/invoke/workshop-join-cars"))
+                            (mock/content-type "application/json")
+                            (mock/header "Authorization" (str "token " @token))
+                            (mock/body (cheshire/generate-string
+                                        {:vehicle-dataset {:did veh-id}
+                                         :workshop-dataset {:did w-id}}))))
+          body     (parse-body (:body response))
+          ret-did (-> body :results :joined-dataset :did)
+          ret-asset (s/get-asset (:agent remote-agent) (-> body :results :joined-dataset :did))
+          ret-dset (s/to-string (s/content ret-asset))
+          ]
+      (is (not (empty? ret-dset)))
+      (is (vector? (get (json/read-str ret-dset) "maintenance")))
+      (is (= 4 (count (get (json/read-str ret-dset) "maintenance"))))
+      ;;test if car metadata is set
+      (is (= "123" (:abc (s/metadata ret-asset)))))))
+
+(deftest prov-retrieval
+  (testing "retrieval"
+    (let [vpath (io/resource "veh.json")
+              wpath (io/resource "workshop.json")
+              veh-dset (s/memory-asset {"cars" "dataset"
+                                        ;"provenance" {"prov-attribute" "value1"}
+                                        } (slurp vpath))
+              w-dset (s/memory-asset {"workshop" "dataset"
+                                     ; "provenance" {"prov-attribute" "value2"}
+                                      }
+                                     (slurp wpath))
+              veh-id (put-asset (:agent remote-agent) veh-dset)
+              w-id (put-asset (:agent remote-agent) w-dset)
+
+              response (app (-> (mock/request :post (str iripath "/invoke/workshop-join-cars"))
+                                (mock/content-type "application/json")
+                                (mock/header "Authorization" (str "token " @token))
+                                (mock/body (cheshire/generate-string
+                                            {:vehicle-dataset {:did veh-id}
+                                             :workshop-dataset {:did w-id}}))))
+              body     (parse-body (:body response))
+              resp-did (-> body :results :joined-dataset :did) 
+              res (s/metadata (s/get-asset (:agent remote-agent) resp-did))
+              response2 (app (-> (mock/request :post (str iripath "/invoke/prov"))
+                                (mock/content-type "application/json")
+                                (mock/header "Authorization" (str "token " @token))
+                                (mock/body (cheshire/generate-string
+                                            {:asset {:did resp-did}}))))
+          body     (parse-body (:body response2))]
+      (is (not (nil? (-> body :results :prov-tree))))
+      (is (not (nil? ((json/read-str (-> body :results :prov-tree))
+                      "derived-from")))))))
