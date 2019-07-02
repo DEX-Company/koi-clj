@@ -166,8 +166,8 @@
   (testing "Test request to join car and workshop data"
     (let [vpath (io/resource "car.json")
           wpath (io/resource "maint.json")
-          veh-dset (s/memory-asset {"cars" "dataset"} (slurp vpath))
-          w-dset (s/memory-asset {"workshop" "dataset"} (slurp wpath))
+          veh-dset (s/memory-asset {"abc" "123"} (slurp "https://raw.githubusercontent.com/DEX-Company/sgcarmart-datacleaning/master/car_datasets/SJR8961K-content.json?token=AAAVX5AY5YMZGS2Q6QASUZK5EPX6K"))
+          w-dset (s/memory-asset {"workshop" "dataset"} (slurp "https://raw.githubusercontent.com/DEX-Company/sgcarmart-datacleaning/master/car_datasets/maintenance.json?token=AAAVX5DSCGLGERBS652LFCS5EPYAY"))
           veh-id (put-asset (:agent remote-agent) veh-dset)
           w-id (put-asset (:agent remote-agent) w-dset)
 
@@ -178,13 +178,15 @@
                                         {:vehicle-dataset {:did veh-id}
                                          :workshop-dataset {:did w-id}}))))
           body     (parse-body (:body response))
-          ret-dset (s/to-string (s/content (s/get-asset (:agent remote-agent) (-> body :results :joined-dataset :did))))
+          ret-did (-> body :results :joined-dataset :did)
+          ret-asset (s/get-asset (:agent remote-agent) (-> body :results :joined-dataset :did))
+          ret-dset (s/to-string (s/content ret-asset))
           ]
-      ;(println " returned data " )
       (is (not (empty? ret-dset)))
       (is (vector? (get (json/read-str ret-dset) "maintenance")))
       (is (= 4 (count (get (json/read-str ret-dset) "maintenance"))))
-      )))
+      ;;test if car metadata is set
+      (is (= "123" (:abc (s/metadata ret-asset)))))))
 
 (deftest prov-retrieval
   (testing "retrieval"

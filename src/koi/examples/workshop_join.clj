@@ -52,6 +52,7 @@
           res {:dependencies assets 
                :results [{:param-name :joined-dataset
                           :type :asset
+                          :metadata (-> assets first s/metadata)
                           :content joined-dset}]}]
       (info " result of join-dataset " res)
       res)))

@@ -71,10 +71,13 @@
         {:keys [dependencies results]} (to-exec)
         res (->> results
                  ;(filter (fn[{:keys [type]}] (= :asset type)))
-                 (mapv (fn[{:keys [param-name content type] :as c}]
+                 (mapv (fn[{:keys [param-name content type
+                                   metadata] :or {metadata {}} :as c}]
                          (if (= type :asset)
-                           (let [metadata (invoke-metadata (name param-name) dependencies (JSON/toString params))
-                                 asset (s/asset (s/memory-asset metadata content))
+                           (let [inv-metadata (invoke-metadata (name param-name) dependencies (JSON/toString params))
+                                 asset (s/asset (s/memory-asset (merge metadata
+                                                                       inv-metadata)
+                                                                content))
                                  reg-asset-id (put-asset agent asset)]
                              {param-name {:did
                                           ;;(str (:did remote-agent) "/" reg-asset-id)
