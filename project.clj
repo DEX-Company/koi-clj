@@ -1,4 +1,4 @@
-(defproject sg.dex/koi-clj "0.1.3"
+(defproject sg.dex/koi-clj "0.1.4"
   :description "Ocean Invoke API implementation in Clojure"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
