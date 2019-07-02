@@ -164,8 +164,8 @@
 
 (deftest workshop-join
   (testing "Test request to join car and workshop data"
-    (let [vpath (io/resource "veh.json")
-          wpath (io/resource "workshop.json")
+    (let [vpath (io/resource "car.json")
+          wpath (io/resource "maint.json")
           veh-dset (s/memory-asset {"cars" "dataset"} (slurp vpath))
           w-dset (s/memory-asset {"workshop" "dataset"} (slurp wpath))
           veh-id (put-asset (:agent remote-agent) veh-dset)
@@ -182,7 +182,9 @@
           ]
       ;(println " returned data " )
       (is (not (empty? ret-dset)))
-      (is (vector? (get (json/read-str ret-dset) "workshop-visits"))))))
+      (is (vector? (get (json/read-str ret-dset) "maintenance")))
+      (is (= 4 (count (get (json/read-str ret-dset) "maintenance"))))
+      )))
 
 (deftest prov-retrieval
   (testing "retrieval"
