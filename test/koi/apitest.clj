@@ -11,6 +11,7 @@
              [koi.op-handler :as oph :refer [service-registry ]]
              [koi.api :as api :refer [app]]
              [clojure.data.json :as json]
+             [clojure.zip :as zip]
              [clojure.java.io :as io]
              [mount.core :as mount])
   (:import [sg.dex.crypto Hash]))
@@ -163,8 +164,8 @@
 
 (deftest workshop-join
   (testing "Test request to join car and workshop data"
-    (let [vpath (io/resource "veh.json")
-          wpath (io/resource "workshop.json")
+    (let [vpath (io/resource "car.json")
+          wpath (io/resource "maint.json")
           veh-dset (s/memory-asset {"cars" "dataset"} (slurp vpath))
           w-dset (s/memory-asset {"workshop" "dataset"} (slurp wpath))
           veh-id (put-asset (:agent remote-agent) veh-dset)
@@ -181,4 +182,39 @@
           ]
       ;(println " returned data " )
       (is (not (empty? ret-dset)))
-      (is (vector? (get (json/read-str ret-dset) "workshop-visits"))))))
+      (is (vector? (get (json/read-str ret-dset) "maintenance")))
+      (is (= 4 (count (get (json/read-str ret-dset) "maintenance"))))
+      )))
+
+(deftest prov-retrieval
+  (testing "retrieval"
+    (let [vpath (io/resource "veh.json")
+              wpath (io/resource "workshop.json")
+              veh-dset (s/memory-asset {"cars" "dataset"
+                                        ;"provenance" {"prov-attribute" "value1"}
+                                        } (slurp vpath))
+              w-dset (s/memory-asset {"workshop" "dataset"
+                                     ; "provenance" {"prov-attribute" "value2"}
+                                      }
+                                     (slurp wpath))
+              veh-id (put-asset (:agent remote-agent) veh-dset)
+              w-id (put-asset (:agent remote-agent) w-dset)
+
+              response (app (-> (mock/request :post (str iripath "/invoke/workshop-join-cars"))
+                                (mock/content-type "application/json")
+                                (mock/header "Authorization" (str "token " @token))
+                                (mock/body (cheshire/generate-string
+                                            {:vehicle-dataset {:did veh-id}
+                                             :workshop-dataset {:did w-id}}))))
+              body     (parse-body (:body response))
+              resp-did (-> body :results :joined-dataset :did) 
+              res (s/metadata (s/get-asset (:agent remote-agent) resp-did))
+              response2 (app (-> (mock/request :post (str iripath "/invoke/prov"))
+                                (mock/content-type "application/json")
+                                (mock/header "Authorization" (str "token " @token))
+                                (mock/body (cheshire/generate-string
+                                            {:asset {:did resp-did}}))))
+          body     (parse-body (:body response2))]
+      (is (not (nil? (-> body :results :prov-tree))))
+      (is (not (nil? ((json/read-str (-> body :results :prov-tree))
+                      "derived-from")))))))

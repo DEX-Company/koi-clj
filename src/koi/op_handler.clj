@@ -21,6 +21,7 @@
    [koi.examples.predict-iris :as iris]
    [koi.examples.filter-empty-rows :as filterrows]
    [koi.examples.workshop-join :as wk]
+   [koi.examples.prov-tree-traversal :as prov]
    [koi.utils :refer [remote-agent]]
    [taoensso.timbre :as timbre
     :refer [log  trace  debug  info  warn  error  fatal  report
@@ -41,7 +42,7 @@
    :fail (f/new-failing jobs jobids)
    :filter-rows (filterrows/new-filter-rows jobs jobids)
    :workshop-join-cars (wk/new-join-cars-dataset jobs jobids)
-   })
+   :prov (prov/new-prov-tree jobs jobids)})
 
 (defstate service-registry :start (default-service-registry))
 
@@ -59,10 +60,15 @@
    "hashing_metadata.json" "irisprediction_metadata.json"
    "translate_german_to_en_metadata.json"
    "filter_rows_metadata.json"
-   "join_cars_metadata.json"])
+   "join_cars_metadata.json"
+   "prov_tree_metadata.json"
+   ])
 
-(def example-dids [:primes :assethashing :hashing :irisprediction :translation :filter-rows
-                   :workshop-join-cars])
+(def example-dids [:primes :assethashing :hashing :irisprediction
+                   :translation :filter-rows
+                   :workshop-join-cars
+                   :prov])
+
 (defn register-operations
   [sfr]
   (let [regd-ids 

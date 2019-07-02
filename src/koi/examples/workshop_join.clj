@@ -30,21 +30,16 @@
 (sp/def ::params (sp/keys :req-un [::vehicle-dataset
                                    ::workshop-dataset]))
 
+(def join-key "vin")
 (defn join-datasets
   [veh-dset workshop-dset]
   (let [veh (json/read-str veh-dset)
         wksp (json/read-str workshop-dset)
-        wksp-details (get wksp "details")
         wksp-data 
-        (->> (get wksp "jobs")
-             (filterv #(= (get veh "aid") (get % "aid")))
-             (mapv #(select-keys % ["data" "date"]))
-             (mapv #(let [d (dissoc % "date")]
-                      {"workshop"
-                       (assoc d "info" (merge wksp-details {"date" (get % "date")}))})))]
-    (json/write-str (assoc veh "workshop-visits" wksp-data))))
-
-
+        (->> (get wksp "maintenance")
+             (filterv #(= (get veh join-key) (get % join-key)))
+             (mapv #(dissoc % join-key)))]
+    (json/write-str (assoc veh "maintenance" wksp-data))))
 
 (defn join-dataset-fn 
   [agent {:keys [vehicle-dataset workshop-dataset]}]

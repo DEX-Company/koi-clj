@@ -1,0 +1,633 @@
+{ "maintenance": [
+        {
+            "title": "LTA Inspection",
+            "class": "inspection",
+            "date": "2015-11-28",
+    	    "vin": "WBAWB320X0PV53794",
+            "provider": {
+                "name": "VICOM Inspection Centre",
+                "address": "Bukit Batok Street 23, Singapore 659545"
+            },
+            "log": [
+                {
+                    "class": "general-pass",
+                    "title": "General - Pass",
+                    "description": "Bodywork, Windscreen/Window glass"
+                },
+                {
+                    "class": "inspection-service",
+                    "title": "Brake - Serviced",
+                    "description": "Brake pedal, Brake hose/pipe/cylinders"
+                    "parts": [
+                        {
+                            "part-number": "Z-PARTS",
+                            "description": "BRAKE PAD FR"
+                        }
+                    ],
+                    "service": [
+                        {
+                            "description": "WORKMANSHIP",
+                            "code": "Z-SERVICE"
+                        }
+                    ]
+                },
+                {
+                    "class": "engine-passed",
+                    "title": "Engine and Transmission - Pass",
+                    "description": "Engine brackets/mounting oil/oil leaks, Propeller shaft"
+                },
+                {
+                    "class": "inspection-pass",
+                    "title": "Lighting Equipment - Pass",
+                    "description": "Headlamps, Stop lamps, Directional indicators, Reflectors"
+                },
+                {
+                    "class": "suspension-pass",
+                    "title": "Suspension System - Pass",
+                    "description": "Steering linkages, ball joints, power steering"
+                },
+                {
+                    "class": "wheel-service",
+                    "title": "Tyre and Road Wheel - Serviced",
+                    "description": "Tyres, road wheels"
+                    "parts": [
+                        {
+                            "part-number": "HT000009",
+                            "description": "JR 155R12 C8 88/86N WR082 CHN"
+                        },
+                        {
+                            "part-number": "HT000060",
+                            "description": "JR 195R15 C8 106/104Q WR082 CHN"
+                        },
+                        {
+                            "part-number": "HT001860",
+                            "description": "MI 305/30R19  102Y XL PILOT SPORT 4 S   USA"
+                        }
+                    ],
+                    "service": [
+                        {
+                            "description": "TYRE FITMENT",
+                            "code": "SERVICE003"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "LTA Inspection",
+            "class": "inspection",
+            "date": "2017-12-07",
+    	    "vin": "WBAWB320X0PV53794",
+            "provider": {
+                "name": "VICOM Inspection Centre",
+                "address": "Bukit Batok Street 23, Singapore 659545"
+            },
+            "log": [
+                {
+                    "class": "general-pass",
+                    "title": "General - Pass",
+                    "description": "Bodywork, Windscreen/Window glass"
+                },
+                {
+                    "class": "inspection-pass",
+                    "title": "Brake - Pass",
+                    "description": "Brake pedal, Brake hose/pipe/cylinders"
+                },
+                {
+                    "class": "engine-service",
+                    "title": "Engine and Transmission - Serviced",
+                    "description": "Engine brackets/mounting oil/oil leaks, Propeller shaft"
+                    "parts": [
+                        {
+                            "part-number": "Z-PARTS",
+                            "description": "LM INJECTION CLEANER"
+                        },
+                        {
+                            "part-number": "Z-PARTS",
+                            "description": "LM ENGINE FLUSH PLUS"
+                        },
+                        {
+                            "part-number": "Z-PARTS",
+                            "description": "LM OIL ADDITIVE"
+                        }
+                    ],
+                    "service": [
+                        {
+                            "description": "OIL CHANGE",
+                            "code": "SERVICE006"
+                        }
+                    ]
+                },
+                {
+                    "class": "inspection-pass",
+                    "title": "Lighting Equipment - Pass",
+                    "description": "Headlamps, Stop lamps, Directional indicators, Reflectors"
+                },
+                {
+                    "class": "suspension-pass",
+                    "title": "Suspension System - Pass",
+                    "description": "Steering linkages, ball joints, power steering"
+                },
+                {
+                    "class": "wheel-pass",
+                    "title": "Tyre and Road Wheel - Pass",
+                    "description": "Tyres, road wheels"
+                }
+            ]
+        },
+        {
+            "title": "Service",
+            "class": "service",
+            "date": "2011-05-11",
+    	    "vin": "WBAWB320X0PV53794",
+            "provider": {
+                "name": "BVO Automotive",
+                "address": "Sin Ming Industrial Est Sector A, Singapore 575673"
+            },
+            "log": [
+                {
+                    "class": "service",
+                    "title": "Tyre and Road Wheels - Service",
+                    "parts": [
+                        {
+                            "part-number": "HT001945",
+                            "description": "GY 195/55R20  95H XL EFFICIENT GRIP PF EUR"
+                        }
+                    ],
+                    "service": [
+                        {
+                            "description": "REPLACE BUMPER",
+                            "code": "Z-SERVICE"
+                        },
+                        {
+                            "description": "TYRE FITMENT-FOC",
+                            "code": "SERVICE003"
+                        },
+                        {
+                            "description": "TYRE BALANCING/ROTATION-FOC",
+                            "code": "SERVICE002"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Service",
+            "class": "service",
+            "date": "2014-01-05",
+    	    "vin": "WBAWB320X0PV53794",
+            "provider": {
+                "name": "BVO Automotive",
+                "address": "Sin Ming Industrial Est Sector A, Singapore 575673"
+            },
+            "log": [
+                {
+                    "class": "service",
+                    "title": "Engine and Transmission - Service",
+                    "parts": [
+                        {
+                            "part-number": "LUBE010",
+                            "description": "MBL 4 LITRE   SYNTHETIC 5W30"
+                        },
+                        {
+                            "part-number": "PART002",
+                            "description": "OIL FILTER"
+                        },
+                        {
+                            "part-number": "PART004",
+                            "description": "AIR FILTER"
+                        }
+                    ],
+                    "service": [
+                        {
+                            "description": "OIL CHANGE",
+                            "code": "SERVICE006"
+                        },
+                        {
+                            "description": "WORKMANSHIP",
+                            "code": "Z-SERVICE"
+                        }
+                    ]
+                }
+            ]
+        },
+{
+            "title": "Pre-delivery Inspection",
+            "class": "inspection",
+            "date": "2009-10-28",
+    "vin": "WBAWB32050PV54013",
+            "provider": {
+                "name": "Performance Motors Service Centre",
+                "address": "Alexandra Rd, Singapore 159944"
+            },
+            "log": [
+                {
+                    "class": "general-pass",
+                    "title": "General - Pass",
+                    "description": "Bodywork, Windscreen/Window glass"
+                },
+                {
+                    "class": "inspection-service",
+                    "title": "Brake - Pass",
+                    "description": "Brake pedal, Brake hose/pipe/cylinders"
+                },
+                {
+                    "class": "engine-passed",
+                    "title": "Engine and Transmission - Pass",
+                    "description": "Engine brackets/mounting oil/oil leaks, Propeller shaft"
+                },
+                {
+                    "class": "inspection-pass",
+                    "title": "Lighting Equipment - Pass",
+                    "description": "Headlamps, Stop lamps, Directional indicators, Reflectors"
+                },
+                {
+                    "class": "suspension-pass",
+                    "title": "Suspension System - Pass",
+                    "description": "Steering linkages, ball joints, power steering"
+                },
+                {
+                    "class": "wheel-pass",
+                    "title": "Tyre and Road Wheel - Pass",
+                    "description": "Tyres, road wheels"
+                }
+            ]
+        },
+{
+            "title": "LTA Inspection",
+            "class": "inspection",
+            "date": "2013-07-21",
+    "vin": "WBAWB32050PV54013",
+            "provider": {
+                "name": "VICOM Inspection Centre",
+                "address": "Bukit Batok Street 23, Singapore 659545"
+            },
+            "log": [
+                {
+                    "class": "general-pass",
+                    "title": "General - Pass",
+                    "description": "Bodywork, Windscreen/Window glass"
+                },
+                {
+                    "class": "inspection-pass",
+                    "title": "Brake - Pass",
+                    "description": "Brake pedal, Brake hose/pipe/cylinders"
+                },
+                {
+                    "class": "engine-service",
+                    "title": "Engine and Transmission - Serviced",
+                    "description": "Engine brackets/mounting oil/oil leaks, Propeller shaft"
+                    "parts": [
+                        {
+                            "part-number": "LUBE014",
+                            "description": "SHL RIMULA R4 15W-40   "
+                        },
+                        {
+                            "part-number": "PART002",
+                            "description": "OIL FILTER"
+                        }
+                    ],
+                    "service": [
+                        {
+                            "description": "OIL CHANGE",
+                            "code": "SERVICE006"
+                        }
+                    ]
+                },
+                {
+                    "class": "inspection-pass",
+                    "title": "Lighting Equipment - Pass",
+                    "description": "Headlamps, Stop lamps, Directional indicators, Reflectors"
+                },
+                {
+                    "class": "suspension-pass",
+                    "title": "Suspension System - Pass",
+                    "description": "Steering linkages, ball joints, power steering"
+                },
+                {
+                    "class": "wheel-pass",
+                    "title": "Tyre and Road Wheel - Pass",
+                    "description": "Tyres, road wheels"
+                }
+            ]
+        },
+{
+            "title": "Service",
+            "class": "service",
+            "date": "2016-04-19",
+    "vin": "WBAWB32050PV54013",
+            "provider": {
+                "name": "Codewerx",
+                "address": "Kaki Bukit Ave 4, Singapore 415875"
+            },
+            "log": [
+                {
+                    "class": "service",
+                    "title": "Tyre and Road Wheels and Lighting - Service",
+                    "parts": [
+                        {
+                            "part-number": "Z-PARTS",
+                            "description": "PHILIP BULB T20W W21W 12V"
+                        },
+                        {
+                            "part-number": "Z-PARTS",
+                            "description": "PHILIP BULB - 504 12V"
+                        },
+                        {
+                            "part-number": "HT000410",
+                            "description": "MI 205/55R16 91V EN SAVER TI EUR"
+                        }
+                    ],
+                    "service": [
+                        {
+                            "description": "WHEEL ALIGNMENT",
+                            "code": "SERVICE001"
+                        },
+                        {
+                            "description": "TYRE FITMENT",
+                            "code": "SERVICE003"
+                        }
+                    ]
+                }
+            ]
+        },
+{
+            "title": "Service",
+            "class": "service",
+            "date": "2017-10-10",
+    "vin": "WBAWB32050PV54013",
+            "provider": {
+                "name": "Performance Motors Service Centre",
+                "address": "Alexandra Rd, Singapore 159944"
+            },
+            "log": [
+                {
+                    "class": "service",
+                    "title": "Braking System - Service",
+                    "parts": [
+                        {
+                            "part-number": "SP00010",
+                            "description": "SPARK PLUG"
+                        },
+                        {
+                            "part-number": "PART0101",
+                            "description": "AUXILLARY BELT"
+                        },
+                        {
+                            "part-number": "PART0076",
+                            "description": "HINGE BUSHING"
+                        },
+                        {
+                            "part-number": "Z-PART",
+                            "description": "FUEL FILTER"
+                        },
+                        {
+                            "part-number": "PART0274",
+                            "description": "FUEL PUMP RELAY"
+                        },
+                        {
+                            "part-number": "PART0552",
+                            "description": "HOSE CLAMP"
+                        },
+                        {
+                            "part-number": "Z-PART",
+                            "description": "CLAMP"
+                        }
+                    ],
+                    "service": [
+                        {
+                            "description": "BRAKE SERVICE",
+                            "code": "SERVICE021"
+                        },
+                        {
+                            "description": "RADIATOR SERVICE",
+                            "code": "SERVICE035"
+                        },
+                        {
+                            "description": "WORKMANSHIP",
+                            "code": "Z-SERVICE"
+                        }
+                    ]
+                }
+            ]
+        },
+
+{
+            "title": "Pre-delivery Inspection",
+            "class": "inspection",
+            "date": "2012-11-30",
+    "vin": "WBAKE32090E773056",
+            "provider": {
+                "name": "Performance Motors Service Centre",
+                "address": "Alexandra Rd, Singapore 159944"
+            },
+            "log": [
+                {
+                    "class": "general-pass",
+                    "title": "General - Pass",
+                    "description": "Bodywork, Windscreen/Window glass"
+                },
+                {
+                    "class": "inspection-pass",
+                    "title": "Brake - Passed",
+                    "description": "Brake pedal, Brake hose/pipe/cylinders"
+                },
+                {
+                    "class": "engine-passed",
+                    "title": "Engine and Transmission - Pass",
+                    "description": "Engine brackets/mounting oil/oil leaks, Propeller shaft"
+                    "service": [
+                        {
+                            "description": "WORKMANSHIP",
+                            "code": "Z-SERVICE"
+                        }
+                    ]
+                },
+                {
+                    "class": "inspection-pass",
+                    "title": "Lighting Equipment - Pass",
+                    "description": "Headlamps, Stop lamps, Directional indicators, Reflectors"
+                },
+                {
+                    "class": "suspension-pass",
+                    "title": "Suspension System - Pass",
+                    "description": "Steering linkages, ball joints, power steering"
+                },
+                {
+                    "class": "wheel-service",
+                    "title": "Tyre and Road Wheel - Serviced",
+                    "description": "Tyres, road wheels"
+                    "service": [
+                        {
+                            "description": "WHEEL ALIGNMENt",
+                            "code": "SERVICE001"
+                        }
+                    ]
+                }
+            ]
+        },
+
+{
+            "title": "LTA Inspection",
+            "class": "inspection",
+            "date": "2017-10-5",
+    "vin": "WBAKE32090E773056",
+            "provider": {
+                "name": "VICOM Inspection Centre",
+                "address": "Bukit Batok Street 23, Singapore 659545"
+            },
+            "log": [
+                {
+                    "class": "general-service",
+                    "title": "General - Serviced",
+                    "description": "Bodywork, Windscreen/Window glass"
+                    "parts": [
+                        {
+                            "part-number": "Z-PARTS",
+                            "description": "AIR-COND FILTER"
+                        },
+                        {
+                            "part-number": "PART004",
+                            "description": "AIR FILTER"
+                        },
+                        {
+                            "part-number": "HT000060",
+                            "description": "JR 195R15 C8 106/104Q WR082 CHN"
+                        }
+                    ],
+                    "service": [
+                        {
+                            "description": "REPLACE BUMPER",
+                            "code": "Z-SERVICE"
+                        }
+                    ]
+                },
+                {
+                    "class": "inspection-pass",
+                    "title": "Brake - Pass",
+                    "description": "Brake pedal, Brake hose/pipe/cylinders"
+                },
+                {
+                    "class": "engine-pass",
+                    "title": "Engine and Transmission - Pass",
+                    "description": "Engine brackets/mounting oil/oil leaks, Propeller shaft"
+                },
+                {
+                    "class": "inspection-pass",
+                    "title": "Lighting Equipment - Pass",
+                    "description": "Headlamps, Stop lamps, Directional indicators, Reflectors"
+                },
+                {
+                    "class": "suspension-pass",
+                    "title": "Suspension System - Pass",
+                    "description": "Steering linkages, ball joints, power steering"
+                },
+                {
+                    "class": "wheel-service",
+                    "title": "Tyre and Road Wheel - Serviced",
+                    "description": "Tyres, road wheels"
+                    "parts": [
+                        {
+                            "part-number": "HT000410",
+                            "description": "MI 205/55R16 91V EN SAVER TI EUR"
+                        }
+                    ],
+                    "service": [
+                        {
+                            "description": "TYRE REPAIR (EXTERNAL)",
+                            "code": "SERVICE005"
+                        },
+                        {
+                            "description": "TYRE FITMENT-FOC",
+                            "code": "SERVICE003"
+                        },
+                    ]
+                }
+            ]
+        },
+{
+            "title": "Service",
+            "class": "service",
+            "date": "2018-04-12",
+    "vin": "WBAKE32090E773056",
+            "provider": {
+                "name": "Performance Motors Service Centre",
+                "address": "Alexandra Rd, Singapore 159944"
+            },
+            "log": [
+                {
+                    "class": "service",
+                    "title": "Tyre and Road Wheels - Service",
+                    "parts": [
+                        {
+                            "part-number": "PART0102",
+                            "description": "REAR LEFT SPEED SENSOR"
+                        },
+                        {
+                            "part-number": "PART021",
+                            "description": "BOLTS"
+                        }
+                    ],
+                    "service": [
+                        {
+                            "description": "WORKMANSHIP",
+                            "code": "Z-SERVICE"
+                        },
+                        {
+                            "description": "GFF/GUIDED FUNCTION",
+                            "code": "SERVICE051"
+                        }
+                    ]
+                }
+            ]
+        },
+{
+            "title": "Service",
+            "class": "service",
+            "date": "2015-05-18",
+    "vin": "WBAKE32090E773056",
+            "provider": {
+                "name": "Performance Motors Service Centre",
+                "address": "Alexandra Rd, Singapore 159944"
+            },
+            "log": [
+                {
+                    "class": "service",
+                    "title": "Tyre and Road Wheels - Service",
+                    "parts": [
+                        {
+                            "part-number": "PART0002",
+                            "description": "OIL FILTER"
+                        },
+                        {
+                            "part-number": "PART0011",
+                            "description": "PLUG"
+                        },
+                        {
+                            "part-number": "PART0023",
+                            "description": "CLEANER WINDSHIELD"
+                        },
+                        {
+                            "part-number": "PART0007",
+                            "description": "WASHER"
+                        }
+                    ],
+                    "service": [
+                        {
+                            "description": "WORKMANSHIP",
+                            "code": "Z-SERVICE"
+                        },
+                        {
+                            "description": "COMPLIMENTARY CARWASH",
+                            "code": "SERVICE012"
+                        },
+                        {
+                            "description": "OIL CHANGE",
+                            "code": "SERVICE006"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
