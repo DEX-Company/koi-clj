@@ -64,8 +64,10 @@
                       {:summary "Run an sync operation"
                        :parameters {:body ::params}
                        :responses {200 {:schema spec/any?}
+                                   201 {:schema spec/any?}
+                                   404 {:schema spec/any?}
                                    500 {:schema spec/any?}
-                                   201 {:schema spec/any?}}
+                                   }
                        :handler oph/invoke-handler}}))
 
            (context "/invokeasync/:did" []
@@ -77,7 +79,9 @@
                       {:summary "Run an async operation"
                        :parameters {:body ::params}
                        :responses {200 {:schema spec/any?}
-                                   201 {:schema spec/any?}}
+                                   201 {:schema spec/any?}
+                                   404 {:schema spec/any?}
+                                   500 {:schema spec/any?}}
                        :handler (partial oph/invoke-handler true)}}))
 
            (context "/jobs/:jobid" []
@@ -88,6 +92,7 @@
                       {:summary "get the status of a job"
                        :responses {200 {:schema spec/any?}
                                    422 {:schema spec/any?}
+                                   404 {:schema spec/any?}
                                    500 {:schema spec/any?}}
                        :handler oph/result-handler}}))))
 

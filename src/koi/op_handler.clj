@@ -8,7 +8,8 @@
     :refer [invoke-sync
             invoke-async
             get-params]]
-   [ring.util.http-response :as http-response :refer [ok header created unprocessable-entity]]
+   [ring.util.http-response :as http-response :refer [ok header created unprocessable-entity
+                                                      not-found]]
    [ring.util.http-status :as status]
    [clojure.java.io :as io]
 
@@ -71,7 +72,7 @@
 
 (defn register-operations
   [sfr]
-  (let [regd-ids 
+  (let [regd-ids
         (mapv (partial register-operation sfr)
               (mapv clojure.java.io/resource example-metadata))]
     (info "registering " (clojure.string/join "\n " (mapv #(str %1 "->" %2) example-metadata regd-ids )))
@@ -118,7 +119,7 @@
              (error " invalid request, sending error in invoke request with " params)
              (http-response/bad-request (str " invalid request: " (if params (clojure.string/join (validator params)) " params is not present") " - " )))))
        (do (error " invalid operation did " did)
-           (unprocessable-entity (str "operation did " did " is not supported"))))))) 
+           (not-found (str "operation did " did " is a valid resource "))))))) 
 
 (defn result-handler
   ([inp]

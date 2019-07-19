@@ -37,7 +37,6 @@
         max-ec (if (number? max-empty-columns) max-empty-columns
                    (try (Integer/parseInt max-empty-columns)
                         (catch Exception e 100)))]
-    (println " max ent " max-ec)
     (fn []
       (let [
             csv-vector (csv/read-csv (io/reader (io/input-stream cont)))

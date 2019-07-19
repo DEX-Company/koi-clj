@@ -4,12 +4,14 @@
              [cheshire.core :as cheshire]
              [ring.util.http-response :as http-response :refer [ok header created unprocessable-entity
                                                                 internal-server-error
+                                                                not-found
                                                                 bad-request]]
              [ring.mock.request :as mock]
              [koi.utils :as utils :refer [put-asset get-asset-content remote-agent keccak512]]
              [clojure.walk :refer [keywordize-keys]]
              [koi.op-handler :as oph :refer [service-registry ]]
              [koi.api :as api :refer [app]]
+             [clojure.data.csv :as csv]
              [clojure.data.json :as json]
              [clojure.zip :as zip]
              [clojure.java.io :as io]
@@ -60,17 +62,23 @@
       (is (= (:status response) 401))))
   (testing "Test request to nonexisting operation"
     ;;fakehashing isn't a valid operation did
-    (let [response (app (-> (mock/request :post (str iripath "/invoke/fakehashing"))
+    (let [response (app (-> (mock/request :post (str iripath "/invoke/assetthatdoesntexist"))
                             (mock/header "Authorization" (str "token " @token))
                             (mock/content-type "application/json")
                             (mock/body (cheshire/generate-string {:to-hash "abc"}))))]
-      (is (= (:status response) (:status (unprocessable-entity))))))
+      (is (= (:status response) (:status (not-found))))))
   (testing "Test bad params to valid operation"
     (let [response (app (-> (mock/request :post (str iripath "/invoke/hashing"))
                             (mock/content-type "application/json")
                             (mock/header "Authorization" (str "token " @token))
                             ;;hashing needs to-hash as an argument
                             (mock/body (cheshire/generate-string {:abc "def"}))))]
+      (is (= (:status response) (:status (bad-request))))))
+  (testing "Test non-json inputs to valid operation"
+    (let [response (app (-> (mock/request :post (str iripath "/invoke/hashing"))
+                            (mock/content-type "application/json")
+                            (mock/header "Authorization" (str "token " @token))
+                            (mock/body "abc")))]
       (is (= (:status response) (:status (bad-request))))))
   (testing "Test failing operation"
     (let [response (app (-> (mock/request :post (str iripath "/invoke/fail"))
@@ -162,42 +170,13 @@
       (is (= 153 (ifn 6)))
       )))
 
-(deftest workshop-join
-  (testing "Test request to join car and workshop data"
-    (let [vpath (io/resource "car.json")
-          wpath (io/resource "maint.json")
-          veh-dset (s/memory-asset {"abc" "123"} (slurp "https://raw.githubusercontent.com/DEX-Company/sgcarmart-datacleaning/master/car_datasets/SJR8961K-content.json?token=AAAVX5AY5YMZGS2Q6QASUZK5EPX6K"))
-          w-dset (s/memory-asset {"workshop" "dataset"} (slurp "https://raw.githubusercontent.com/DEX-Company/sgcarmart-datacleaning/master/car_datasets/maintenance.json?token=AAAVX5DSCGLGERBS652LFCS5EPYAY"))
-          veh-id (put-asset (:agent remote-agent) veh-dset)
-          w-id (put-asset (:agent remote-agent) w-dset)
-
-          response (app (-> (mock/request :post (str iripath "/invoke/workshop-join-cars"))
-                            (mock/content-type "application/json")
-                            (mock/header "Authorization" (str "token " @token))
-                            (mock/body (cheshire/generate-string
-                                        {:vehicle-dataset {:did veh-id}
-                                         :workshop-dataset {:did w-id}}))))
-          body     (parse-body (:body response))
-          ret-did (-> body :results :joined-dataset :did)
-          ret-asset (s/get-asset (:agent remote-agent) (-> body :results :joined-dataset :did))
-          ret-dset (s/to-string (s/content ret-asset))
-          ]
-      (is (not (empty? ret-dset)))
-      (is (vector? (get (json/read-str ret-dset) "maintenance")))
-      (is (= 4 (count (get (json/read-str ret-dset) "maintenance"))))
-      ;;test if car metadata is set
-      (is (= "123" (:abc (s/metadata ret-asset)))))))
-
 (deftest prov-retrieval
   (testing "retrieval"
     (let [vpath (io/resource "veh.json")
               wpath (io/resource "workshop.json")
-              veh-dset (s/memory-asset {"cars" "dataset"
-                                        ;"provenance" {"prov-attribute" "value1"}
-                                        } (slurp vpath))
-              w-dset (s/memory-asset {"workshop" "dataset"
-                                     ; "provenance" {"prov-attribute" "value2"}
-                                      }
+          veh-dset (s/memory-asset {"cars" "dataset"}
+                                   (slurp vpath))
+              w-dset (s/memory-asset {"workshop" "dataset"}
                                      (slurp wpath))
               veh-id (put-asset (:agent remote-agent) veh-dset)
               w-id (put-asset (:agent remote-agent) w-dset)
@@ -220,3 +199,20 @@
       (is (not (nil? (-> body :results :prov-tree))))
       (is (not (nil? ((json/read-str (-> body :results :prov-tree))
                       "derived-from")))))))
+
+(comment 
+  (let [k2 (-> k2json keywordize-keys)
+        agent-id (-> k2 :agent keys first)
+        df (mapv (fn[imap]
+                   (merge (select-keys imap [:asset-id])
+                          {:type "asset"}
+                          (select-keys (get-in imap [:metadata]) [:name :description :content-hash])))
+                 (:derived-from k2))
+        df1 (conj df {:asset-id (-> k2 :agent keys first) :type "operation"})
+        df2 (conj df1 {:asset-id "this"  :type "asset"})
+        edges (merge {agent-id "this"}
+                     (zipmap (mapv :asset-id (:derived-from k2)) (repeat agent-id)))
+        fin (assoc {} :provenance-vis {:vertices df2 :edges edges})]
+    (spit "/tmp/k3.json" (json/write-str fin))
+    )
+  (spit "/tmp/k2.json " (-> k1 :results :prov-tree)))
