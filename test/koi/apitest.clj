@@ -98,7 +98,12 @@
           job-body (parse-body (:body jobres))]
       (is (= (:status response) (:status (created))))
       (is (= (:status jobres) (:status (ok))))
-      (is (every? #{:status :errorcode :description} (keys job-body))))))
+      (is (every? #{:status :errorcode :description} (keys job-body)))))
+  (testing "Test nonexistent job"
+    (let [jobres (app (-> (mock/request :get (str iripath "/jobs/1234" ))
+                          (mock/header "Authorization" (str "token " @token))
+                          (mock/content-type "application/json")))]
+      (is (= (:status jobres) (:status (not-found)))))))
 
 (deftest consuming-assets
   (testing "Test request to asset hash operation"

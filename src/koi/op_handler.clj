@@ -124,9 +124,13 @@
 (defn result-handler
   ([inp]
    (let [{:keys [jobid]} (:route-params inp)]
+     (info " result-handler " jobid " " @jobs)
      (try
-       (info " result-handler " jobid " " @jobs)
-       (ok (get @jobs (Integer/parseInt jobid)))
+       (let [parsed-jobid (Integer/parseInt jobid)
+             job (get @jobs parsed-jobid)]
+         (if job
+           (ok job)
+           (not-found (str " Job with id: " jobid " not found "))))
        (catch Exception e
          (do
            (error (str " got error in getting job results " e))
