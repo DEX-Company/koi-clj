@@ -1,32 +1,28 @@
 # Koi-clj 
 
-A reference implementation of Invokable services for Ocean, implemented in Clojure. It implements four operations.
-
-## Usage
-
-For development, you will need to run the latest copy of [Barge](https://github.com/DEX-Company/barge). Starting the default Barge would give you koi-clj running on port 3000.
+A reference implementation of Invokable services implemented in Clojure. 
 
 
-### Prerequisites:
+## Table of Contents
 
-- Install jdk1.8+
-- Install [lein](https://leiningen.org)
- 
-Steps:
+* [Overview](#overview)
+* [Running locally](#running-locally)
+* [Configuration](#configuration)
+* [Documentation](#documentation)
+* [Testing](#testing)
+* [License](#license)
 
-``` bash 
-lein ring server
-```
+## Overview
 
-Navigate to localhost:3000
+Koi-clj is a reference implementation of the DEP-6 implemented in Clojure. 
+It provides 
 
-### Surfer
+- a REST API Endpoints compliant with the methods described in DEP-6.
+- Examples of operations
+  - hashing: an Operation that returns a hash of an Asset
+  - filterrows: an Operation that removes rows in a csv dataset if it has more than N empty columns, where N is a configuration option.
 
-The default configuration expects Surfer to be running on `http://localhost:8080/`. To change this, change resources/config.edn
-
-### Executing an operation
-
-Default operations supported are
+Example of execution two operations:
 
 #### hashing
 
@@ -40,30 +36,70 @@ Input payload:
 {"to-hash":"stringtohash"}
 ```
   
-#### assethashing
+#### filtering rows
 
-  - accepts an ocean asset, defined by a DID
-  - returns an ocean asset DID, the content of which is the hash of the input asset.
+  - accepts an asset, defined by a DID
+  - returns an asset, the content of which is the filtered dataset.
   
 Example:
 
-- DID field: `assethashing` 
+- DID field: `filter-rows` 
 
 - params field
 ```json
-{"to-hash":{"did":"asset_id_of_content_to_hash"}}
+{"dataset":{"did":"asset_did_of_dataset_to_filter"}}
 ```
 
-Note that the asset did must exist on Ocean.
+Response
  
 ```json
-{"to-hash":{"did":"45a8cebe88ad5d8161e19bf2f201af772ad3c6613be9d60f7663a8c33646b203"}}
+{"filtered-dataset":{"did":"asset_did_of_filtered_dataset"}}
 ```
 
   
+# Running locally
 
-## License
+### Prerequisites:
 
-Copyright © 2019 DEX
+- Install jdk1.8+
+- Install [lein](https://leiningen.org)
+ 
+Steps:
 
-Distributed under the Apache License version 2.0.
+``` bash 
+git clone https://github.com/DEX-Company/koi-clj/
+cd koi-clj
+lein ring server
+```
+
+Navigate to localhost:8191
+
+# Configuration
+
+TBD
+
+# Documentation 
+
+TBD
+
+# Testing
+
+- `lein test` runs the unit tests
+
+# License
+
+```
+Copyright 2018-2019 DEX Pte. Ltd.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
