@@ -67,11 +67,14 @@ Navigate to localhost:8191
 
 # Configuration
 
-TBD
+Running Koi-clj requires an Agent configuration to be specified. An example config can be found at [config.edn](https://github.com/DEX-Company/koi-clj/blob/develop/resources/config.edn). 
 
 # Documentation 
 
-TBD
+The [doc](https://github.com/DEX-Company/koi-clj/tree/develop/doc) includes documentation on
+
+- Implementing a new operation
+- Creating metadata for a new operation
 
 # Testing
 
