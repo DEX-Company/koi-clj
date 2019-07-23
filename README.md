@@ -22,35 +22,26 @@ It provides
   - hashing: an Operation that returns a hash of an Asset
   - filterrows: an Operation that removes rows in a csv dataset if it has more than N empty columns, where N is a configuration option.
 
-Example of execution two operations:
+Example of execution of an operation:
 
-#### hashing
-
-  - accepts a string asset.  
-  - returns hash of the input
-
-Input payload:
-- DID field: `hashing` 
-- params field
-```json
-{"to-hash":"stringtohash"}
-```
   
-#### filtering rows
+#### Cleaning empty rows
 
-  - accepts an asset, defined by a DID
-  - returns an asset, the content of which is the filtered dataset.
+This operation accepts an Asset (of type CSV), and returns a new Asset that removes empty rows.
+
+  - accepts an asset as input
+  - returns an asset, the content of which is the cleaned dataset.
   
 Example:
 
-- DID field: `filter-rows` 
+The JSON sample below is the payload sent to the `/invoke` endpoint of the Service provider.
 
-- params field
+- params (input) field
 ```json
 {"dataset":{"did":"asset_did_of_dataset_to_filter"}}
 ```
 
-Response
+The response sent by the endpoint on successful completion of the operation
  
 ```json
 {"filtered-dataset":{"did":"asset_did_of_filtered_dataset"}}
