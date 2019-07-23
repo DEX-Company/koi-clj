@@ -2,7 +2,10 @@
 
 In this document, we'll discuss using koi-clj as a template to implement a new operation in Clojure.
 
-In order to implement a new operation, a developer must use the protocols declared [protocols.clj](https://github.com/DEX-Company/koi-clj/blob/develop/src/koi/protocols.clj)
+In order to create a new operation, a developer must 
+
+- implement the protocols declared [protocols.clj](https://github.com/DEX-Company/koi-clj/blob/develop/src/koi/protocols.clj)
+- create the metadata, which is discussed in detail [here](#) 
 
 The protocol declares three methods
 
@@ -64,6 +67,13 @@ Note that:
         ;(info " result of predict-class " res)
         res))))
 ```
+
+### Adding it to the list of operations.
+
+`op_handler.clj` maintains a list of operations. On Koi startup, the operation handler
+
+- registers the metadata for each operation using an Agent. 
+- registers a rest endpoint corresponding to the ID of the operation. 
 
 
 The complete source can be found [here](https://github.com/DEX-Company/koi-clj/blob/develop/src/koi/examples/predict_iris.clj)
