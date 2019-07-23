@@ -14,10 +14,10 @@ A reference implementation of Invokable services implemented in Clojure.
 
 ## Overview
 
-Koi-clj is a reference implementation of the DEP-6 implemented in Clojure. 
+Koi-clj is a reference implementation of the [DEP-6](https://github.com/DEX-Company/DEPs/tree/master/6) implemented in Clojure. 
 It provides 
 
-- a REST API Endpoints compliant with the methods described in DEP-6.
+- [REST API Endpoints](https://github.com/DEX-Company/DEPs/tree/master/6#methods) compliant with the methods described in DEP-6.
 - Examples of operations
   - hashing: an Operation that returns a hash of an Asset
   - filterrows: an Operation that removes rows in a csv dataset if it has more than N empty columns, where N is a configuration option.
