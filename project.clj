@@ -54,7 +54,8 @@
                  [net.mikera/core.matrix "0.58.0"]
                  [org.clojure/data.csv "0.1.4"]
                  ]
-
+  :plugins [[lein-codox "0.10.7"]]
+  :codox {:output-path "codox"}
   :source-paths ["src/"]
   :test-paths ["test/"]
   :profiles {:test {;:jvm-opts ["-Dconfig.edn=resources/test-config.edn"]
