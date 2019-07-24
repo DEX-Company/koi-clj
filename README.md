@@ -76,6 +76,10 @@ The [doc](https://github.com/DEX-Company/koi-clj/tree/develop/doc) includes docu
 - Implementing a new operation
 - Creating metadata for a new operation
 
+## API Documentation
+
+- Here's the [link for API docs](https://dex-company.github.io/koi-clj/)
+
 # Testing
 
 - `lein test` runs the unit tests
