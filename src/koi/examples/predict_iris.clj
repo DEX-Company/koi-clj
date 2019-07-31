@@ -56,7 +56,3 @@
   prot/PParams
   (get-params [_]
     ::params))
-
-(defn new-iris-predictor
-  [jobs jobids]
-  (PredictIrisClass. jobs jobids))

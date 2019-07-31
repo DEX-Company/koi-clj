@@ -72,7 +72,3 @@
   prot/PParams
   (get-params [_]
     ::params))
-
-(defn new-filter-rows
-  [jobs jobids]
-  (FilterRowsClass. jobs jobids))

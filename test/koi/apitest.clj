@@ -9,7 +9,7 @@
              [ring.mock.request :as mock]
              [koi.utils :as utils :refer [put-asset get-asset-content remote-agent keccak512]]
              [clojure.walk :refer [keywordize-keys]]
-             [koi.op-handler :as oph :refer [service-registry ]]
+             [koi.op-handler :as oph :refer [registry ]]
              [koi.api :as api :refer [app]]
              [clojure.data.csv :as csv]
              [clojure.data.json :as json]
@@ -86,7 +86,7 @@
                             (mock/content-type "application/json")
                             (mock/body (cheshire/generate-string {:dummy "def"}))))]
       (is (= (:status response) (:status (internal-server-error))))))
-  (testing "Test async failing operation"
+  #_(testing "Test async failing operation"
     (let [response (app (-> (mock/request :post (str iripath "/invokeasync/fail"))
                             (mock/header "Authorization" (str "token " @token))
                             (mock/content-type "application/json")
@@ -95,10 +95,14 @@
           jobres (app (-> (mock/request :get (str iripath "/jobs/" jobid))
                           (mock/header "Authorization" (str "token " @token))
                           (mock/content-type "application/json")))
-          job-body (parse-body (:body jobres))]
+          job-body (parse-body (:body jobres))
+          ]
+      (println " failing job result "(parse-body (:body jobres)))
       (is (= (:status response) (:status (created))))
       (is (= (:status jobres) (:status (ok))))
-      (is (every? #{:status :errorcode :description} (keys job-body)))))
+      (is (every? #{:status :errorcode :description} (keys job-body)))
+     ; job-body
+      ))
   (testing "Test nonexistent job"
     (let [jobres (app (-> (mock/request :get (str iripath "/jobs/1234" ))
                           (mock/header "Authorization" (str "token " @token))

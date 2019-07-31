@@ -98,8 +98,8 @@
 
 (def app
   (do
-    (mount/start-with-states {#'koi.op-handler/service-registry
-                              {:start oph/valid-assetid-svc-registry}})
+    (mount/start-with-states {#'koi.op-handler/registry
+                              {:start oph/operation-registry}})
     (api
      {:swagger
       {:ui "/"

@@ -12,7 +12,8 @@
             logf tracef debugf infof warnf errorf fatalf reportf]]
    [clojure.java.io :as io]
    [spec-tools.json-schema :as jsc])
-  (:import [sg.dex.crypto Hash]))
+  (:import [sg.dex.crypto Hash]
+           [java.lang.reflect Constructor]))
 
 (sp/def ::to-hash string?)
 
@@ -56,7 +57,3 @@
   prot/PParams
   (get-params [_]
     ::params))
-
-(defn new-hashing
-  [jobs jobids]
-  (Hashing. jobs jobids))
