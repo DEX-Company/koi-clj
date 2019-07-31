@@ -70,7 +70,3 @@
   prot/PParams
   (get-params [_]
     ::params))
-
-(defn new-join-cars-dataset
-  [jobs jobids]
-  (JoinCarsDatasetClass. jobs jobids))

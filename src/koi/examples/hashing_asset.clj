@@ -74,7 +74,3 @@
   prot/PParams
   (get-params [_]
     ::params))
-
-(defn new-hashing
-  [jobs jobids]
-  (HashingAsset. jobs jobids))

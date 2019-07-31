@@ -86,7 +86,3 @@
   prot/PParams
   (get-params [_]
     ::params))
-
-(defn new-primes
-  [jobs jobids]
-  (PrimeNumbers. jobs jobids))

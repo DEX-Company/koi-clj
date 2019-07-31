@@ -59,7 +59,3 @@
   prot/PParams
   (get-params [_]
     ::params))
-
-(defn new-german-en-translator
-  [jobs jobids]
-  (TranslateClass. jobs jobids))

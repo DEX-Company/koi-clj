@@ -89,7 +89,3 @@
   prot/PParams
   (get-params [_]
     ::params))
-
-(defn new-prov-tree
-  [jobs jobids]
-  (ProvTraversalClass. jobs jobids))
