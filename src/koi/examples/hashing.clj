@@ -12,7 +12,8 @@
             logf tracef debugf infof warnf errorf fatalf reportf]]
    [clojure.java.io :as io]
    [spec-tools.json-schema :as jsc])
-  (:import [sg.dex.crypto Hash]))
+  (:import [sg.dex.crypto Hash]
+           [java.lang.reflect Constructor]))
 
 (sp/def ::to-hash string?)
 
@@ -56,6 +57,31 @@
   prot/PParams
   (get-params [_]
     ::params))
+
+(comment
+  (simple-symbol? (symbol "koi.examples.hashing" "Hashing"))
+  (simple-symbol? (symbol "koi.examples.hashing.Hashing" ))
+  (def c1 "koi.examples.hashing.Hashing")
+  (import [(symbol "koi.examples.hashing.Hashing" )])
+  (import 'koi.examples.hashing.Hashing)
+  (def p (Hashing. "a" "ab"))
+
+  (defn import-by-name
+    [n]
+    (.importClass (the-ns *ns*)
+                  (clojure.lang.RT/classForName (str "koi.examples.hashing." n))))
+
+  (def k 
+    (import-by-name "Hashing"))
+  (-> k class)
+  (Constructor/newInstance k "a" "b")
+
+  (clojure.lang.Reflector/invokeConstructor
+   (resolve (symbol "koi.examples.hashing.Hashing"))
+   (to-array ["a" "b"])
+
+   )
+  )
 
 (defn new-hashing
   [jobs jobids]

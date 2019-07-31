@@ -30,59 +30,57 @@
             spy get-env]]
    [koi.config :as config :refer [get-config]]))
 
+;;the jobs are stored as in-memory atoms. A production setup might
+;;want to store the jobs in persisten (e.g db) storage
 (def jobids (atom 0))
 (def jobs (atom {}))
 
-(defn default-service-registry
-  []
-  {:hashing (h/new-hashing jobs jobids)
-   :assethashing (ha/new-hashing jobs jobids)
-   :primes (p/new-primes jobs jobids)
-   :irisprediction (iris/new-iris-predictor jobs jobids)
-   :translation (trans/new-german-en-translator jobs jobids)
-   :fail (f/new-failing jobs jobids)
-   :filter-rows (filterrows/new-filter-rows jobs jobids)
-   :workshop-join-cars (wk/new-join-cars-dataset jobs jobids)
-   :prov (prov/new-prov-tree jobs jobids)})
-
-(defstate service-registry :start (default-service-registry))
-
 (defn register-operation
-  [sfr asset-metadata-resource]
-  (let [prime-metadata (->> asset-metadata-resource
+  "register an operation using ht eagent. Returns the asset id of the operation."
+  [agent asset-metadata-resource]
+  (let [ast-metadata (->> asset-metadata-resource
                             slurp che/parse-string)
-        ast (s/memory-asset prime-metadata "abc")
-        remote-asset (s/register sfr ast)
+        ast (s/memory-asset ast-metadata "")
+        remote-asset (s/register agent ast)
         res (s/asset-id remote-asset)]
     (keyword res)))
 
-(def example-metadata
-  ["prime_asset_metadata.json" "hashing_asset_metadata.json"
-   "hashing_metadata.json" "irisprediction_metadata.json"
-   "translate_german_to_en_metadata.json"
-   "filter_rows_metadata.json"
-   "join_cars_metadata.json"
-   "prov_tree_metadata.json"
-   ])
-
-(def example-dids [:primes :assethashing :hashing :irisprediction
-                   :translation :filter-rows
-                   :workshop-join-cars
-                   :prov])
-
 (defn register-operations
-  [sfr]
-  (let [regd-ids
-        (mapv (partial register-operation sfr)
-              (mapv clojure.java.io/resource example-metadata))]
-    (info "registering " (clojure.string/join "\n " (mapv #(str %1 "->" %2) example-metadata regd-ids )))
+  "registers a map of operations as defined in the config. Returns a list of
+  asset ids."
+  [agent operations]
+  (let [operation-keys (keys operations)
+        regd-ids
+        (mapv (partial register-operation agent)
+              (mapv clojure.java.io/resource
+                    (mapv (fn[[k v]]
+                            (:metadata v)) operations)))]
+    (info "registering "
+          (clojure.string/join "\n " (mapv #(str %1 " -> " %2)
+                                           operation-keys
+                                           regd-ids )))
     regd-ids))
 
-(defn valid-assetid-svc-registry
+(defn operation-registry
+  "return a map that acts as an operation registry. Key is operation id/common name
+  and value is the implementation class to be called"
   []
-  (let [svcreg (default-service-registry)
-        regd-ids (register-operations (:agent remote-agent))]
-    (merge svcreg (zipmap regd-ids (mapv svcreg example-dids)))))
+  (let [operations (:operations (get-config))
+        op-keys (keys operations)
+        op-impls (mapv #(do
+                          (info " loading " %)
+                          (clojure.lang.Reflector/invokeConstructor
+                           (resolve (symbol %))
+                           (to-array [jobs jobids])))
+                       (mapv (fn[[k v]] (:classname v)) operations))
+        regd-ids (register-operations (:agent remote-agent) operations)]
+    ;;return a map that has the asset/operation id as key and value is the operation class
+    ;;merging a map that has the common name of the operation for easier testing.
+    (merge (zipmap op-keys op-impls)
+           (zipmap regd-ids op-impls))))
+
+
+(defstate registry :start (operation-registry))
 
 (defn invoke-handler
   "this method handles API calls to /invoke. The first argument is a boolean value, if true,
@@ -91,7 +89,7 @@
   ([async? inp]
    (let [params (:body-params inp)
          {:keys [did]} (:route-params inp) ]
-     (if-let [ep (service-registry (keyword did))]
+     (if-let [ep (registry (keyword did))]
        (let [validator (get-params ep) ]
          (if (and validator params (sp/valid? validator params))
            (do
