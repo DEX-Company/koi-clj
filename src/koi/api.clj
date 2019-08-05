@@ -97,17 +97,21 @@
                        :handler oph/result-handler}}))))
 
 (def app
-  (do
-    (mount/start-with-states {#'koi.op-handler/registry
-                              {:start oph/operation-registry}})
-    (api
-     {:swagger
-      {:ui "/"
-       :spec "/swagger1.json"
-       :data {:info {:title "invoke-api "
-                     :description "Invoke with Ocean "}
-              :tags [{:name "invoke service", :description "invoke Ocean services"}]}}}
-     routes)))
+  (api
+   {:swagger
+    {:ui "/"
+     :spec "/swagger1.json"
+     :data {:info {:title "invoke-api "
+                   :description "Invoke with Ocean "}
+            :tags [{:name "invoke service", :description "invoke Ocean services"}]}}}
+   routes))
+
+(defn app-init
+  []
+  (mount/start-with-states {#'koi.op-handler/registry
+                            {:start oph/operation-registry}}))
 
 (defn -main [& args]
-  (run-jetty app {:port (Integer/valueOf (or (System/getenv "port") "3000"))}))
+  (do 
+    (app-init)
+    (run-jetty app {:port (Integer/valueOf (or (System/getenv "port") "3000"))})))

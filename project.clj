@@ -1,4 +1,4 @@
-(defproject sg.dex/koi-clj "0.1.4"
+(defproject sg.dex/koi-clj "0.1.5-SNAPSHOT"
   :description "Ocean Invoke API implementation in Clojure"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
@@ -71,5 +71,6 @@
                       :jvm-opts ["-Dconfig.edn=resources/dev-config.edn"]
                       :main koi.api}}
 
-  :ring { :handler koi.api/app }
+  :ring {:handler koi.api/app
+         :init koi.api/app-init}
 )
