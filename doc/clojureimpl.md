@@ -1,11 +1,11 @@
-## Implementing an operation in Clojure
+## Implementing an operation in Koi-clj (in Clojure)
 
 In this document, we'll discuss using koi-clj as a template to implement a new operation in Clojure.
 
-In order to create a new operation, a developer must 
+In order to implement a new operation, a developer must 
 
-- implement the protocols declared [protocols.clj](https://github.com/DEX-Company/koi-clj/blob/develop/src/koi/protocols.clj)
-- create the metadata, which is discussed in detail [here](#) 
+- Implement the protocols declared [protocols.clj](https://github.com/DEX-Company/koi-clj/blob/develop/src/koi/protocols.clj)
+- Create the metadata, which is discussed in detail [here](#) 
 
 The protocol declares three methods
 

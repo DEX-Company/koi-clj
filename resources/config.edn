@@ -2,6 +2,7 @@
  :agent-url #or [#env AGENT_URL "http://52.187.164.74:8080" ]
  :username "Aladdin"
  :password "OpenSesame"
+ :port 3000
  :operations
  {
   ;;note that path name with hyphen (-) must be replaced with underscore, since java doesn't allow hyphens

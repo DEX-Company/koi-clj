@@ -9,7 +9,7 @@
    [koi.protocols :as prot 
     :refer [invoke-sync
             invoke-async
-            get-params]]
+            valid-args?]]
    [koi.invokespec :as ispec]
    [clojure.walk :refer [keywordize-keys]]
    [clojure.java.io :as io]
@@ -77,7 +77,7 @@
       res)))
 
 (deftype ProvTraversalClass [jobs jobids]
-
+  :load-ns true
   prot/PSyncInvoke
   (invoke-sync [_ args]
     (process args prov-tree-fn))
@@ -86,6 +86,6 @@
   (invoke-async [_ args]
     (async-handler jobids jobs #(process args prov-tree-fn)))
 
-  prot/PParams
-  (get-params [_]
-    ::params))
+  prot/PValidParams
+  (valid-args? [_ args]
+    {:valid? (sp/valid? ::params args)}))

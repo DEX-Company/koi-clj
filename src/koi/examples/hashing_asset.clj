@@ -9,7 +9,7 @@
    [koi.protocols :as prot 
     :refer [invoke-sync
             invoke-async
-            get-params]]
+            valid-args?]]
    [koi.invokespec :as ispec]
    [clojure.java.io :as io]
    [koi.utils :as utils :refer [put-asset get-asset-content get-asset remote-agent keccak512
@@ -47,7 +47,7 @@
         res))))
 
 (deftype HashingAsset [jobs jobids]
-
+  :load-ns true
   prot/PSyncInvoke
   (invoke-sync [_ args]
     (process args compute-hash))
@@ -71,6 +71,7 @@
         .start)
       {:jobid jobid}))
 
-  prot/PParams
-  (get-params [_]
-    ::params))
+  prot/PValidParams
+  (valid-args? [_ args]
+    {:valid? (sp/valid? ::params args)})
+  )

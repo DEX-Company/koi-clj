@@ -16,7 +16,7 @@
    [koi.protocols :as prot 
     :refer [invoke-sync
             invoke-async
-            get-params]]
+            valid-args?]]
    [koi.invokespec :as ispec]
    [clojure.java.io :as io]
    [aero.core :refer (read-config)]
@@ -60,7 +60,7 @@
         res))))
 
 (deftype FilterRowsClass [jobs jobids]
-
+  :load-ns true
   prot/PSyncInvoke
   (invoke-sync [_ args]
     (process args filter-rows))
@@ -69,6 +69,7 @@
   (invoke-async [_ args]
     (async-handler jobids jobs #(process args filter-rows)))
 
-  prot/PParams
-  (get-params [_]
-    ::params))
+  prot/PValidParams
+  (valid-args? [_ args]
+    {:valid? (sp/valid? ::params args)})
+  )

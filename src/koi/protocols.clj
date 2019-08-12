@@ -10,7 +10,9 @@
   (invoke-async [m args]
     "This method invokes the invoke job. Should return a job id"))
 
-(defprotocol PParams
-  "returns metadata relevant to a service"
-  (get-params [m]
-    "returns the params for validation"))
+(defprotocol PValidParams
+  "returns a map with keys valid? and description. If valid? is true,
+  then the invoke request is delegated to invoke or invoke async"
+  (valid-args? [m args]
+    "returns a map with keys valid? and description. If valid? is true,
+  then the invoke request is delegated to invoke or invoke async"))
