@@ -83,8 +83,8 @@
                     (catch Exception e
                       (error " failed to register operations ")
                       (clojure.stacktrace/print-stack-trace e)))
-         _ (println " op-keys " op-keys  "op -impl " op-impls
-                    " regd-ids " regd-ids)
+         _ (info " op-keys " op-keys  "\n op -impl " op-impls
+                    "\n regd-ids " regd-ids)
          res (merge (zipmap op-keys op-impls)
                     (zipmap regd-ids op-impls))]
      ;;return a map that has the asset/operation id as key and value is the operation class
@@ -116,13 +116,10 @@
   ([registry async? inp]
    (let [params (or (:body-params inp) (:body inp))
          {:keys [did]} (:route-params inp) ]
-     (println " invoke handler input " (keys inp) " raw " inp)
      (if-let [ep (registry (keyword did))]
        (let [params-check (valid-args? ep params)
              valid? (:valid? params-check) ]
-         (println " validator " [params-check valid? ep (class ep)])
          (if valid?
-            ; (and validator params (sp/valid? validator params))
            (do
              (info " valid request, making invoke request with " params)
              (if async?
