@@ -82,11 +82,15 @@
                     ;(register-operations (:agent (get-remote-agent conf)) operations)
                     (catch Exception e
                       (error " failed to register operations ")
-                      (clojure.stacktrace/print-stack-trace e)))]
+                      (clojure.stacktrace/print-stack-trace e)))
+         _ (println " op-keys " op-keys  "op -impl " op-impls
+                    " regd-ids " regd-ids)
+         res (merge (zipmap op-keys op-impls)
+                    (zipmap regd-ids op-impls))]
      ;;return a map that has the asset/operation id as key and value is the operation class
      ;;merging a map that has the common name of the operation for easier testing.
-     (merge (zipmap op-keys op-impls)
-            (zipmap regd-ids op-impls)))))
+     (println " registered assets " res)
+     res)))
 
 (defrecord OperationRegistry [config]
   component/Lifecycle
@@ -110,12 +114,13 @@
   responds with a job id. Else it returns synchronously."
   ([registry inp] (invoke-handler registry false inp))
   ([registry async? inp]
-   (let [params (:body-params inp)
+   (let [params (or (:body-params inp) (:body inp))
          {:keys [did]} (:route-params inp) ]
+     (println " invoke handler input " (keys inp) " raw " inp)
      (if-let [ep (registry (keyword did))]
        (let [params-check (valid-args? ep params)
              valid? (:valid? params-check) ]
-         ;(println " validator " [validator params ])
+         (println " validator " [params-check valid? ep (class ep)])
          (if valid?
             ; (and validator params (sp/valid? validator params))
            (do
