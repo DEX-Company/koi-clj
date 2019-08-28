@@ -106,16 +106,6 @@
                       500 {:schema spec/any?}}
           :handler oph/result-handler}})))))
 
-#_(def app
-  (api
-   {:swagger
-    {:ui "/"
-     :spec "/swagger1.json"
-     :data {:info {:title "invoke-api "
-                   :description "Invoke with Ocean "}
-            :tags [{:name "invoke service", :description "invoke Ocean services"}]}}}
-   routes))
-
 (defrecord WebServer [port operation-registry]
   component/Lifecycle
   (start [this]
@@ -133,7 +123,7 @@
 
     )
   (stop [this]
-    (println " no-op stopping jetty")
+    (println " stopping jetty")
     (if-let [server (:http-server this)]
       (do (.stop server)
           (.join server)
@@ -144,19 +134,6 @@
   [port]
   (map->WebServer {:port port})
   )
-
-#_(defn app-init
-  ([]
-   (app-init (get-config)))
-  ([config]
-   (info " mount starting with " config)
-   #_(mount/start-with-states {#'koi.op-handler/registry
-                             {:start #(oph/operation-registry config)}})))
-
-#_(defn -main [& args]
-  (do 
-    (app-init)
-    (run-jetty app {:port (Integer/valueOf (or (System/getenv "port") "3000"))})))
 
 (defn default-system
   [config]

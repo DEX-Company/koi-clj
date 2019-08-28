@@ -106,7 +106,7 @@
                             (mock/content-type "application/json")
                             (mock/body (cheshire/generate-string {:dummy "def"}))))]
       (is (= (:status response) (:status (internal-server-error))))))
-  #_(testing "Test async failing operation"
+  (testing "Test async failing operation"
     (let [response (app (-> (mock/request :post (str iripath "/invokeasync/fail"))
                             (mock/header "Authorization" (str "token " @token))
                             (mock/content-type "application/json")
@@ -121,7 +121,6 @@
       (is (= (:status response) (:status (created))))
       (is (= (:status jobres) (:status (ok))))
       (is (every? #{:status :errorcode :description} (keys job-body)))
-     ; job-body
       ))
   (testing "Test nonexistent job"
     (let [jobres (app (-> (mock/request :get (str iripath "/jobs/1234" ))
@@ -129,86 +128,38 @@
                           (mock/content-type "application/json")))]
       (is (= (:status jobres) (:status (not-found)))))))
 
-(comment
-(let [ast-atom (atom {})]
-      (with-redefs [put-asset (fn [ag ast]
-                                  (let [byt (s/to-string ast)
-                                        h1 (Hash/keccak256String byt)
-                                        ]
-                                    (swap! ast-atom assoc h1 ast)
-                                    h1))
-                    get-asset (fn [ag ast-param]
-                                (let [ast 
-                                      (->> ast-param :did
-                                           (get @ast-atom ))]
-                                  ))
-                      get-asset-content (fn [ag did]
-                                  (->> did
-                                       (get @ast-atom )
-                                       (s/content)
-                                       s/to-string)
-                                  )]
-        (let [ast (s/memory-asset {"hello" "world"} "abc")
-              remid (put-asset (:agent remote-agent) ast)
-              response (app (-> (mock/request :post (str iripath "/invoke/assethashing"))
-                                (mock/content-type "application/json")
-                                (mock/header "Authorization" (str "token " @token))
-                                (mock/body (cheshire/generate-string {:to-hash {:did remid}
-                                                                      :algorithm "keccak256"}))))
-              body     (parse-body (:body response))
-              ]
-          #_(is (string? (-> body :results :hash-value :did)))
-                                        ;remid
-          body
-          ))))
+(deftest consuming-assets
+  (testing "Test request to asset hash operation"
+    (let [ast (s/memory-asset {"hello" "world"} "abc")
+          remid (put-asset (:agent remote-agent) ast)
+          response (app (-> (mock/request :post (str iripath "/invoke/assethashing"))
+                            (mock/content-type "application/json")
+                            (mock/header "Authorization" (str "token " @token))
+                            (mock/body (cheshire/generate-string {:to-hash {:did remid}
+                                                                  :algorithm "keccak256"}))))
+          body     (parse-body (:body response))]
+      (is (string? (-> body :results :hash-value :did)))))
+  (testing "Test request to primes operation"
+    (let [response (app (-> (mock/request :post (str iripath "/invoke/primes"))
+                            (mock/content-type "application/json")
+                            (mock/header "Authorization" (str "token " @token))
+                            (mock/body (cheshire/generate-string {:first-n "20"}))))
+          body     (parse-body (:body response))]
+      (is (string? (-> body :results :primes :did)))))
+  (testing "Test request to iris prediction "
+    (let [dset (slurp "https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/d546eaee765268bf2f487608c537c05e22e4b221/iris.csv")
+          ast (s/memory-asset {"iris" "prediction"} dset)
+          remid (put-asset (:agent remote-agent) ast)
 
-(comment 
-  (deftest consuming-assets
-      (testing "Test request to asset hash operation"
-        (let [ast-atom (atom {})]
-          (with-redefs [put-asset (fn [ag ast]
-                                    (let [byt (s/to-bytes ast)
-                                          h1 (Hash/keccak256String byt)
-                                          ]
-                                      (swap! ast-atom assoc h1 ast)
-                                      h1))
-                        get-asset-content (fn [ag did]
-                                            (->> did
-                                                 (get @ast-atom )
-                                                 (s/content)
-                                                 s/to-string)
-                                            )]
-            (let [ast (s/memory-asset {"hello" "world"} "abc")
-                  remid (put-asset (:agent remote-agent) ast)
-                  response (app (-> (mock/request :post (str iripath "/invoke/assethashing"))
-                                    (mock/content-type "application/json")
-                                    (mock/header "Authorization" (str "token " @token))
-                                    (mock/body (cheshire/generate-string {:to-hash {:did remid}
-                                                                          :algorithm "keccak256"}))))
-                  body     (parse-body (:body response))]
-              (is (string? (-> body :results :hash-value :did)))))))
-
-      (testing "Test request to primes operation"
-        (let [response (app (-> (mock/request :post (str iripath "/invoke/primes"))
-                                (mock/content-type "application/json")
-                                (mock/header "Authorization" (str "token " @token))
-                                (mock/body (cheshire/generate-string {:first-n "20"}))))
-              body     (parse-body (:body response))]
-          (is (string? (-> body :results :primes :did)))))
-      (testing "Test request to iris prediction "
-        (let [dset (slurp "https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/d546eaee765268bf2f487608c537c05e22e4b221/iris.csv")
-              ast (s/memory-asset {"iris" "prediction"} dset)
-              remid (put-asset (:agent remote-agent) ast)
-
-              response (app (-> (mock/request :post (str iripath "/invoke/irisprediction"))
-                                (mock/content-type "application/json")
-                                (mock/header "Authorization" (str "token " @token))
-                                (mock/body (cheshire/generate-string {:dataset {:did remid}}))))
-              body     (parse-body (:body response))
-              ret-dset (s/to-string (s/content (s/get-asset (:agent remote-agent) (-> body :results :predictions :did))))
-              dset-rows (clojure.string/split ret-dset #"\n")
-              first-row "sepal_length,sepal_width,petal_length,petal_width,species,predclass"]
-          (is (= first-row (first dset-rows)))))))
+          response (app (-> (mock/request :post (str iripath "/invoke/irisprediction"))
+                            (mock/content-type "application/json")
+                            (mock/header "Authorization" (str "token " @token))
+                            (mock/body (cheshire/generate-string {:dataset {:did remid}}))))
+          body     (parse-body (:body response))
+          ret-dset (s/to-string (s/content (s/get-asset (:agent remote-agent) (-> body :results :predictions :did))))
+          dset-rows (clojure.string/split ret-dset #"\n")
+          first-row "sepal_length,sepal_width,petal_length,petal_width,species,predclass"]
+      (is (= first-row (first dset-rows))))))
 
 (comment 
   (let [prime-metadata (->> (clojure.java.io/resource "prime_asset_metadata.json")
