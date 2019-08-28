@@ -57,11 +57,12 @@
   then use local registration mechanism, else use a remote agent.
   "
   ([] (operation-registry (get-config)))
-  ([conf](operation-registry (fn[config]
+  ([conf](operation-registry (:agent (get-remote-agent conf))
+                             (fn[config]
                                (register-operations (:agent (get-remote-agent config))
                                                     (:operations config)))
                              conf))
-  ([register-fn conf]
+  ([agent register-fn conf]
    (let [operations (:operations conf)
          op-keys (keys operations)
          op-impls (mapv #(do
@@ -69,7 +70,7 @@
                              (info " loading " %)
                              (clojure.lang.Reflector/invokeConstructor
                               (resolve (symbol %))
-                              (to-array [jobs jobids]))
+                              (to-array [agent jobs jobids]))
 
                              (catch Exception e
                                (do 
@@ -92,18 +93,38 @@
      (println " registered assets " res)
      res)))
 
-(defrecord OperationRegistry [config]
+(defrecord OperationRegistry [agent config]
   component/Lifecycle
 
   (start [component]
     (println ";; Starting registry ")
-    (let [reg (operation-registry config)]
+    (let [reg (operation-registry (:agent agent)
+                                  (fn[cfg]
+                                    (register-operations (:agent (:agent agent))
+                                                         (:operations cfg)))
+                                  config)]
       (assoc component :operation-registry reg)))
 
   (stop [component]
     (println ";; Stopping registry ")
     (assoc component :operation-registry nil)))
-                                        ;(defstate registry :start (operation-registry))
+
+(defrecord Agent [config]
+  component/Lifecycle
+
+  (start [component]
+    (let [ag (get-remote-agent config)
+          res (assoc component :agent ag)]
+      (println ";; Starting agent " )
+      res))
+
+  (stop [component]
+    (println ";; Stopping agent ")
+    (assoc component :agent nil)))
+
+(defn new-agent
+  [config]
+  (map->Agent {:config config}))
 
 (defn new-operation-registry
   [config]

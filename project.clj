@@ -80,6 +80,7 @@
         koi.examples.filter-empty-rows
         koi.examples.prov-tree-traversal
         koi.examples.failing-asset
+        koi.examples.workshop-join
         ]
   ;:ring {:handler koi.api/app :init koi.api/app-init}
 )

@@ -12,7 +12,7 @@
             valid-args?]]
    [koi.invokespec :as ispec]
    [clojure.java.io :as io]
-   [koi.utils :as utils :refer [put-asset get-asset-content get-asset remote-agent keccak512
+   [koi.utils :as utils :refer [put-asset get-asset-content get-asset keccak512
                                 async-handler
                                 process]]
    [aero.core :refer (read-config)]
@@ -57,15 +57,15 @@
       (info " result of join-dataset " res)
       res)))
 
-(deftype JoinCarsDatasetClass [jobs jobids]
+(deftype JoinCarsDatasetClass [agent jobs jobids]
   :load-ns true
   prot/PSyncInvoke
   (invoke-sync [_ args]
-    (process args join-dataset-fn))
+    (process agent args join-dataset-fn))
 
   prot/PAsyncInvoke
   (invoke-async [_ args]
-    (async-handler jobids jobs #(process args join-dataset-fn)))
+    (async-handler jobids jobs #(process agent args join-dataset-fn)))
 
   prot/PValidParams
   (valid-args? [_ args]

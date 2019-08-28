@@ -26,7 +26,7 @@
   {:results {:keccak256 (Hash/keccak256String cont)
              :keccak512 (keccak512 cont)}})
 
-(deftype Hashing [jobs jobids]
+(deftype Hashing [agent jobs jobids]
   :load-ns true
 
   prot/PSyncInvoke

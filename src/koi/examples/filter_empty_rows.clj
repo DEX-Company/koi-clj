@@ -7,7 +7,7 @@
    [clojure.core.matrix.dataset :as cd]
   [clojure.data.csv :as csv]
    [starfish.core :as s ]
-   [koi.utils :as utils :refer [put-asset get-asset-content remote-agent process async-handler
+   [koi.utils :as utils :refer [put-asset get-asset-content process async-handler
                                 get-asset]]
    [taoensso.timbre :as timbre
     :refer [log  trace  debug  info  warn  error  fatal  report
@@ -59,15 +59,15 @@
                             :content res-data}]}]
         res))))
 
-(deftype FilterRowsClass [jobs jobids]
+(deftype FilterRowsClass [agent jobs jobids]
   :load-ns true
   prot/PSyncInvoke
   (invoke-sync [_ args]
-    (process args filter-rows))
+    (process agent args filter-rows))
 
   prot/PAsyncInvoke
   (invoke-async [_ args]
-    (async-handler jobids jobs #(process args filter-rows)))
+    (async-handler jobids jobs #(process agent args filter-rows)))
 
   prot/PValidParams
   (valid-args? [_ args]

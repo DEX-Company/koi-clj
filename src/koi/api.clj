@@ -119,14 +119,26 @@
 (defrecord WebServer [port operation-registry]
   component/Lifecycle
   (start [this]
-    (println " start jetty at " port " oper " operation-registry " - 90 " (:operation-registry operation-registry))
-    (assoc this :http-server
-           (run-jetty
-            (koi-routes (:operation-registry operation-registry))
-            {:port (Integer/valueOf (or (System/getenv "port") port))})))
+    (println " start jetty at " port)
+    (try 
+      (let [server (run-jetty
+                    (koi-routes (:operation-registry operation-registry))
+                    {:join? false
+                     :port (Integer/valueOf (or (System/getenv "port") port))})]
+        (assoc this :http-server server))
+      (catch Exception e
+        (println " got exception starting jetty " (.getMessage e))
+        (clojure.stacktrace/print-stack-trace e)
+        (assoc this :http-server nil)))
+
+    )
   (stop [this]
     (println " no-op stopping jetty")
-    this))
+    (if-let [server (:http-server this)]
+      (do (.stop server)
+          (.join server)
+          (dissoc this :http-server))
+    this)))
 
 (defn new-webserver
   [port]
@@ -150,11 +162,24 @@
   [config]
   (let [{:keys [port]} config]
     (component/system-map
-     :config-options config
-     :operation-registry (oph/new-operation-registry config)
+     ;:config-options config
+     :agent (oph/new-agent config)
+     :operation-registry (component/using
+                          (oph/new-operation-registry config)
+                          {:agent :agent})
      :app (component/using
            (new-webserver port)
            {:operation-registry :operation-registry}))))
 
 (defn -main [& args]
   (component/start (default-system (aero.core/read-config (clojure.java.io/resource "config.edn")))))
+
+(comment
+
+  (def system (default-system (aero.core/read-config (clojure.java.io/resource "config.edn"))))
+
+  (alter-var-root #'system component/start)
+  (-> system :operation-registry :operation-registry)
+  (alter-var-root #'system component/stop)
+  )
+

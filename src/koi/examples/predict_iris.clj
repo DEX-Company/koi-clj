@@ -12,7 +12,7 @@
             valid-args?]]
    [koi.invokespec :as ispec]
    [clojure.java.io :as io]
-   [koi.utils :as utils :refer [put-asset get-asset-content get-asset remote-agent keccak512
+   [koi.utils :as utils :refer [put-asset get-asset-content get-asset keccak512
                                 async-handler
                                 process]]
    [aero.core :refer (read-config)]
@@ -43,15 +43,15 @@
         ;(info " result of predict-class " res)
         res))))
 
-(deftype PredictIrisClass [jobs jobids]
+(deftype PredictIrisClass [agent jobs jobids]
   :load-ns true
   prot/PSyncInvoke
   (invoke-sync [_ args]
-    (process args predict-class))
+    (process agent args predict-class))
 
   prot/PAsyncInvoke
   (invoke-async [_ args]
-    (async-handler jobids jobs #(process args predict-class)))
+    (async-handler jobids jobs #(process agent args predict-class)))
 
   prot/PValidParams
   (valid-args? [_ args]
