@@ -9,7 +9,7 @@
    [koi.protocols :as prot 
     :refer [invoke-sync
             invoke-async
-            get-params]]
+            valid-args?]]
    [koi.invokespec :as ispec]
    [clojure.java.io :as io]
    [clojure.data.json :as json]
@@ -56,6 +56,7 @@
   (invoke-async [_ args]
     (async-handler jobids jobs #(process args translate-dataset)))
 
-  prot/PParams
-  (get-params [_]
-    ::params))
+  prot/PValidParams
+  (valid-args? [_ args]
+    {:valid? (sp/valid? ::params args)})
+  )

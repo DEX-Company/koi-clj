@@ -45,13 +45,13 @@
 (def prime-metadata 
   (->> (clojure.java.io/resource "prime_asset_metadata.json") slurp))
 
-(defstate remote-agent :start (get-remote-agent))
+;;(defstate remote-agent :start (get-remote-agent))
 
 
 (defn invoke-metadata
   "creates invoke metadata given result parameter name, a list of dependencies (which are Assets),
   and a string representation of input params"
-  [param-name dependencies params]
+  [remote-agent param-name dependencies params]
   (s/invoke-prov-metadata (.toString (UUID/randomUUID))
                           ;;this is incorrect, it should be koi's did, not surfer's. 
                           (.toString (:did remote-agent))
@@ -65,7 +65,7 @@
 
   It executes the function to compute the results, creates provenance metadata , registers the asset(s)
   and uploads the contents"
-  [params execfn]
+  [remote-agent params execfn]
   (let [agent (:agent remote-agent)
         to-exec (execfn agent params)
         {:keys [dependencies results]} (to-exec)
@@ -74,7 +74,9 @@
                  (mapv (fn[{:keys [param-name content type
                                    metadata] :or {metadata {}} :as c}]
                          (if (= type :asset)
-                           (let [inv-metadata (invoke-metadata (name param-name) dependencies (JSON/toString params))
+                           (let [inv-metadata (invoke-metadata
+                                               remote-agent
+                                               (name param-name) dependencies (JSON/toString params))
                                  asset (s/asset (s/memory-asset (merge metadata
                                                                        inv-metadata)
                                                                 content))
@@ -107,5 +109,3 @@
                             :description (str "Got exception " (.getMessage e))})))))
       .start)
     {:jobid jobid}))
-
-

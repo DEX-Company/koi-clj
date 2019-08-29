@@ -7,14 +7,17 @@
                                                                 not-found
                                                                 bad-request]]
              [ring.mock.request :as mock]
-             [koi.utils :as utils :refer [put-asset get-asset-content remote-agent keccak512]]
+             [koi.utils :as utils :refer [put-asset get-asset-content keccak512
+                                          get-asset]]
              [clojure.walk :refer [keywordize-keys]]
-             [koi.op-handler :as oph :refer [registry ]]
-             [koi.api :as api :refer [app]]
+             [koi.op-handler :as oph :refer [operation-registry ]]
+             [koi.api :as api :refer [koi-routes]]
+             [com.stuartsierra.component :as component]
              [clojure.data.csv :as csv]
              [clojure.data.json :as json]
              [clojure.zip :as zip]
              [clojure.java.io :as io]
+             [koi.config :as config :refer [get-config]]
              [mount.core :as mount])
   (:import [sg.dex.crypto Hash]))
 
@@ -24,20 +27,37 @@
 (def token (atom 0))
 
 (def iripath "/api/v1")
+
+(comment 
+  (def op-registry
+    (let [conf (get-config) ]
+      (operation-registry (fn[c]
+                            {})
+                          conf))))
+
 (defn get-auth-token
   "get the bearer token and use it for rest of the tests"
-  []
-  (let [response (app (-> (mock/request :post (str iripath "/auth/token"))
-                          (mock/header "Authorization" "Basic QWxhZGRpbjpPcGVuU2VzYW1l")))
+  [app]
+  (let [;app (koi-routes op-registry )
+        response (app
+                  (-> (mock/request :post (str iripath "/auth/token"))
+                      (mock/header "Authorization" "Basic QWxhZGRpbjpPcGVuU2VzYW1l"))
+                  )
         body     (parse-body (:body response))]
     (reset! token body)
     (is (= (:status response) (:status (ok))))))
 
 (defn my-test-fixture [f]
-  (mount/start)
-  (get-auth-token)
+  (let [conf (get-config (clojure.java.io/resource "test-config.edn"))]
+    (def system (api/default-system conf))
+    (alter-var-root #'system component/start)
+    (def app (koi-routes (-> system :operation-registry :operation-registry )))
+    (def remote-agent (:agent (:agent system)))
+    )
+  ;(get-auth-token app)
   (f)
-  (mount/stop))
+  (alter-var-root #'system component/stop)
+  )
 
 (use-fixtures :once my-test-fixture)
 
@@ -86,7 +106,7 @@
                             (mock/content-type "application/json")
                             (mock/body (cheshire/generate-string {:dummy "def"}))))]
       (is (= (:status response) (:status (internal-server-error))))))
-  #_(testing "Test async failing operation"
+  (testing "Test async failing operation"
     (let [response (app (-> (mock/request :post (str iripath "/invokeasync/fail"))
                             (mock/header "Authorization" (str "token " @token))
                             (mock/content-type "application/json")
@@ -101,7 +121,6 @@
       (is (= (:status response) (:status (created))))
       (is (= (:status jobres) (:status (ok))))
       (is (every? #{:status :errorcode :description} (keys job-body)))
-     ; job-body
       ))
   (testing "Test nonexistent job"
     (let [jobres (app (-> (mock/request :get (str iripath "/jobs/1234" ))
@@ -120,7 +139,6 @@
                                                                   :algorithm "keccak256"}))))
           body     (parse-body (:body response))]
       (is (string? (-> body :results :hash-value :did)))))
-
   (testing "Test request to primes operation"
     (let [response (app (-> (mock/request :post (str iripath "/invoke/primes"))
                             (mock/content-type "application/json")
@@ -143,17 +161,24 @@
           first-row "sepal_length,sepal_width,petal_length,petal_width,species,predclass"]
       (is (= first-row (first dset-rows))))))
 
+(comment 
+  (let [prime-metadata (->> (clojure.java.io/resource "prime_asset_metadata.json")
+                            slurp
+                            cheshire/parse-string)]
+    (s/register (:agent remote-agent) (s/memory-asset prime-metadata "abc"))
+    ))
+
 (deftest oper-registration
   (testing "primes operation "
     (do 
-        (let [prime-metadata (->> (clojure.java.io/resource "prime_asset_metadata.json")
-                                  slurp
-                                  cheshire/parse-string)
-              ast (s/memory-asset prime-metadata "abc")
-              remote-asset (s/register (:agent remote-agent) ast)
-              res (s/asset-id remote-asset)
-              rem-metadata (s/metadata remote-asset)]
-          (is (=  (s/asset-id ast) res))))))
+      (let [prime-metadata (->> (clojure.java.io/resource "prime_asset_metadata.json")
+                                slurp
+                                cheshire/parse-string)
+            ast (s/memory-asset prime-metadata "abc")
+            remote-asset (s/register (:agent remote-agent) ast)
+            res (s/asset-id remote-asset)
+            rem-metadata (s/metadata remote-asset)]
+        (is (=  (s/asset-id ast) res))))))
 
 (deftest filterrows 
   (testing "Test request to filter rows"
@@ -196,7 +221,8 @@
                                 (mock/body (cheshire/generate-string
                                             {:vehicle-dataset {:did veh-id}
                                              :workshop-dataset {:did w-id}}))))
-              body     (parse-body (:body response))
+          body     (parse-body (:body response))
+          _ (println " body returned in prov-retrieval " body)
               resp-did (-> body :results :joined-dataset :did) 
               res (s/metadata (s/get-asset (:agent remote-agent) resp-did))
               response2 (app (-> (mock/request :post (str iripath "/invoke/prov"))

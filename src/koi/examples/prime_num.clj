@@ -2,7 +2,7 @@
   (:require
    [clojure.spec.alpha :as sp]
    [starfish.core :as s]
-   [koi.utils :as utils :refer [put-asset get-asset-content remote-agent process]]
+   [koi.utils :as utils :refer [put-asset get-asset-content process]]
    [taoensso.timbre :as timbre
     :refer [log  trace  debug  info  warn  error  fatal  report
             logf tracef debugf infof warnf errorf fatalf reportf
@@ -10,7 +10,7 @@
    [koi.protocols :as prot 
     :refer [invoke-sync
             invoke-async
-            get-params]]
+            valid-args?]]
    [koi.invokespec :as ispec]
    [clojure.java.io :as io]
    [aero.core :refer (read-config)]
@@ -53,11 +53,11 @@
       (info " result of execfn " res)
       res)))
 
-(deftype PrimeNumbers [jobs jobids]
-
+(deftype PrimeNumbers [agent jobs jobids]
+  :load-ns true
   prot/PSyncInvoke
   (invoke-sync [_ args]
-    (process args compute-primes))
+    (process agent args compute-primes))
 
   prot/PAsyncInvoke
   (invoke-async [_ args]
@@ -68,7 +68,7 @@
                        (try (Thread/sleep 10000)
                             (catch Exception e))
                        (swap! jobs assoc jobid {:status :running})
-                       (try (let [res (process args compute-primes)]
+                       (try (let [res (process agent args compute-primes)]
                               (swap! jobs assoc jobid
                                      {:status :succeeded
                                       :results (:results res)}))
@@ -83,6 +83,7 @@
         .start)
       {:jobid jobid}))
   
-  prot/PParams
-  (get-params [_]
-    ::params))
+  prot/PValidParams
+  (valid-args? [_ args]
+    {:valid? (sp/valid? ::params args)})
+  )

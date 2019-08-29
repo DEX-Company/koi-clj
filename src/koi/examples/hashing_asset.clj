@@ -9,10 +9,10 @@
    [koi.protocols :as prot 
     :refer [invoke-sync
             invoke-async
-            get-params]]
+            valid-args?]]
    [koi.invokespec :as ispec]
    [clojure.java.io :as io]
-   [koi.utils :as utils :refer [put-asset get-asset-content get-asset remote-agent keccak512
+   [koi.utils :as utils :refer [put-asset get-asset-content get-asset keccak512
                                 process]]
    [aero.core :refer (read-config)]
    [spec-tools.json-schema :as jsc])
@@ -46,11 +46,11 @@
         (info " result of execfn " res)
         res))))
 
-(deftype HashingAsset [jobs jobids]
-
+(deftype HashingAsset [agent jobs jobids]
+  :load-ns true
   prot/PSyncInvoke
   (invoke-sync [_ args]
-    (process args compute-hash))
+    (process agent args compute-hash))
 
   prot/PAsyncInvoke
   (invoke-async [_ args]
@@ -58,7 +58,7 @@
       (doto (Thread.
              (fn []
                (swap! jobs assoc jobid {:status :accepted})
-               (try (let [res (process args compute-hash)]
+               (try (let [res (process agent args compute-hash)]
                       (swap! jobs assoc jobid
                              {:status :succeeded
                               :results (:results res)}))
@@ -71,6 +71,7 @@
         .start)
       {:jobid jobid}))
 
-  prot/PParams
-  (get-params [_]
-    ::params))
+  prot/PValidParams
+  (valid-args? [_ args]
+    {:valid? (sp/valid? ::params args)})
+  )

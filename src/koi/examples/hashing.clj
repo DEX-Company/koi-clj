@@ -4,7 +4,7 @@
    [koi.protocols :as prot 
     :refer [invoke-sync
             invoke-async
-            get-params]]
+            valid-args?]]
    [koi.invokespec :as ispec]
    [koi.utils :as utils :refer [get-asset-content keccak512]]
    [taoensso.timbre :as timbre
@@ -26,7 +26,8 @@
   {:results {:keccak256 (Hash/keccak256String cont)
              :keccak512 (keccak512 cont)}})
 
-(deftype Hashing [jobs jobids]
+(deftype Hashing [agent jobs jobids]
+  :load-ns true
 
   prot/PSyncInvoke
   (invoke-sync [_ args]
@@ -54,6 +55,6 @@
         .start)
       {:jobid jobid}))
   
-  prot/PParams
-  (get-params [_]
-    ::params))
+  prot/PValidParams
+  (valid-args? [_ args]
+    {:valid? (sp/valid? ::params args)}))

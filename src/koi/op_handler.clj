@@ -4,31 +4,20 @@
    [cheshire.core :as che :refer :all]
    [starfish.core :as s]
    [clojure.spec.alpha :as sp]
+   [com.stuartsierra.component :as component]
    [koi.protocols :as prot 
     :refer [invoke-sync
             invoke-async
-            get-params]]
+            valid-args?]]
    [ring.util.http-response :as http-response :refer [ok header created unprocessable-entity
                                                       not-found]]
    [ring.util.http-status :as status]
    [clojure.java.io :as io]
-
-   [mount.core :refer [defstate]]
-   [koi.examples.hashing :as h]
-   [koi.examples.hashing-asset :as ha]
-   [koi.examples.failing-asset :as f]
-   [koi.examples.prime-num :as p]
-   [koi.examples.translate-german-to-en :as trans]
-   [koi.examples.predict-iris :as iris]
-   [koi.examples.filter-empty-rows :as filterrows]
-   [koi.examples.workshop-join :as wk]
-   [koi.examples.prov-tree-traversal :as prov]
-   [koi.utils :refer [remote-agent]]
    [taoensso.timbre :as timbre
     :refer [log  trace  debug  info  warn  error  fatal  report
             logf tracef debugf infof warnf errorf fatalf reportf
             spy get-env]]
-   [koi.config :as config :refer [get-config]]))
+   [koi.config :as config :refer [get-config get-remote-agent]]))
 
 ;;the jobs are stored as in-memory atoms. A production setup might
 ;;want to store the jobs in persisten (e.g db) storage
@@ -63,35 +52,95 @@
 
 (defn operation-registry
   "return a map that acts as an operation registry. Key is operation id/common name
-  and value is the implementation class to be called"
-  []
-  (let [operations (:operations (get-config))
-        op-keys (keys operations)
-        op-impls (mapv #(do
-                          (info " loading " %)
-                          (clojure.lang.Reflector/invokeConstructor
-                           (resolve (symbol %))
-                           (to-array [jobs jobids])))
-                       (mapv (fn[[k v]] (:classname v)) operations))
-        regd-ids (register-operations (:agent remote-agent) operations)]
-    ;;return a map that has the asset/operation id as key and value is the operation class
-    ;;merging a map that has the common name of the operation for easier testing.
-    (merge (zipmap op-keys op-impls)
-           (zipmap regd-ids op-impls))))
+  and value is the implementation class to be called.
+  The register-fn takes a configuration map that registers the operations. If the agent is local,
+  then use local registration mechanism, else use a remote agent.
+  "
+  ([] (operation-registry (get-config)))
+  ([conf](operation-registry (:agent (get-remote-agent conf))
+                             (fn[config]
+                               (register-operations (:agent (get-remote-agent config))
+                                                    (:operations config)))
+                             conf))
+  ([agent register-fn conf]
+   (let [operations (:operations conf)
+         op-keys (keys operations)
+         op-impls (mapv #(do
+                           (try 
+                             (info " loading " %)
+                             (clojure.lang.Reflector/invokeConstructor
+                              (resolve (symbol %))
+                              (to-array [agent jobs jobids]))
 
+                             (catch Exception e
+                               (do 
+                                 (error " failed to load operation class " %)
+                                 (clojure.stacktrace/print-stack-trace e)))))
+                        (mapv (fn[[k v]] (:classname v)) operations))
+         regd-ids (try
+                    (info " registering operations ")
+                    (register-fn conf)
+                    ;(register-operations (:agent (get-remote-agent conf)) operations)
+                    (catch Exception e
+                      (error " failed to register operations ")
+                      (clojure.stacktrace/print-stack-trace e)))
+         _ (info " op-keys " op-keys  "\n op -impl " op-impls
+                    "\n regd-ids " regd-ids)
+         res (merge (zipmap op-keys op-impls)
+                    (zipmap regd-ids op-impls))]
+     ;;return a map that has the asset/operation id as key and value is the operation class
+     ;;merging a map that has the common name of the operation for easier testing.
+     (info " registered assets " res)
+     res)))
 
-(defstate registry :start (operation-registry))
+(defrecord OperationRegistry [agent config]
+  component/Lifecycle
+
+  (start [component]
+    (info ";; Starting operation registry ")
+    (let [reg (operation-registry (:agent agent)
+                                  (fn[cfg]
+                                    (register-operations (:agent (:agent agent))
+                                                         (:operations cfg)))
+                                  config)]
+      (assoc component :operation-registry reg)))
+
+  (stop [component]
+    (info ";; Stopping registry ")
+    (assoc component :operation-registry nil)))
+
+(defrecord Agent [config]
+  component/Lifecycle
+
+  (start [component]
+    (let [ag (get-remote-agent config)
+          res (assoc component :agent ag)]
+      (info ";; Starting agent " )
+      res))
+
+  (stop [component]
+    (info ";; Stopping agent ")
+    (assoc component :agent nil)))
+
+(defn new-agent
+  [config]
+  (map->Agent {:config config}))
+
+(defn new-operation-registry
+  [config]
+  (map->OperationRegistry {:config config}))
 
 (defn invoke-handler
   "this method handles API calls to /invoke. The first argument is a boolean value, if true,
   responds with a job id. Else it returns synchronously."
-  ([inp] (invoke-handler false inp))
-  ([async? inp]
-   (let [params (:body-params inp)
+  ([registry inp] (invoke-handler registry false inp))
+  ([registry async? inp]
+   (let [params (or (:body-params inp) (:body inp))
          {:keys [did]} (:route-params inp) ]
      (if-let [ep (registry (keyword did))]
-       (let [validator (get-params ep) ]
-         (if (and validator params (sp/valid? validator params))
+       (let [params-check (valid-args? ep params)
+             valid? (:valid? params-check) ]
+         (if valid?
            (do
              (info " valid request, making invoke request with " params)
              (if async?
@@ -115,7 +164,11 @@
                      (http-response/internal-server-error " server error executing operation "))))))
            (do
              (error " invalid request, sending error in invoke request with " params)
-             (http-response/bad-request (str " invalid request: " (if params (clojure.string/join (validator params)) " params is not present") " - " )))))
+             (http-response/bad-request (str " invalid request: "
+                                             #_(if params (clojure.string/join
+                                                         (validator params))
+                                                 " params is not present")
+                                             " - " )))))
        (do (error " invalid operation did " did)
            (not-found (str "operation did " did " is a valid resource "))))))) 
 

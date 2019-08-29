@@ -7,6 +7,7 @@
                                        undocumented
                                        GET PUT POST DELETE]]
    [compojure.api.coercion.spec :as spec-coercion]
+   [com.stuartsierra.component :as component]
    [ring.middleware.cors :refer [wrap-cors]]
    [compojure.api.coercion.schema :as cos]
    [compojure.route :as route]
@@ -21,12 +22,12 @@
    [spec-tools.data-spec :as ds]
    [spec-tools.json-schema :as jsc]
    [schema-tools.core :as st]
-   [mount.core :as mount :refer [defstate]]
    [clojure.java.io :as io]
    [koi.middleware.basic-auth :refer [basic-auth-mw]]
    [koi.middleware.authenticated :refer [authenticated-mw]]
    [koi.middleware.token-auth :refer [token-auth-mw]]
    [koi.route-functions.auth.get-auth-credentials :refer [auth-credentials-response]]
+   [koi.config :as config :refer [get-config get-remote-agent]]
    [koi.op-handler :as oph])
   (:import [java.util UUID])
   (:gen-class))
@@ -38,76 +39,124 @@
 (s/def ::auth-header string?)
 (s/def ::auth-response string?)
 
-(def routes
-  (context "/api/v1" []
-           :tags ["Invoke ocean service"]
-           :coercion :spec
+(defn koi-routes
+  [operation-registry]
+  (api
+   {:swagger
+    {:ui "/"
+     :spec "/swagger1.json"
+     :data {:info {:title "invoke-api "
+                   :description "Invoke with Ocean "}
+            :tags [{:name "invoke service", :description "invoke Ocean services"}]}}}
 
-           (context "/auth" []
+   (context "/api/v1" []
+     :tags ["Invoke ocean service"]
+     :coercion :spec
 
-                    (POST "/token" {:as request}
-                         :tags ["Auth"]
-                         :return ::auth-response
-                         :header-params [authorization :- ::auth-header]
-                         :middleware [basic-auth-mw authenticated-mw]
-                         :summary "Returns auth info given a username and password in the '`Authorization`' header."
-                         :description "Authorization header expects '`Basic username:password`' where `username:password`
+     (context "/auth" []
+
+       (POST "/token" {:as request}
+         :tags ["Auth"]
+         :return ::auth-response
+         :header-params [authorization :- ::auth-header]
+         :middleware [basic-auth-mw authenticated-mw]
+         :summary "Returns auth info given a username and password in the '`Authorization`' header."
+         :description "Authorization header expects '`Basic username:password`' where `username:password`
                          is base64 encoded. To adhere to basic auth standards we have to use a field called
                          `username` however we will accept a valid username or email as a value for this key."
-                         (auth-credentials-response request)))
+         (auth-credentials-response request)))
 
-           (context "/invoke/:did" []
-                    :path-params [did :- string?]
-                    :middleware [token-auth-mw authenticated-mw]
-                    (sw/resource
-                     {:post
-                      {:summary "Run an sync operation"
-                       :parameters {:body ::params}
-                       :responses {200 {:schema spec/any?}
-                                   201 {:schema spec/any?}
-                                   404 {:schema spec/any?}
-                                   500 {:schema spec/any?}
-                                   }
-                       :handler oph/invoke-handler}}))
+     (context "/invoke/:did" []
+       :path-params [did :- string?]
+       :middleware [token-auth-mw authenticated-mw]
+       (sw/resource
+        {:post
+         {:summary "Run an sync operation"
+          :parameters {:body ::params}
+          :responses {200 {:schema spec/any?}
+                      201 {:schema spec/any?}
+                      404 {:schema spec/any?}
+                      500 {:schema spec/any?}
+                      }
+          :handler (partial oph/invoke-handler operation-registry)}}))
 
-           (context "/invokeasync/:did" []
-                    :path-params [did :- string?]
-                    :middleware [token-auth-mw authenticated-mw]
-                    (sw/resource
-                     {
-                      :post
-                      {:summary "Run an async operation"
-                       :parameters {:body ::params}
-                       :responses {200 {:schema spec/any?}
-                                   201 {:schema spec/any?}
-                                   404 {:schema spec/any?}
-                                   500 {:schema spec/any?}}
-                       :handler (partial oph/invoke-handler true)}}))
+     (context "/invokeasync/:did" []
+       :path-params [did :- string?]
+       :middleware [token-auth-mw authenticated-mw]
+       (sw/resource
+        {
+         :post
+         {:summary "Run an async operation"
+          :parameters {:body ::params}
+          :responses {200 {:schema spec/any?}
+                      201 {:schema spec/any?}
+                      404 {:schema spec/any?}
+                      500 {:schema spec/any?}}
+          :handler (partial oph/invoke-handler operation-registry true)}}))
 
-           (context "/jobs/:jobid" []
-                    :path-params [jobid :- int?]
-                    :middleware [token-auth-mw authenticated-mw]
-                    (sw/resource
-                     {:get
-                      {:summary "get the status of a job"
-                       :responses {200 {:schema spec/any?}
-                                   422 {:schema spec/any?}
-                                   404 {:schema spec/any?}
-                                   500 {:schema spec/any?}}
-                       :handler oph/result-handler}}))))
+     (context "/jobs/:jobid" []
+       :path-params [jobid :- int?]
+       :middleware [token-auth-mw authenticated-mw]
+       (sw/resource
+        {:get
+         {:summary "get the status of a job"
+          :responses {200 {:schema spec/any?}
+                      422 {:schema spec/any?}
+                      404 {:schema spec/any?}
+                      500 {:schema spec/any?}}
+          :handler oph/result-handler}})))))
 
-(def app
-  (do
-    (mount/start-with-states {#'koi.op-handler/registry
-                              {:start oph/operation-registry}})
-    (api
-     {:swagger
-      {:ui "/"
-       :spec "/swagger1.json"
-       :data {:info {:title "invoke-api "
-                     :description "Invoke with Ocean "}
-              :tags [{:name "invoke service", :description "invoke Ocean services"}]}}}
-     routes)))
+(defrecord WebServer [port operation-registry]
+  component/Lifecycle
+  (start [this]
+    (info " start jetty at " port)
+    (try 
+      (let [server (run-jetty
+                    (koi-routes (:operation-registry operation-registry))
+                    {:join? false
+                     :port (Integer/valueOf (or (System/getenv "port") port))})]
+        (assoc this :http-server server))
+      (catch Exception e
+        (error " got exception starting jetty " (.getMessage e))
+        (clojure.stacktrace/print-stack-trace e)
+        (assoc this :http-server nil)))
+
+    )
+  (stop [this]
+    (info " stopping jetty")
+    (if-let [server (:http-server this)]
+      (do (.stop server)
+          (.join server)
+          (dissoc this :http-server))
+    this)))
+
+(defn new-webserver
+  [port]
+  (map->WebServer {:port port})
+  )
+
+(defn default-system
+  [config]
+  (let [{:keys [port]} config]
+    (component/system-map
+     ;:config-options config
+     :agent (oph/new-agent config)
+     :operation-registry (component/using
+                          (oph/new-operation-registry config)
+                          {:agent :agent})
+     :app (component/using
+           (new-webserver port)
+           {:operation-registry :operation-registry}))))
 
 (defn -main [& args]
-  (run-jetty app {:port (Integer/valueOf (or (System/getenv "port") "3000"))}))
+  (component/start (default-system (aero.core/read-config (clojure.java.io/resource "config.edn")))))
+
+(comment
+
+  (def system (default-system (aero.core/read-config (clojure.java.io/resource "config.edn"))))
+
+  (alter-var-root #'system component/start)
+  (-> system :operation-registry :operation-registry)
+  (alter-var-root #'system component/stop)
+  )
+

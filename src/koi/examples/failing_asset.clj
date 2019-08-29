@@ -5,9 +5,9 @@
    [koi.protocols :as prot 
     :refer [invoke-sync
             invoke-async
-            get-params]]
+            valid-args?]]
    [clojure.java.io :as io]
-   [koi.utils :as utils :refer [put-asset get-asset-content get-asset remote-agent keccak512
+   [koi.utils :as utils :refer [put-asset get-asset-content get-asset keccak512
                                 async-handler
                                 process]]
    [koi.invokespec :as ispec]
@@ -21,20 +21,22 @@
   [agent {:keys [dummy]}]
   (throw (Exception. "test exception")))
 
-(deftype FailingAsset [jobs jobids]
+(deftype FailingAsset [agent jobs jobids]
+  :load-ns true
 
   prot/PSyncInvoke
   (invoke-sync [_ args]
-    (process args run-method))
+    (process agent args run-method))
 
   prot/PAsyncInvoke
   (invoke-async [_ args]
-    (async-handler jobids jobs #(process args run-method)))
-  
-  prot/PParams
-  (get-params [_]
-    ::params))
+    (async-handler jobids jobs #(process agent args run-method)))
+
+  prot/PValidParams
+  (valid-args? [_ args]
+    {:valid? (sp/valid? ::params args)})
+  )
 
 (defn new-failing
-  [jobs jobids]
-  (FailingAsset. jobs jobids))
+  [agent jobs jobids]
+  (FailingAsset. agent jobs jobids))

@@ -9,11 +9,11 @@
    [koi.protocols :as prot 
     :refer [invoke-sync
             invoke-async
-            get-params]]
+            valid-args?]]
    [koi.invokespec :as ispec]
    [clojure.walk :refer [keywordize-keys]]
    [clojure.java.io :as io]
-   [koi.utils :as utils :refer [put-asset get-asset-content get-asset remote-agent keccak512
+   [koi.utils :as utils :refer [put-asset get-asset-content get-asset keccak512
                                 async-handler
                                 process]]
    [aero.core :refer (read-config)]
@@ -49,8 +49,8 @@
 
 
 (defn walk-fn
-  [asset-id]
-  (let [ast (s/get-asset (:agent remote-agent) asset-id)
+  [remote-agent asset-id]
+  (let [ast (s/get-asset remote-agent asset-id)
         mdata (s/metadata ast)
         imap {:asset-id asset-id
               :metadata (dissoc mdata :provenance)}]
@@ -61,31 +61,30 @@
       imap)))
 
 (defn prov-data
-  [asset-id]
-  (println " prov-data " asset-id)
-  (let [k1 (walk-fn asset-id)]
-    (assoc k1 :derived-from (mapv walk-fn (:derived-from k1)))))
+  [remote-agent asset-id]
+  (let [k1 (walk-fn remote-agent asset-id)]
+    (assoc k1 :derived-from (mapv (partial walk-fn remote-agent) (:derived-from k1)))))
 
 (defn prov-tree-fn
-  [agent {:keys [asset]}]
+  [remote-agent {:keys [asset]}]
   (fn []
-    (let [data (json/write-str (prov-data (:did asset)))
+    (let [data (json/write-str (prov-data remote-agent (:did asset)))
           res {:dependencies [asset] 
                :results [{:param-name :prov-tree
                           :type :json
                           :content data}]}]
       res)))
 
-(deftype ProvTraversalClass [jobs jobids]
-
+(deftype ProvTraversalClass [agent jobs jobids]
+  :load-ns true
   prot/PSyncInvoke
   (invoke-sync [_ args]
-    (process args prov-tree-fn))
+    (process agent args prov-tree-fn))
 
   prot/PAsyncInvoke
   (invoke-async [_ args]
-    (async-handler jobids jobs #(process args prov-tree-fn)))
+    (async-handler jobids jobs #(process agent args prov-tree-fn)))
 
-  prot/PParams
-  (get-params [_]
-    ::params))
+  prot/PValidParams
+  (valid-args? [_ args]
+    {:valid? (sp/valid? ::params args)}))

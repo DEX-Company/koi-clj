@@ -1,4 +1,4 @@
-(defproject sg.dex/koi-clj "0.1.4"
+(defproject sg.dex/koi-clj "0.1.5-SNAPSHOT"
   :description "Ocean Invoke API implementation in Clojure"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
@@ -23,7 +23,8 @@
                  [metosin/compojure-api "2.0.0-alpha28"]
 
                  ;;components
-                 [mount "0.1.12"]
+                 ;[mount "0.1.12"]
+                 [com.stuartsierra/component "0.4.0"]
 
                  [ring "1.6.3"]
                  [metosin/ring-http-response "0.9.0"]
@@ -53,6 +54,8 @@
                  ;;csv manipulation
                  [net.mikera/core.matrix "0.58.0"]
                  [org.clojure/data.csv "0.1.4"]
+
+                 ;;
                  ]
   :plugins [[lein-codox "0.10.7"]]
   :codox {:output-path "codox"}
@@ -70,6 +73,14 @@
              :uberjar{:aot :all 
                       :jvm-opts ["-Dconfig.edn=resources/dev-config.edn"]
                       :main koi.api}}
-
-  :ring { :handler koi.api/app }
+  :aot [koi.examples.hashing
+        koi.examples.prime-num
+        koi.examples.predict-iris
+        koi.examples.hashing-asset
+        koi.examples.filter-empty-rows
+        koi.examples.prov-tree-traversal
+        koi.examples.failing-asset
+        koi.examples.workshop-join
+        ]
+  ;:ring {:handler koi.api/app :init koi.api/app-init}
 )
