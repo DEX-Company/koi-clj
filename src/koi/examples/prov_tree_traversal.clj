@@ -62,7 +62,6 @@
 
 (defn prov-data
   [remote-agent asset-id]
-  (println " prov-data " asset-id)
   (let [k1 (walk-fn remote-agent asset-id)]
     (assoc k1 :derived-from (mapv (partial walk-fn remote-agent) (:derived-from k1)))))
 

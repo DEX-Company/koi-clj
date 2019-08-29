@@ -109,7 +109,7 @@
 (defrecord WebServer [port operation-registry]
   component/Lifecycle
   (start [this]
-    (println " start jetty at " port)
+    (info " start jetty at " port)
     (try 
       (let [server (run-jetty
                     (koi-routes (:operation-registry operation-registry))
@@ -117,13 +117,13 @@
                      :port (Integer/valueOf (or (System/getenv "port") port))})]
         (assoc this :http-server server))
       (catch Exception e
-        (println " got exception starting jetty " (.getMessage e))
+        (error " got exception starting jetty " (.getMessage e))
         (clojure.stacktrace/print-stack-trace e)
         (assoc this :http-server nil)))
 
     )
   (stop [this]
-    (println " stopping jetty")
+    (info " stopping jetty")
     (if-let [server (:http-server this)]
       (do (.stop server)
           (.join server)

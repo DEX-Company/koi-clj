@@ -90,14 +90,14 @@
                     (zipmap regd-ids op-impls))]
      ;;return a map that has the asset/operation id as key and value is the operation class
      ;;merging a map that has the common name of the operation for easier testing.
-     (println " registered assets " res)
+     (info " registered assets " res)
      res)))
 
 (defrecord OperationRegistry [agent config]
   component/Lifecycle
 
   (start [component]
-    (println ";; Starting registry ")
+    (info ";; Starting operation registry ")
     (let [reg (operation-registry (:agent agent)
                                   (fn[cfg]
                                     (register-operations (:agent (:agent agent))
@@ -106,7 +106,7 @@
       (assoc component :operation-registry reg)))
 
   (stop [component]
-    (println ";; Stopping registry ")
+    (info ";; Stopping registry ")
     (assoc component :operation-registry nil)))
 
 (defrecord Agent [config]
@@ -115,11 +115,11 @@
   (start [component]
     (let [ag (get-remote-agent config)
           res (assoc component :agent ag)]
-      (println ";; Starting agent " )
+      (info ";; Starting agent " )
       res))
 
   (stop [component]
-    (println ";; Stopping agent ")
+    (info ";; Stopping agent ")
     (assoc component :agent nil)))
 
 (defn new-agent

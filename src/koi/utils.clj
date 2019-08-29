@@ -30,7 +30,6 @@
 
 (defn get-asset
   [agent asset-param]
-  (println " get-asset " agent " asset-param " asset-param)
   (->> asset-param
        :did
        (s/get-asset agent)))
@@ -68,7 +67,6 @@
   and uploads the contents"
   [remote-agent params execfn]
   (let [agent (:agent remote-agent)
-        _ (println " process fn agent " agent)
         to-exec (execfn agent params)
         {:keys [dependencies results]} (to-exec)
         res (->> results
