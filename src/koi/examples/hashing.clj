@@ -6,7 +6,7 @@
             invoke-async
             valid-args?]]
    [koi.invokespec :as ispec]
-   [koi.utils :as utils :refer [get-asset-content keccak512]]
+   [koi.utils :as utils :refer [ keccak512]]
    [taoensso.timbre :as timbre
     :refer [log  trace  debug  info  warn  error  fatal  report
             logf tracef debugf infof warnf errorf fatalf reportf]]
@@ -26,7 +26,7 @@
   {:results {:keccak256 (Hash/keccak256String cont)
              :keccak512 (keccak512 cont)}})
 
-(deftype Hashing [agent jobs jobids]
+(deftype Hashing [agent storage jobs jobids]
   :load-ns true
 
   prot/PSyncInvoke

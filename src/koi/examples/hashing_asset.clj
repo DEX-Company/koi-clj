@@ -7,13 +7,11 @@
             logf tracef debugf infof warnf errorf fatalf reportf
             spy get-env]]
    [koi.protocols :as prot 
-    :refer [invoke-sync
-            invoke-async
-            valid-args?]]
+    :refer [invoke-sync invoke-async valid-args?
+            get-asset]]
    [koi.invokespec :as ispec]
    [clojure.java.io :as io]
-   [koi.utils :as utils :refer [put-asset get-asset-content get-asset keccak512
-                                process]]
+   [koi.utils :as utils :refer [keccak512 process async-handler]]
    [aero.core :refer (read-config)]
    [spec-tools.json-schema :as jsc])
   (:import [sg.dex.crypto Hash]
@@ -29,8 +27,8 @@
 
 
 (defn compute-hash
-  [agent {:keys [to-hash algorithm]}]
-  (let [ast (get-asset agent to-hash)
+  [storage {:keys [to-hash algorithm]}]
+  (let [ast (get-asset storage to-hash)
         cont (-> ast s/content s/to-string)]
     (fn []
       (let [hashval (cond (= algorithm "keccak256")
@@ -46,30 +44,15 @@
         (info " result of execfn " res)
         res))))
 
-(deftype HashingAsset [agent jobs jobids]
+(deftype HashingAsset [agent storage jobs jobids]
   :load-ns true
   prot/PSyncInvoke
   (invoke-sync [_ args]
-    (process agent args compute-hash))
+    (process agent storage args compute-hash))
 
   prot/PAsyncInvoke
   (invoke-async [_ args]
-    (let [jobid (swap! jobids inc)]
-      (doto (Thread.
-             (fn []
-               (swap! jobs assoc jobid {:status :accepted})
-               (try (let [res (process agent args compute-hash)]
-                      (swap! jobs assoc jobid
-                             {:status :succeeded
-                              :results (:results res)}))
-                    (catch Exception e
-                      (error " Caught exception running async job " (.getMessage e))
-                      (swap! jobs assoc jobid
-                             {:status :error
-                              :errorcode 8005
-                              :description (str "Got exception " (.getMessage e))})))))
-        .start)
-      {:jobid jobid}))
+    (async-handler jobids jobs #(process agent storage args compute-hash)))
 
   prot/PValidParams
   (valid-args? [_ args]

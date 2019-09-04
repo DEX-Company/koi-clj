@@ -7,8 +7,7 @@
             invoke-async
             valid-args?]]
    [clojure.java.io :as io]
-   [koi.utils :as utils :refer [put-asset get-asset-content get-asset keccak512
-                                async-handler
+   [koi.utils :as utils :refer [async-handler
                                 process]]
    [koi.invokespec :as ispec]
    [aero.core :refer (read-config)]
@@ -21,16 +20,16 @@
   [agent {:keys [dummy]}]
   (throw (Exception. "test exception")))
 
-(deftype FailingAsset [agent jobs jobids]
+(deftype FailingAsset [agent storage jobs jobids]
   :load-ns true
 
   prot/PSyncInvoke
   (invoke-sync [_ args]
-    (process agent args run-method))
+    (process agent storage args run-method))
 
   prot/PAsyncInvoke
   (invoke-async [_ args]
-    (async-handler jobids jobs #(process agent args run-method)))
+    (async-handler jobids jobs #(process agent storage args run-method)))
 
   prot/PValidParams
   (valid-args? [_ args]
@@ -38,5 +37,5 @@
   )
 
 (defn new-failing
-  [agent jobs jobids]
-  (FailingAsset. agent jobs jobids))
+  [agent storage jobs jobids]
+  (FailingAsset. agent storage jobs jobids))

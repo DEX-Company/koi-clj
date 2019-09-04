@@ -56,24 +56,25 @@
   The register-fn takes a configuration map that registers the operations. If the agent is local,
   then use local registration mechanism, else use a remote agent.
   "
-  ([] (operation-registry (get-config)))
-  ([conf](operation-registry (:agent (get-remote-agent conf))
+  #_([] (operation-registry (get-config)))
+  #_([conf](operation-registry (:agent (get-remote-agent conf))
                              (fn[config]
                                (register-operations (:agent (get-remote-agent config))
                                                     (:operations config)))
                              conf))
-  ([agent register-fn conf]
+  ([agent storage register-fn conf]
    (let [operations (:operations conf)
          op-keys (keys operations)
+         _ (println " operation registry storage " storage " agent " agent)
          op-impls (mapv #(do
-                           (try 
+                           (try
                              (info " loading " %)
                              (clojure.lang.Reflector/invokeConstructor
                               (resolve (symbol %))
-                              (to-array [agent jobs jobids]))
+                              (to-array [agent (:storage storage) jobs jobids]))
 
                              (catch Exception e
-                               (do 
+                               (do
                                  (error " failed to load operation class " %)
                                  (clojure.stacktrace/print-stack-trace e)))))
                         (mapv (fn[[k v]] (:classname v)) operations))
@@ -93,12 +94,13 @@
      (info " registered assets " res)
      res)))
 
-(defrecord OperationRegistry [agent config]
+(defrecord OperationRegistry [storage agent config]
   component/Lifecycle
 
   (start [component]
     (info ";; Starting operation registry ")
     (let [reg (operation-registry (:agent agent)
+                                  storage
                                   (fn[cfg]
                                     (register-operations (:agent (:agent agent))
                                                          (:operations cfg)))
@@ -115,7 +117,7 @@
   (start [component]
     (let [ag (get-remote-agent config)
           res (assoc component :agent ag)]
-      (info ";; Starting agent " )
+      (info ";; Starting agent " res)
       res))
 
   (stop [component]

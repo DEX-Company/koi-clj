@@ -16,3 +16,10 @@
   (valid-args? [m args]
     "returns a map with keys valid? and description. If valid? is true,
   then the invoke request is delegated to invoke or invoke async"))
+
+(defprotocol PAssetStorage
+  "Protocol for asset storage"
+  (get-asset [m asset]
+    "Retrieves an asset ")
+  (put-asset [m params]
+    "Save an asset "))

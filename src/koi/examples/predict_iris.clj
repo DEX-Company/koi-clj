@@ -12,7 +12,7 @@
             valid-args?]]
    [koi.invokespec :as ispec]
    [clojure.java.io :as io]
-   [koi.utils :as utils :refer [put-asset get-asset-content get-asset keccak512
+   [koi.utils :as utils :refer [get-asset
                                 async-handler
                                 process]]
    [aero.core :refer (read-config)]

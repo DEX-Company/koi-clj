@@ -2,7 +2,7 @@
   (:require
    [clojure.spec.alpha :as sp]
    [starfish.core :as s]
-   [koi.utils :as utils :refer [put-asset get-asset-content process]]
+   [koi.utils :as utils :refer [process]]
    [taoensso.timbre :as timbre
     :refer [log  trace  debug  info  warn  error  fatal  report
             logf tracef debugf infof warnf errorf fatalf reportf

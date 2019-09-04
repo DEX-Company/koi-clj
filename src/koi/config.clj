@@ -15,7 +15,10 @@
   ([config]
    (let [agent-url (:agent-url config)
          did (s/random-did)
-         ddo (s/create-ddo agent-url)]
-     {:did did :ddo ddo :agent
-      (s/remote-agent did ddo (:username config) (:password config))})))
+         ddo (s/create-ddo agent-url)
+         res 
+         {:did did :ddo ddo :agent
+          (s/remote-agent did ddo (:username config) (:password config))}]
+     (println " get-remote-agent " res)
+     res)))
 

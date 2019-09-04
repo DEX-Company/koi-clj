@@ -2,6 +2,7 @@
   (:require
    [starfish.core :as s]
    [clojure.walk :refer [keywordize-keys stringify-keys]]
+   [koi.protocols :as prot :refer [get-asset put-asset]]
    [taoensso.timbre :as timbre
     :refer [log  trace  debug  info  warn  error  fatal  report
             logf tracef debugf infof warnf errorf fatalf reportf
@@ -15,24 +16,22 @@
            [sg.dex.starfish.util Hex JSON]
            [org.bouncycastle.jcajce.provider.digest Keccak$Digest512 ]))
 
-(defn put-asset
-  ([r-agent asset]
-   (let [remote-asset (s/register r-agent asset)
-         _ (s/upload r-agent asset)]
-     (s/asset-id remote-asset))))
+(deftype RemoteStorage
+    [agent]
+  prot/PAssetStorage
+  (put-asset
+    [_ asset]
+    (println " agent is " agent)
+    (let [ag (:agent agent)
+          remote-asset (s/register ag asset)]
+      (s/upload ag asset)
+      (s/asset-id remote-asset)))
 
-(defn get-asset-content
-  ([remote-agent did]
-   (->> did
-        (s/get-asset remote-agent)
-        (s/content)
-        s/to-string)))
-
-(defn get-asset
-  [agent asset-param]
-  (->> asset-param
-       :did
-       (s/get-asset agent)))
+  (get-asset
+    [_ asset-param]
+    (->> asset-param
+         :did
+         (s/get-asset (:agent agent)))))
 
 (defn keccak512
   "returns the keccak512 digest"
@@ -42,7 +41,7 @@
              (.update byt 0 (alength byt)))]
     (Hex/toString (.digest di))))
 
-(def prime-metadata 
+#_(def prime-metadata 
   (->> (clojure.java.io/resource "prime_asset_metadata.json") slurp))
 
 ;;(defstate remote-agent :start (get-remote-agent))
@@ -65,9 +64,10 @@
 
   It executes the function to compute the results, creates provenance metadata , registers the asset(s)
   and uploads the contents"
-  [remote-agent params execfn]
+  [remote-agent storage params execfn]
   (let [agent (:agent remote-agent)
-        to-exec (execfn agent params)
+        _ (println " process-fn storage " storage " agent " agent)
+        to-exec (execfn storage params)
         {:keys [dependencies results]} (to-exec)
         res (->> results
                  ;(filter (fn[{:keys [type]}] (= :asset type)))
@@ -80,7 +80,7 @@
                                  asset (s/asset (s/memory-asset (merge metadata
                                                                        inv-metadata)
                                                                 content))
-                                 reg-asset-id (put-asset agent asset)]
+                                 reg-asset-id (put-asset storage asset)]
                              {param-name {:did
                                           ;;(str (:did remote-agent) "/" reg-asset-id)
                                           ;;when the caller uses universal resolver, put this back

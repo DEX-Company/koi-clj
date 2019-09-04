@@ -6,6 +6,9 @@
  :operations
  {
   ;;note that path name with hyphen (-) must be replaced with underscore, since java doesn't allow hyphens
+  ;;give full path
+  ;;possibly give asset id as well.
+
   :primes {:classname "koi.examples.prime_num.PrimeNumbers" :metadata "prime_asset_metadata.json"}
   :assethashing {:classname "koi.examples.hashing_asset.HashingAsset" :metadata "hashing_asset_metadata.json"}
   :hashing {:classname "koi.examples.hashing.Hashing" :metadata "hashing_metadata.json"}
