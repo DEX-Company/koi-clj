@@ -18,6 +18,12 @@
       (dissoc (handler (assoc args :config (:operation json-config)))
               :config))))
 
+(defn register-sideeffect
+  [ragent asset]
+  (do
+    (s/register ragent asset)
+    (s/upload ragent asset)))
+
 (defn wrap-asset-store
   ([handler asset-store] (wrap-asset-store handler asset-store identity))
   ([handler asset-store asset-side-effect]
@@ -57,14 +63,14 @@
   [handler]
   (fn [args]
     (let [_ (println " wrap-inputs " args)
-          asset-map (:asset-store-fn args)
+          asset-store-fn (:asset-store-fn args)
           invoke-args (:invoke-args args)
           input 
           (apply merge
                  (mapv (fn[[k {:keys [:type]} :as inp]]
                          (select-keys
                           (if (= type "asset")
-                            (update-in invoke-args [k] #(get asset-map (:did %)))
+                            (update-in invoke-args [k] #(asset-store-fn (:did %)))
                             args)
                           [k]))
                        (get-in (:config args) [:params])))
@@ -106,8 +112,12 @@
     (if (and handler metadata-path)
       (-> handler symbol resolve
           (wrap-inputs)
+          (wrap-results)
           (wrap-config (io/resource metadata-path))
-          (wrap-asset-store {"1234" (s/memory-asset {:test :metadata} "content")})
+          (wrap-asset-store
+           {"1234" (s/memory-asset {:test :metadata} "content")}
+           ;(partial s/get-asset ragent)
+           )
           )
       nil)))
 
@@ -121,18 +131,6 @@
           (wrap-results)
           (wrap-config (io/resource metadata-path))
           (wrap-asset-store {"1234" (s/memory-asset {:test :metadata} "content")})))))
-
-#_(defn call-invoke
-  [operation-config]
-  (let [{:keys [operation-var metadata-path]} (resolve-op-config operation-config)]
-    (println " call-invoke " [operation-var metadata-path])
-    ((-> operation-var
-         (wrap-inputs)
-         (wrap-config (io/resource metadata-path))
-         (wrap-asset-store {"1234" (s/memory-asset {:test :metadata} "content")})
-         )
-     {:invoke-args {:to-hash {:did "1234"}
-                    :algorithm "keccak256"}})))
 
 (defn load-operation-config
   "returns a map of operation config, where keys are the operation name
@@ -149,6 +147,8 @@
                                           (str (string->ns %) "/"
                                                (:fn v))))}))
               {}))
+        ;;calculate the hash of the metadata, and merge a map where the values are the same,
+        ;;and keys are the hashes of the metadata
         res2 (reduce-kv (fn[acc k v]
                           (let [dig (-> v :metadata-path io/resource slurp s/digest)]
                             (assoc acc (keyword dig) v)))
@@ -204,14 +204,3 @@
       :metadata-path
       (io/resource)
       slurp))
-
-
-
-
-#_((->> (io/resource "koi-config.edn")
-      (load-edn )
-      load-operation-config
-      (default-middleware :hashing)
-      )
- {:invoke-args {:to-hash {:did "1234"}
-                :algorithm "keccak256"}})

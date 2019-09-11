@@ -43,86 +43,88 @@
 (s/def ::auth-response string?)
 
 (defn koi-routes
-  [operation-registry]
-  (api
-   {:swagger
-    {:ui "/"
-     :spec "/swagger1.json"
-     :data {:info {:title "invoke-api "
-                   :description "Invoke with Ocean "}
-            :tags [{:name "invoke service", :description "invoke Ocean services"}]}}}
+  [config]
+  (let [operation-registry (:operation-registry config)]
+    (println " koi-routes start " operation-registry)
+    (api
+     {:swagger
+      {:ui "/"
+       :spec "/swagger1.json"
+       :data {:info {:title "invoke-api "
+                     :description "Invoke with Ocean "}
+              :tags [{:name "invoke service", :description "invoke Ocean services"}]}}}
 
-   (context "/api/v1" []
-     :tags ["Invoke ocean service"]
-     :coercion :spec
+     (context "/api/v1" []
+       :tags ["Invoke ocean service"]
+       :coercion :spec
 
-     (context "/meta/data/:did" []
-              :path-params [did :- string?]
-              :middleware [token-auth-mw authenticated-mw]
-              (sw/resource
-               {:get
-                {:summary "Get metadata for operation"
-                 ;:parameters {:body ::params}
-                 :responses {200 {:schema spec/any?}
-                             201 {:schema spec/any?}
-                             404 {:schema spec/any?}
-                             500 {:schema spec/any?}}
-                 :handler (partial oph/get-handler operation-registry)}})
-              )
+       (context "/meta/data/:did" []
+         :path-params [did :- string?]
+         :middleware [token-auth-mw authenticated-mw]
+         (sw/resource
+          {:get
+           {:summary "Get metadata for operation"
+                                        ;:parameters {:body ::params}
+            :responses {200 {:schema spec/any?}
+                        201 {:schema spec/any?}
+                        404 {:schema spec/any?}
+                        500 {:schema spec/any?}}
+            :handler (partial oph/get-handler operation-registry)}})
+         )
 
 
-     (context "/auth" []
+       (context "/auth" []
 
-       (POST "/token" {:as request}
-         :tags ["Auth"]
-         :return ::auth-response
-         :header-params [authorization :- ::auth-header]
-         :middleware [basic-auth-mw authenticated-mw]
-         :summary "Returns auth info given a username and password in the '`Authorization`' header."
-         :description "Authorization header expects '`Basic username:password`' where `username:password`
+         (POST "/token" {:as request}
+           :tags ["Auth"]
+           :return ::auth-response
+           :header-params [authorization :- ::auth-header]
+           :middleware [basic-auth-mw authenticated-mw]
+           :summary "Returns auth info given a username and password in the '`Authorization`' header."
+           :description "Authorization header expects '`Basic username:password`' where `username:password`
                          is base64 encoded. To adhere to basic auth standards we have to use a field called
                          `username` however we will accept a valid username or email as a value for this key."
-         (auth-credentials-response request)))
+           (auth-credentials-response request)))
 
-     (context "/invoke/:did" []
-       :path-params [did :- string?]
-       :middleware [token-auth-mw authenticated-mw]
-       (sw/resource
-        {:post
-         {:summary "Run an sync operation"
-          :parameters {:body ::params}
-          :responses {200 {:schema spec/any?}
-                      201 {:schema spec/any?}
-                      404 {:schema spec/any?}
-                      500 {:schema spec/any?}
-                      }
-          :handler (partial oph/invoke-handler operation-registry)}}))
+       (context "/invoke/:did" []
+         :path-params [did :- string?]
+         :middleware [token-auth-mw authenticated-mw]
+         (sw/resource
+          {:post
+           {:summary "Run an sync operation"
+            :parameters {:body ::params}
+            :responses {200 {:schema spec/any?}
+                        201 {:schema spec/any?}
+                        404 {:schema spec/any?}
+                        500 {:schema spec/any?}
+                        }
+            :handler (partial oph/invoke-handler operation-registry)}}))
 
-     (context "/invokeasync/:did" []
-       :path-params [did :- string?]
-       :middleware [token-auth-mw authenticated-mw]
-       (sw/resource
-        {
-         :post
-         {:summary "Run an async operation"
-          :parameters {:body ::params}
-          :responses {200 {:schema spec/any?}
-                      201 {:schema spec/any?}
-                      404 {:schema spec/any?}
-                      500 {:schema spec/any?}}
-          :handler (partial oph/invoke-handler operation-registry true)}}))
+       (context "/invokeasync/:did" []
+         :path-params [did :- string?]
+         :middleware [token-auth-mw authenticated-mw]
+         (sw/resource
+          {
+           :post
+           {:summary "Run an async operation"
+            :parameters {:body ::params}
+            :responses {200 {:schema spec/any?}
+                        201 {:schema spec/any?}
+                        404 {:schema spec/any?}
+                        500 {:schema spec/any?}}
+            :handler (partial oph/invoke-handler operation-registry true)}}))
 
-     (context "/jobs/:jobid" []
-       :path-params [jobid :- int?]
-       :middleware [token-auth-mw authenticated-mw]
-       (sw/resource
-        {:get
-         {:summary "get the status of a job"
-          :responses {200 {:schema spec/any?}
-                      422 {:schema spec/any?}
-                      404 {:schema spec/any?}
-                      500 {:schema spec/any?}}
-          :handler oph/result-handler}})))))
+       (context "/jobs/:jobid" []
+         :path-params [jobid :- int?]
+         :middleware [token-auth-mw authenticated-mw]
+         (sw/resource
+          {:get
+           {:summary "get the status of a job"
+            :responses {200 {:schema spec/any?}
+                        422 {:schema spec/any?}
+                        404 {:schema spec/any?}
+                        500 {:schema spec/any?}}
+            :handler oph/result-handler}}))))))
 
 (defrecord WebServer [port operation-registry]
   component/Lifecycle
@@ -130,7 +132,7 @@
     (info " start jetty at " port " op-registry " operation-registry)
     (try
       (let [server (run-jetty
-                    (koi-routes (:operation-registry operation-registry))
+                    (koi-routes operation-registry)
                     {:join? false
                      :port (Integer/valueOf (or (System/getenv "port") port))})]
         (assoc this :http-server server))
