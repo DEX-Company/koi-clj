@@ -5,6 +5,7 @@
    [starfish.core :as s]
    [clojure.spec.alpha :as sp]
    [com.stuartsierra.component :as component]
+   [koi.middleware :as km]
    [koi.protocols :as prot 
     :refer [invoke-sync
             invoke-async
@@ -150,6 +151,14 @@
       (do (error " invalid operation did " did)
           (not-found (str "operation did " did " is a valid resource "))))))
 
+(defn inv-sync
+  [op-config params]
+  (let [mid (km/test-middleware op-config)
+        resp (mid {:invoke-args params})]
+    (println " mid " mid " op-config " op-config " params "{:invoke-args params}
+             " resp " resp)
+    resp))
+
 (defn invoke-handler
   "this method handles API calls to /invoke. The first argument is a boolean value, if true,
   responds with a job id. Else it returns synchronously."
@@ -169,7 +178,8 @@
                (clojure.stacktrace/print-stack-trace e)
                (http-response/internal-server-error " server error executing operation "))))
          (try
-           (let [invres (invoke-sync ep params)]
+           (let [_ (println " invoke-handler " ep " params " params )
+                 invres (inv-sync ep params)]
              (info " result of invoke resp: " invres)
              (ok invres))
            (catch Exception e

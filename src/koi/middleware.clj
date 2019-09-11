@@ -19,21 +19,23 @@
               :config))))
 
 (defn wrap-asset-store
-  ([handler asset-store] identity)
+  ([handler asset-store] (wrap-asset-store handler asset-store identity))
   ([handler asset-store asset-side-effect]
    (fn [args]
-     (let []
-       (-> args
-           (assoc :asset-store-fn asset-store)
-           handler
-           (dissoc :asset-store-fn)
-           (as-> x (reduce-kv
-                    (fn[acc k v]
-                      (assoc acc k
-                             (if (s/asset? v)
-                               (do (asset-side-effect v)
-                                   {:did (s/asset-id v)}) v)))
-                    {} x)))))))
+     (let [_ (println " wrap-asset-store args " args)
+           res 
+           (-> args
+               (assoc :asset-store-fn asset-store)
+               handler
+               (dissoc :asset-store-fn)
+               (as-> x (reduce-kv
+                        (fn[acc k v]
+                          (assoc acc k
+                                 (if (s/asset? v)
+                                   (do (asset-side-effect v)
+                                       {:did (s/asset-id v)}) v)))
+                        {} x)))]
+       res))))
 
 (defn reify-agent
   ""
@@ -53,7 +55,8 @@
 (defn wrap-inputs
   [handler]
   (fn [args]
-    (let [asset-map (:asset-store-fn args)
+    (let [_ (println " wrap-inputs " args)
+          asset-map (:asset-store-fn args)
           invoke-args (:invoke-args args)
           input 
           (apply merge
@@ -63,9 +66,11 @@
                             (update-in invoke-args [k] #(get asset-map (:did %)))
                             args)
                           [k]))
-                       (get-in (:config args) [:params])))]
-      (println " wrap-input call to handler " input)
-      (handler input ))))
+                       (get-in (:config args) [:params])))
+          _ (println " wrap-input call to handler " input)
+          resp (handler input )]
+      (println " wrap-input response " resp)
+      resp)))
 
 (defn load-edn
   "Load edn from an io/reader source (filename or io/resource)."
@@ -105,6 +110,16 @@
           )
       nil)))
 
+(defn test-middleware
+  [op-config]
+  (let [{:keys [handler metadata-path]} op-config]
+    (println " test-middleware "(and handler metadata-path))
+    (when (and handler metadata-path)
+      (-> handler symbol resolve
+          (wrap-inputs)
+          (wrap-config (io/resource metadata-path))
+          (wrap-asset-store {"1234" (s/memory-asset {:test :metadata} "content")})))))
+
 #_(defn call-invoke
   [operation-config]
   (let [{:keys [operation-var metadata-path]} (resolve-op-config operation-config)]
@@ -122,19 +137,25 @@
   and value is a map with handler and metadata-path"
   [edn-config]
   (println "edn-config " edn-config)
-  (let [res 
-        {:operation-registry
-         (->> edn-config
-              (reduce-kv
-               (fn[acc k v]
-                 (merge acc
-                        {k (update-in v [:handler]
-                                      #(do (load-file %)
-                                           (str (string->ns %) "/"
-                                                (:fn v))))}))
-               {}))}]
-    (println " load-operation-config  res " res)
-    res))
+  (let [res
+        (->> edn-config
+             (reduce-kv
+              (fn[acc k v]
+                (merge acc
+                       {k (update-in v [:handler]
+                                     #(do (load-file %)
+                                          (str (string->ns %) "/"
+                                               (:fn v))))}))
+              {}))
+        res2 (reduce-kv (fn[acc k v]
+                          (let [dig (-> v :metadata-path io/resource slurp s/digest)]
+                            (assoc acc (keyword dig) v)))
+                            {} res)
+
+        res3 {:operation-registry (merge res res2)}
+        ]
+    (println " load-operation-config  res " res3)
+    res3))
 
 (defn load-operations-reg
   [config]
@@ -152,6 +173,16 @@
            load-operation-config
            :operation-registry)]
   (default-middleware :hashing config))
+
+(let [hash-config
+      (->> (io/resource "koi-config.edn")
+           (load-edn )
+           load-operation-config
+           :operation-registry
+           :hashing)
+      ifn (test-middleware hash-config)]
+  (ifn {:invoke-args {:to-hash {:did "1234"}
+                      :algorithm "keccak256"}}))
 
 (let [config
       (->> (io/resource "config.edn")
