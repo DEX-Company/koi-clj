@@ -6,10 +6,8 @@
    [clojure.spec.alpha :as sp]
    [com.stuartsierra.component :as component]
    [koi.middleware :as km]
-   [koi.protocols :as prot 
-    :refer [invoke-sync
-            invoke-async
-            valid-args?]]
+   [koi.utils :as ut :refer [async-handler]]
+   ;[koi.protocols :as prot :refer [invoke-sync invoke-async valid-args?]]
    [ring.util.http-response :as http-response :refer [ok header created unprocessable-entity
                                                       not-found]]
    [ring.util.http-status :as status]
@@ -169,7 +167,7 @@
      (if-let [ep (registry (keyword did))]
        (if async?
          (try
-           (let [invres (invoke-async ep params)]
+           (let [invres (async-handler jobids jobs #(inv-sync ep params))]
              (info " result of invoke start " invres)
              (created "url" invres))
            (catch Exception e

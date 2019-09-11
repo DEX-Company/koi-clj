@@ -23,18 +23,19 @@
   ([handler asset-store asset-side-effect]
    (fn [args]
      (let [_ (println " wrap-asset-store args " args)
-           res 
+           res
            (-> args
                (assoc :asset-store-fn asset-store)
                handler
                (dissoc :asset-store-fn)
-               (as-> x (reduce-kv
-                        (fn[acc k v]
-                          (assoc acc k
-                                 (if (s/asset? v)
-                                   (do (asset-side-effect v)
-                                       {:did (s/asset-id v)}) v)))
-                        {} x)))]
+               (as-> x
+                   {:results (reduce-kv
+                              (fn[acc k v]
+                                (assoc acc k
+                                       (if (s/asset? v)
+                                         (do (asset-side-effect v)
+                                             {:did (s/asset-id v)}) v)))
+                              {} (:results x))}))]
        res))))
 
 (defn reify-agent
@@ -72,6 +73,13 @@
       (println " wrap-input response " resp)
       resp)))
 
+(defn wrap-results
+  [handler]
+  (fn [args]
+    (let [resp {:results (handler args)}]
+      (println " wrap-output response " resp)
+      resp)))
+
 (defn load-edn
   "Load edn from an io/reader source (filename or io/resource)."
   [source]
@@ -92,13 +100,6 @@
       (clojure.string/replace #"/" ".")
       (clojure.string/replace #"_" "-")))
 
-(defn resolve-op-config
-  [operation-config]
-  (let [{:keys [handler metadata-path]} operation-config]
-    (if-let [var-i (-> handler symbol resolve)]
-      {:operation-var var-i :metadata-path metadata-path}
-      (new Exception " Unable to load operation config"))))
-
 (defn default-middleware
   [op-name operation-config]
   (let [{:keys [handler metadata-path]} (op-name operation-config)]
@@ -117,6 +118,7 @@
     (when (and handler metadata-path)
       (-> handler symbol resolve
           (wrap-inputs)
+          (wrap-results)
           (wrap-config (io/resource metadata-path))
           (wrap-asset-store {"1234" (s/memory-asset {:test :metadata} "content")})))))
 
