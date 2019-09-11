@@ -132,6 +132,24 @@
   [config]
   (map->OperationRegistry {:config config}))
 
+(defn get-handler
+  "this method handles API calls to /meta/data:did. Returns the meta data for an operation "
+  [registry inp]
+  (let [{:keys [did]} (:route-params inp) ]
+    (println " get-handler " registry " did " did  " - "(registry (keyword did)))
+    (if-let [{:keys [:metadata-path]} (registry (keyword did))]
+      (try
+        (let [invres (slurp (io/resource metadata-path))]
+          (info " result of get " invres)
+          (ok invres))
+        (catch Exception e
+          (do
+            (error (str " got error in invoke " e))
+            (clojure.stacktrace/print-stack-trace e)
+            (http-response/internal-server-error " server error executing operation "))))
+      (do (error " invalid operation did " did)
+          (not-found (str "operation did " did " is a valid resource "))))))
+
 (defn invoke-handler
   "this method handles API calls to /invoke. The first argument is a boolean value, if true,
   responds with a job id. Else it returns synchronously."
@@ -140,37 +158,25 @@
    (let [params (or (:body-params inp) (:body inp))
          {:keys [did]} (:route-params inp) ]
      (if-let [ep (registry (keyword did))]
-       (let [params-check (valid-args? ep params)
-             valid? (:valid? params-check) ]
-         (if valid?
-           (do
-             (info " valid request, making invoke request with " params)
-             (if async?
-               (try
-                 (let [invres (invoke-async ep params)]
-                   (info " result of invoke start " invres)
-                   (created "url" invres))
-                 (catch Exception e
-                   (do
-                     (error (str " got error in invoke " e))
-                     (clojure.stacktrace/print-stack-trace e)
-                     (http-response/internal-server-error " server error executing operation "))))
-               (try
-                 (let [invres (invoke-sync ep params)]
-                   (info " result of invoke resp: " invres)
-                   (ok invres))
-                 (catch Exception e
-                   (do
-                     (error (str " got error in invoke " e))
-                     (clojure.stacktrace/print-stack-trace e)
-                     (http-response/internal-server-error " server error executing operation "))))))
-           (do
-             (error " invalid request, sending error in invoke request with " params)
-             (http-response/bad-request (str " invalid request: "
-                                             #_(if params (clojure.string/join
-                                                         (validator params))
-                                                 " params is not present")
-                                             " - " )))))
+       (if async?
+         (try
+           (let [invres (invoke-async ep params)]
+             (info " result of invoke start " invres)
+             (created "url" invres))
+           (catch Exception e
+             (do
+               (error (str " got error in invoke " e))
+               (clojure.stacktrace/print-stack-trace e)
+               (http-response/internal-server-error " server error executing operation "))))
+         (try
+           (let [invres (invoke-sync ep params)]
+             (info " result of invoke resp: " invres)
+             (ok invres))
+           (catch Exception e
+             (do
+               (error (str " got error in invoke " e))
+               (clojure.stacktrace/print-stack-trace e)
+               (http-response/internal-server-error " server error executing operation ")))))
        (do (error " invalid operation did " did)
            (not-found (str "operation did " did " is a valid resource "))))))) 
 

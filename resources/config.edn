@@ -2,9 +2,13 @@
  :agent-url #or [#env AGENT_URL "http://52.187.164.74:8080" ]
  :username "Aladdin"
  :password "OpenSesame"
- :port 3000
+ :port 3001
  :operations
- {
+ {:hashing {:handler "src/koi/examples/hashing_simple.clj"
+            :metadata-path "hashing_asset_metadata.json"
+            :fn "compute-hash"}}
+
+ #_{
   ;;note that path name with hyphen (-) must be replaced with underscore, since java doesn't allow hyphens
   ;;give full path
   ;;possibly give asset id as well.

@@ -28,6 +28,7 @@
    [koi.middleware.token-auth :refer [token-auth-mw]]
    [koi.route-functions.auth.get-auth-credentials :refer [auth-credentials-response]]
    [koi.config :as config :refer [get-config get-remote-agent]]
+   [koi.middleware :as km]
    [koi.op-handler :as oph])
   (:import [java.util UUID]
            ;[koi.utils RemoteStorage]
@@ -54,6 +55,21 @@
    (context "/api/v1" []
      :tags ["Invoke ocean service"]
      :coercion :spec
+
+     (context "/meta/data/:did" []
+              :path-params [did :- string?]
+              :middleware [token-auth-mw authenticated-mw]
+              (sw/resource
+               {:get
+                {:summary "Get metadata for operation"
+                 ;:parameters {:body ::params}
+                 :responses {200 {:schema spec/any?}
+                             201 {:schema spec/any?}
+                             404 {:schema spec/any?}
+                             500 {:schema spec/any?}}
+                 :handler (partial oph/get-handler operation-registry)}})
+              )
+
 
      (context "/auth" []
 
@@ -111,8 +127,8 @@
 (defrecord WebServer [port operation-registry]
   component/Lifecycle
   (start [this]
-    (info " start jetty at " port)
-    (try 
+    (info " start jetty at " port " op-registry " operation-registry)
+    (try
       (let [server (run-jetty
                     (koi-routes (:operation-registry operation-registry))
                     {:join? false
@@ -121,9 +137,7 @@
       (catch Exception e
         (error " got exception starting jetty " (.getMessage e))
         (clojure.stacktrace/print-stack-trace e)
-        (assoc this :http-server nil)))
-
-    )
+        (assoc this :http-server nil))))
   (stop [this]
     (info " stopping jetty")
     (if-let [server (:http-server this)]
@@ -159,7 +173,7 @@
      :storage (component/using (map->StorageAgent {})
                                {:agent :agent})
      :operation-registry (component/using
-                          (oph/new-operation-registry config)
+                          (km/load-operation-config (:operations config))
                           {:agent :agent
                            :storage :storage})
      :app (component/using
@@ -176,5 +190,9 @@
   (alter-var-root #'system component/start)
   (-> system :operation-registry :operation-registry)
   (alter-var-root #'system component/stop)
+
+  (oph/get-handler (-> system :operation-registry :operation-registry)
+                   {:route-params {:did "hashing"}}
+                   )
   )
 
