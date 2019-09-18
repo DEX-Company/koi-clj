@@ -18,6 +18,7 @@
    [ring.util.http-status :as status]
    [muuntaja.format.json :as json-format]
    [spec-tools.spec :as spec]
+   [koi.interceptors :as ki]
    [clojure.spec.alpha :as s]
    [spec-tools.data-spec :as ds]
    [spec-tools.json-schema :as jsc]
@@ -29,9 +30,10 @@
    [koi.route-functions.auth.get-auth-credentials :refer [auth-credentials-response]]
    [koi.config :as config :refer [get-config get-remote-agent]]
    [koi.middleware :as km]
-   [koi.op-handler :as oph])
+   [koi.op-handler :as oph]
+   [koi.interceptors :as ki])
   (:import [java.util UUID]
-           ;[koi.utils RemoteStorage]
+                                        ;[koi.utils RemoteStorage]
            )
   (:gen-class))
 
@@ -44,8 +46,9 @@
 
 (defn koi-routes
   [config]
-  (let [operation-registry (:operation-registry config)]
-    (println " koi-routes start " operation-registry)
+  (let [;operation-registry (:operation-registry config)
+        handler (ki/middleware-wrapped-handler config)
+        ]
     (api
      {:swagger
       {:ui "/"
@@ -57,20 +60,20 @@
      (context "/api/v1" []
        :tags ["Invoke ocean service"]
        :coercion :spec
-
-       (context "/meta/data/:did" []
-         :path-params [did :- string?]
-         :middleware [token-auth-mw authenticated-mw]
-         (sw/resource
-          {:get
-           {:summary "Get metadata for operation"
+       (comment 
+         (context "/meta/data/:did" []
+           :path-params [did :- string?]
+           :middleware [token-auth-mw authenticated-mw]
+           (sw/resource
+            {:get
+             {:summary "Get metadata for operation"
                                         ;:parameters {:body ::params}
-            :responses {200 {:schema spec/any?}
-                        201 {:schema spec/any?}
-                        404 {:schema spec/any?}
-                        500 {:schema spec/any?}}
-            :handler (partial oph/get-handler operation-registry)}})
-         )
+              :responses {200 {:schema spec/any?}
+                          201 {:schema spec/any?}
+                          404 {:schema spec/any?}
+                          500 {:schema spec/any?}}
+              :handler (oph/get-handler operation-registry)}})
+           ))
 
 
        (context "/auth" []
@@ -98,7 +101,7 @@
                         404 {:schema spec/any?}
                         500 {:schema spec/any?}
                         }
-            :handler (partial oph/invoke-handler operation-registry)}}))
+            :handler (oph/invoke-handler handler)}}))
 
        (context "/invokeasync/:did" []
          :path-params [did :- string?]
@@ -112,7 +115,7 @@
                         201 {:schema spec/any?}
                         404 {:schema spec/any?}
                         500 {:schema spec/any?}}
-            :handler (partial oph/invoke-handler operation-registry true)}}))
+            :handler (oph/invoke-async-handler handler)}}))
 
        (context "/jobs/:jobid" []
          :path-params [jobid :- int?]

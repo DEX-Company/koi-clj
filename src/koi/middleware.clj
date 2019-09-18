@@ -154,8 +154,7 @@
                             (assoc acc (keyword dig) v)))
                             {} res)
 
-        res3 {:operation-registry (merge res res2)}
-        ]
+        res3 {:operation-registry (merge res res2)}]
     (println " load-operation-config  res " res3)
     res3))
 

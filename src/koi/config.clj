@@ -1,8 +1,10 @@
 (ns koi.config
   (:require 
    [starfish.core :as s]
-   [aero.core :refer (read-config)]
-   ))
+   [aero.core :refer (read-config)])
+  (:import [org.json.simple JSONObject]
+            [org.json.simple.parser JSONParser ParseException]
+           ))
 
 
 (defn get-config
@@ -17,8 +19,10 @@
          did (s/random-did)
          ddo (s/create-ddo agent-url)
          res 
-         {:did did :ddo ddo :agent
+         {:did did :ddo ddo :remote-agent
           (s/remote-agent did ddo (:username config) (:password config))}]
      (println " get-remote-agent " res)
      res)))
 
+#_(let [jp (JSONParser.)]
+  (.parse jp (s/create-ddo "http://1.2.3.4:8080")))

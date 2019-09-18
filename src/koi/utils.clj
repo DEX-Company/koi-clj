@@ -109,3 +109,11 @@
                             :description (str "Got exception " (.getMessage e))})))))
       .start)
     {:jobid jobid}))
+
+(defn resolve-op
+  "Takes an string representation of a var and returns it as a function.
+  E.g. ((resolve-op \"koi.examples.hashing-simple/compute-hash\")
+         {:to-hash (s/memory-asset {:test :metadata} \"content\")})
+  "
+  [fstr]
+  (-> fstr symbol resolve))

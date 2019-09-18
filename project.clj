@@ -38,11 +38,18 @@
                  ;;json schema
                  [metosin/scjsv "0.5.0"]
                  ;;starfish
-                 [sg.dex/starfish-clj "0.5.0" :exclusions [com.fasterxml.jackson.core/jackson-annotations
+                 [sg.dex/starfish-clj "0.6.1-SNAPSHOT" :exclusions [com.fasterxml.jackson.core/jackson-annotations
+                                                           sg.dex/starfish-java
                                                            com.oceanprotocol/keeper-contracts
                                                            commons-codec
                                                            org.bouncycastle/bcprov-jdk15on]]
-
+                 [sg.dex/starfish-java "0.7.1-SNAPSHOT"
+                  :exclusions [com.fasterxml.jackson.core/jackson-annotations
+                               com.oceanprotocol/keeper-contracts
+                               commons-codec
+                               org.bouncycastle/bcprov-jdk15on]
+                  ]
+                 [com.googlecode.json-simple/json-simple "1.1.1"]
                  ;;configuration management
                  [aero "1.1.3"]
                  [ring/ring-mock "0.3.2"]
@@ -55,7 +62,8 @@
                  [net.mikera/core.matrix "0.58.0"]
                  [org.clojure/data.csv "0.1.4"]
 
-                 ;;
+                 ;;interceptors
+                 [metosin/sieppari "0.0.0-alpha7"]
                  ]
   :plugins [[lein-codox "0.10.7"]]
   :codox {:output-path "codox"}
