@@ -18,7 +18,6 @@
                               false)
                             false))
                         map-spec)]
-    (println " map-validator " spec-resp)
     (every? identity spec-resp)))
 
 (defn param-validator
@@ -31,11 +30,10 @@
    (fn [ctx]
      (let [req (get-in ctx [:request])
            all-keys-present? (map-validator param-spec req)]
-       (println " param-validator "all-keys-present?)
        (if all-keys-present?
          ctx
          (throw (Exception. " mandatory params missing")))))
-   :error (fn[ctx] (-> ctx (dissoc ctx :error)
+   :error (fn[ctx] (-> ctx (dissoc :error)
                        (update-in [:response :error]
                                   (constantly {:cause "mandatory params missing"}))))})
 
@@ -50,10 +48,7 @@
      (let [all-keys-present? (map-validator result-spec (get-in ctx [:response]))]
        (if all-keys-present?
          ctx
-         (throw (Exception. " mandatory result keys missing")))))
-   :error (fn[ctx] (-> ctx (dissoc ctx :error)
-                       (update-in [:response :error]
-                                  (constantly {:cause "mandatory result keys missing"}))))})
+         (assoc ctx :response {:error {:cause "mandatory result keys missing"}}))))})
 
 (defn input-asset-retrieval
   "For assets that reference asset ids/dids, an agent replaces the did reference with
@@ -63,12 +58,19 @@
   {:enter
    (fn [ctx]
      (update-in ctx [:request]
-                #(reduce-kv (fn[acc k v]
-                              (assoc acc k
-                                     (if-let [did (:did v)]
-                                       (retrieval-fn did)
-                                       v)))
-                            {} %)))})
+                #(reduce-kv
+                  (fn[acc k v]
+                    (assoc acc k
+                           (if-let [did (:did v)]
+                             (if-let [resp (retrieval-fn did)]
+                               resp
+                               (throw (Exception. " mandatory asset could not be retrieved")))
+                             v)))
+                  {} %)))
+   :error (fn[ctx] (-> ctx (dissoc :error)
+                       (update-in [:response :error]
+                                  (constantly {:cause "mandatory asset could not be retrieved"}))))
+   })
 
 (defn output-asset-upload
   "For operations that generate output asset(s),this interceptor
@@ -77,13 +79,17 @@
   [upload-fn]
   {:leave
    (fn [ctx]
-     (update-in ctx [:response]
-                #(reduce-kv (fn[acc k v]
-                              (assoc acc k
-                                     (if (s/asset? v)
-                                       {:did (upload-fn v)}
-                                       v)))
-                            {} %)))})
+     (let [resp
+           (try 
+             (reduce-kv
+              (fn[acc k v]
+                (assoc acc k
+                       (if (s/asset? v)
+                         {:did (upload-fn v)} v)))
+              {} (:response ctx))
+             (catch Exception e
+               {:error {:cause "upload function threw an exception"}}))]
+       (assoc ctx :response resp)))})
 
 (defn materialize-handler
   "Given handler configuration, return a function that can be run
@@ -98,6 +104,9 @@
     (do (s/register ragent ast)
         (s/asset-id (s/upload ragent ast)))))
 
+(defn run-chain
+  [interceptors f]
+  (partial si/execute (conj interceptors f)))
 
 (defn middleware-wrapped-handler
   [config]
@@ -120,33 +129,33 @@
           (output-asset-upload (asset-reg-upload ragent))]
          (materialize-handler operation-var))))))
 
-(def i-metadata (-> (io/resource "hashing_asset_metadata.json")
-                    slurp 
-                    (json/read-str :key-fn keyword)
-                    ))
-(si/execute [(param-validator i-metadata)
-             sample-operation]
-            {:to-hash "abcd"})
-;;that works, now misspell the key
+(comment
+  (def i-metadata (-> (io/resource "hashing_asset_metadata.json")
+                      slurp 
+                      (json/read-str :key-fn keyword)
+                      ))
+  (si/execute [(param-validator i-metadata)
+               sample-operation]
+              {:to-hash "abcd"})
+  ;;that works, now misspell the key
 
-(si/execute [(param-validator i-metadata)
-             sample-operation]
-            {:to-has "abcd"})
+  (si/execute [(param-validator i-metadata)
+               sample-operation]
+              {:to-has "abcd"})
 
-;;returns an error
+  ;;returns an error
 
-;;now validate the results too
-(si/execute [(param-validator i-metadata)
-             (result-validator i-metadata)
-             sample-operation]
-            {:to-hash "abcd"})
+  ;;now validate the results too
+  (si/execute [(param-validator i-metadata)
+               (result-validator i-metadata)
+               sample-operation]
+              {:to-hash "abcd"})
 
-;;that works, lets run an operation which doesn't have the :hash-value key
-(si/execute [(param-validator i-metadata)
-             (result-validator i-metadata)
-             (fn[_] {})]
-            {:to-hash "abcd"})
+  ;;that works, lets run an operation which doesn't have the :hash-value key
+  (si/execute [(param-validator i-metadata)
+               (result-validator i-metadata)
+               (fn[_] {})]
+              {:to-hash "abcd"})
+  )
 
-(defn run-chain
-  [interceptors f]
-  (partial si/execute (conj interceptors f)))
+

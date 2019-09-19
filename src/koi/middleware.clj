@@ -28,7 +28,7 @@
   ([handler asset-store] (wrap-asset-store handler asset-store identity))
   ([handler asset-store asset-side-effect]
    (fn [args]
-     (let [_ (println " wrap-asset-store args " args)
+     (let [;_ (println " wrap-asset-store args " args)
            res
            (-> args
                (assoc :asset-store-fn asset-store)
@@ -62,7 +62,7 @@
 (defn wrap-inputs
   [handler]
   (fn [args]
-    (let [_ (println " wrap-inputs " args)
+    (let [;_ (println " wrap-inputs " args)
           asset-store-fn (:asset-store-fn args)
           invoke-args (:invoke-args args)
           input 
@@ -74,16 +74,15 @@
                             args)
                           [k]))
                        (get-in (:config args) [:params])))
-          _ (println " wrap-input call to handler " input)
           resp (handler input )]
-      (println " wrap-input response " resp)
+      ;(println " wrap-input response " resp)
       resp)))
 
 (defn wrap-results
   [handler]
   (fn [args]
     (let [resp {:results (handler args)}]
-      (println " wrap-output response " resp)
+      ;(println " wrap-output response " resp)
       resp)))
 
 (defn load-edn
@@ -124,7 +123,6 @@
 (defn test-middleware
   [op-config]
   (let [{:keys [handler metadata-path]} op-config]
-    (println " test-middleware "(and handler metadata-path))
     (when (and handler metadata-path)
       (-> handler symbol resolve
           (wrap-inputs)
@@ -136,7 +134,6 @@
   "returns a map of operation config, where keys are the operation name
   and value is a map with handler and metadata-path"
   [edn-config]
-  (println "edn-config " edn-config)
   (let [res
         (->> edn-config
              (reduce-kv
@@ -155,7 +152,6 @@
                             {} res)
 
         res3 {:operation-registry (merge res res2)}]
-    (println " load-operation-config  res " res3)
     res3))
 
 (defn load-operations-reg

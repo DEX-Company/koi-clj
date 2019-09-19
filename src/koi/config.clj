@@ -21,8 +21,4 @@
          res 
          {:did did :ddo ddo :remote-agent
           (s/remote-agent did ddo (:username config) (:password config))}]
-     (println " get-remote-agent " res)
      res)))
-
-#_(let [jp (JSONParser.)]
-  (.parse jp (s/create-ddo "http://1.2.3.4:8080")))
