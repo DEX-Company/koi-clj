@@ -105,8 +105,9 @@
   {:operation-registry
    {:hashing {:handler "koi.interceptors-integration-test/sha-asset-hash"
               :metadata
-              {:results {:hash-val {:type "asset", :position 0, :required true}}
-               :params {:to-hash {:type "asset", :position 0, :required true}}}}}
+              {:operation 
+               {:results {:hash-val {:type "asset", :position 0, :required true}}
+                :params {:to-hash {:type "asset", :position 0, :required true}}}}}}
 
    :agent-conf
    {:agent-url "http://13.70.20.203:8090"
@@ -125,9 +126,10 @@
 
     (testing "positive test case"
       (let [op-handler (wrapped-handler :hashing)
-            resp (->> (op-handler {:to-hash {:did asset-id}}))]
-        (is (string? (-> resp :hash-val :did)))
-        (->> (s/get-asset ragent (-> resp :hash-val :did)) s/asset? is)))))
+            resp (->> (op-handler {:to-hash {:did asset-id}}))
+            did (-> resp :results :hash-val :did)]
+        (is (string? did))
+        (->> (s/get-asset ragent did) s/asset? is)))))
 
 (comment 
   (let [test-input-asset (s/asset (s/memory-asset
@@ -142,4 +144,3 @@
     ((oph/invoke-handler wrapped-handler)
      {:body-params {:to-hash {:did asset-id}}
       :route-params {:did :hashing}})))
-

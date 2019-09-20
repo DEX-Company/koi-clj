@@ -98,13 +98,18 @@
            (fn []
              (swap! jobs assoc jobid {:status :accepted})
              (try (let [res (exec-fn)]
+                    (println " async-handler res " res)
                     (swap! jobs assoc jobid
-                           {:status :succeeded
-                            :results (:results res)}))
+                           (if (:results res)
+                             {:status :succeeded
+                              :results (:results res)}
+                             {:status :failed
+                              :errorcode 8005
+                              :description (str "Got exception " (:error res))})))
                   (catch Exception e
                     (error " Caught exception running async job " (.getMessage e))
                     (swap! jobs assoc jobid
-                           {:status :error
+                           {:status :failed
                             :errorcode 8005
                             :description (str "Got exception " (.getMessage e))})))))
       .start)

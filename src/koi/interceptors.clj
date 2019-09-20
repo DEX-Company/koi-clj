@@ -11,10 +11,10 @@
   (let [spec-resp (mapv (fn [[k {:keys [type required]}]]
                           (if required
                             (if-let [k1 (get actual k)]
-                              (if (= "asset" type)
+                              (if (= :asset (keyword type))
                                 (s/asset? k1)
                                 ;;assumes that for non-asset type, any non-nil object is ok
-                                k1)
+                                (not (nil? k1)))
                               false)
                             false))
                         map-spec)]
@@ -32,10 +32,20 @@
            all-keys-present? (map-validator param-spec req)]
        (if all-keys-present?
          ctx
-         (throw (Exception. " mandatory params missing")))))
-   :error (fn[ctx] (-> ctx (dissoc :error)
+         (assoc ctx :error (Exception. " mandatory params missing")))))
+   #_(fn[ctx] (-> ctx (dissoc :error)
                        (update-in [:response :error]
-                                  (constantly {:cause "mandatory params missing"}))))})
+                                  (constantly {:cause " 234 mandatory params missing"}))))})
+
+(defn wrap-error-cause 
+  "remove the exception and wrap it in an error cause."
+  []
+  {:error (fn[ctx]
+            (if-let [exception (:error ctx)]
+              (-> ctx (dissoc :error)
+                  (update-in [:response :error]
+                             (constantly {:cause (.getMessage exception)})))
+              ctx))})
 
 (defn result-validator
   "validates the output result  map keys against the metadata.
@@ -69,8 +79,7 @@
                   {} %)))
    :error (fn[ctx] (-> ctx (dissoc :error)
                        (update-in [:response :error]
-                                  (constantly {:cause "mandatory asset could not be retrieved"}))))
-   })
+                                  (constantly {:cause (.getMessage (:error ctx))}))))})
 
 (defn output-asset-upload
   "For operations that generate output asset(s),this interceptor
@@ -91,11 +100,23 @@
                {:error {:cause "upload function threw an exception"}}))]
        (assoc ctx :response resp)))})
 
+(defn wrap-result
+  "wrap the result from the operation in an map against the :results key"
+  []
+  {:leave
+   (fn [ctx]
+     (if-not (get-in ctx [:response :error])
+       (do
+         (update-in ctx [:response]
+                    #(assoc {} :results %)))
+       ctx))})
+
 (defn materialize-handler
   "Given handler configuration, return a function that can be run
   at the end of the chain"
   [handler]
   (fn [inp]
+    (require (symbol (first (.split handler "/"))))
     ((-> handler symbol resolve) inp)))
 
 (defn asset-reg-upload
@@ -113,20 +134,28 @@
   (fn [operation]
     (let [op-registry (:operation-registry config)
           agent-conf (:agent-conf config)
-          param-spec (get-in config [:operation-registry :metadata :params])
-          result-spec (get-in config [:operation-registry :metadata :params])
+          param-spec (get-in config [:operation-registry operation :metadata :operation :params])
+          result-spec (get-in config [:operation-registry operation :metadata :operation :results])
           remote-agent (cf/get-remote-agent agent-conf)
           ragent (:remote-agent remote-agent)
           ;;lets pre-register an asset that will be used
           ret-fn (partial s/get-asset ragent)
           operation-var (get-in op-registry [operation :handler])]
       ;;when operation is invalid, return nil
+      ;;the sequence is:
+      ;;first to last all the :enter fns are run
+      ;;then the handler is run
+      ;;last to first :leave fns are run
       (when operation-var
         (run-chain
-         [(input-asset-retrieval ret-fn)
+         [
+          (wrap-error-cause)
+          (wrap-result)
+          (input-asset-retrieval ret-fn)
           (param-validator param-spec)
+          (output-asset-upload (asset-reg-upload ragent))
           (result-validator result-spec)
-          (output-asset-upload (asset-reg-upload ragent))]
+          ]
          (materialize-handler operation-var))))))
 
 (comment
@@ -157,5 +186,3 @@
                (fn[_] {})]
               {:to-hash "abcd"})
   )
-
-

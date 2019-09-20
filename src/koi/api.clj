@@ -32,9 +32,7 @@
    [koi.middleware :as km]
    [koi.op-handler :as oph]
    [koi.interceptors :as ki])
-  (:import [java.util UUID]
-                                        ;[koi.utils RemoteStorage]
-           )
+  (:import [java.util UUID])
   (:gen-class))
 
 (s/def ::operation string?)
@@ -46,9 +44,7 @@
 
 (defn koi-routes
   [config]
-  (let [;operation-registry (:operation-registry config)
-        handler (ki/middleware-wrapped-handler config)
-        ]
+  (let [handler (ki/middleware-wrapped-handler config)]
     (api
      {:swagger
       {:ui "/"
@@ -129,13 +125,13 @@
                         500 {:schema spec/any?}}
             :handler oph/result-handler}}))))))
 
-(defrecord WebServer [port operation-registry]
+(defrecord WebServer [port config]
   component/Lifecycle
   (start [this]
-    (info " start jetty at " port " op-registry " operation-registry)
+    (info " start jetty at " port " config " config)
     (try
       (let [server (run-jetty
-                    (koi-routes operation-registry)
+                    (koi-routes config)
                     {:join? false
                      :port (Integer/valueOf (or (System/getenv "port") port))})]
         (assoc this :http-server server))
@@ -174,16 +170,14 @@
   [config]
   (let [{:keys [port]} config]
     (component/system-map
-     :agent (oph/new-agent config)
-     :storage (component/using (map->StorageAgent {})
-                               {:agent :agent})
-     :operation-registry (component/using
-                          (km/load-operation-config (:operations config))
-                          {:agent :agent
-                           :storage :storage})
+     :config config
+     ;:agent (oph/new-agent config)
+     ;:storage (component/using (map->StorageAgent {}) {:agent :agent})
+     #_:operation-registry #_(component/using (km/load-operation-config (:operations config))
+                                          {:agent :agent :storage :storage})
      :app (component/using
            (new-webserver port)
-           {:operation-registry :operation-registry}))))
+           {:config :config}))))
 
 (defn -main [& args]
   (component/start (default-system (aero.core/read-config (clojure.java.io/resource "config.edn")))))
@@ -193,7 +187,7 @@
   (def system (default-system (aero.core/read-config (clojure.java.io/resource "config.edn"))))
 
   (alter-var-root #'system component/start)
-  (-> system :operation-registry :operation-registry)
+  (-> system :app)
   (alter-var-root #'system component/stop)
 
   (oph/get-handler (-> system :operation-registry :operation-registry)

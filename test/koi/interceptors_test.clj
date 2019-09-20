@@ -12,10 +12,9 @@
             [clojure.java.io :as io])
   (:import [org.json.simple.parser JSONParser]))
 
-(defn my-test-fixture [f]
-  (f))
+;(defn my-test-fixture [f] (f))
 
-(use-fixtures :once my-test-fixture)
+;(use-fixtures :once my-test-fixture)
 
 (defn sha-raw-hash
   "accepts a JSON object input against the to-hash key, and returns the hash value as a string"
@@ -48,15 +47,22 @@
              [(ki/param-validator param-spec)]
              sha-asset-hash))
            vals first s/asset? is)))
-  (testing "failure case"
+  (testing "failure case: invalid value for to-hash"
     (let [param-spec {:to-hash {:type "asset", :position 0, :required true}}]
-      (->> {:to-hash "abcd"}
+      (is (thrown? Exception (->> {:to-hash "abcd"}
+                                  ((ki/run-chain
+                                    [(ki/param-validator param-spec)]
+                                    sha-asset-hash))
+                                  )))))
+  (testing "failure case: invalid key instead of to-hash"
+    (let [param-spec {:to-hash {:type "asset", :position 0, :required true}}]
+      (->> {:abc "abcd"}
            ((ki/run-chain
              [(ki/param-validator param-spec)]
              sha-asset-hash))
-           :error
-           map?
-           is))))
+           (thrown? Exception)
+           is)))
+  )
 
 (deftest result-validator-test
   (testing "positive case "

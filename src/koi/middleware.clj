@@ -163,7 +163,8 @@
              config))
 
                                         ;(load-operations-reg (load-edn (io/resource "koi-config.edn")))
-
+(comment
+  
 (let [config
       (->> (io/resource "koi-config.edn")
            (load-edn )
@@ -199,3 +200,4 @@
       :metadata-path
       (io/resource)
       slurp))
+)

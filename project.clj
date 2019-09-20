@@ -43,7 +43,7 @@
                                                            com.oceanprotocol/keeper-contracts
                                                            commons-codec
                                                            org.bouncycastle/bcprov-jdk15on]]
-                 [sg.dex/starfish-java "0.7.1-SNAPSHOT"
+                 [sg.dex/starfish-java "0.7.1"
                   :exclusions [com.fasterxml.jackson.core/jackson-annotations
                                com.oceanprotocol/keeper-contracts
                                commons-codec

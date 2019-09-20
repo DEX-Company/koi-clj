@@ -133,18 +133,10 @@
   (fn[inp]
     (let [{:keys [did]} (:route-params inp) ]
       (println " get-handler " registry " did " did  " - "(registry (keyword did)))
-      (if-let [{:keys [:metadata-path]} (registry (keyword did))]
-        (try
-          (let [invres (slurp (io/resource metadata-path))]
-            (info " result of get " invres)
-            (ok invres))
-          (catch Exception e
-            (do
-              (error (str " got error in invoke " e))
-              (clojure.stacktrace/print-stack-trace e)
-              (http-response/internal-server-error " server error executing operation "))))
+      (if-let [{:keys [metadata]} (registry (keyword did))]
+        (ok metadata)
         (do (error " invalid operation did " did)
-            (not-found (str "operation did " did " is a valid resource ")))))))
+            (not-found (str "operation did " did " is not a valid resource ")))))))
 
 (defn inv-sync
   [op-config params]
@@ -158,16 +150,22 @@
   "this method returns a function that handles API calls to /invoke.
   The first argument is a boolean value, if true,
   responds with a job id. Else it returns synchronously."
-  ([handler]
+  ([registry]
    (fn [inp]
      (let [params (or (:body-params inp) (:body inp))
            {:keys [did]} (:route-params inp) ]
-       (if-let [handler-fn (handler (keyword did))]
+       (if-let [handler-fn (registry (keyword did))]
          (try
-           (let [;_ (println " invoke-handler " ep " params " params )
-                 invres (handler-fn params)]
-             (info " result of invoke resp: " invres)
-             (ok invres))
+           (let [invres (handler-fn params)]
+             (println " invoke-response " invres )
+             (if (:error invres)
+               (do
+                 (error (str " invoke handler returned an error " ))
+                 (http-response/bad-request
+                  (str " server error executing operation " (-> invres :error :cause))))
+               (do 
+                 (info " result of invoke resp: " invres)
+                 (ok invres))))
            (catch Exception e
              (do
                (error (str " got error in invoke " e))
@@ -183,7 +181,8 @@
            {:keys [did]} (:route-params inp) ]
        (if-let [handler-fn (handler (keyword did))]
          (try
-           (let [invres (async-handler jobids jobs #(handler-fn params))]
+           (let [invres (async-handler jobids jobs
+                                       (fn[] (handler-fn params)))]
              (info " result of async invoke start " invres)
              (created "url" invres))
            (catch Exception e
