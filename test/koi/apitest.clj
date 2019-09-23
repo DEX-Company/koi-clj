@@ -66,8 +66,8 @@
           body     (parse-body (:body response))
           ]
       response
-      ;(is (= hashval (-> body :results :hash-val)))
-      #_(is (= (:status response) (:status (ok))))))
+      (is (= hashval (-> body :results :hash-val)))
+      (is (= (:status response) (:status (ok))))))
   (testing "Test unauthorized request to hash operation"
     (let [response (app (-> (mock/request :post (str iripath "/invoke/hashing"))
                             (mock/content-type "application/json")
@@ -176,13 +176,6 @@
               first-row "sepal_length,sepal_width,petal_length,petal_width,species,predclass"]
           (is (= first-row (first dset-rows)))))))
 
-(comment 
-  (let [prime-metadata (->> (clojure.java.io/resource "prime_asset_metadata.json")
-                            slurp
-                            cheshire/parse-string)]
-    (s/register (:agent remote-agent) (s/memory-asset prime-metadata "abc"))
-    ))
-
 #_(deftest oper-registration
   (testing "primes operation "
     (do 
@@ -249,20 +242,3 @@
       (is (not (nil? (-> body :results :prov-tree))))
       (is (not (nil? ((json/read-str (-> body :results :prov-tree))
                       "derived-from")))))))
-
-(comment 
-  (let [k2 (-> k2json keywordize-keys)
-        agent-id (-> k2 :agent keys first)
-        df (mapv (fn[imap]
-                   (merge (select-keys imap [:asset-id])
-                          {:type "asset"}
-                          (select-keys (get-in imap [:metadata]) [:name :description :content-hash])))
-                 (:derived-from k2))
-        df1 (conj df {:asset-id (-> k2 :agent keys first) :type "operation"})
-        df2 (conj df1 {:asset-id "this"  :type "asset"})
-        edges (merge {agent-id "this"}
-                     (zipmap (mapv :asset-id (:derived-from k2)) (repeat agent-id)))
-        fin (assoc {} :provenance-vis {:vertices df2 :edges edges})]
-    (spit "/tmp/k3.json" (json/write-str fin))
-    )
-  (spit "/tmp/k2.json " (-> k1 :results :prov-tree)))

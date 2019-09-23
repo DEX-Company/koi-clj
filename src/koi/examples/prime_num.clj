@@ -52,38 +52,3 @@
                           :content primes-str}]}]
       (info " result of execfn " res)
       res)))
-
-(deftype PrimeNumbers [agent jobs jobids]
-  :load-ns true
-  prot/PSyncInvoke
-  (invoke-sync [_ args]
-    (process agent args compute-primes))
-
-  prot/PAsyncInvoke
-  (invoke-async [_ args]
-    (let [jobid (swap! jobids inc)
-          _ (info " jobid for async prime job " jobid)]
-      (doto (Thread. (fn []
-                       (swap! jobs assoc jobid {:status :scheduled})
-                       (try (Thread/sleep 10000)
-                            (catch Exception e))
-                       (swap! jobs assoc jobid {:status :running})
-                       (try (let [res (process agent args compute-primes)]
-                              (swap! jobs assoc jobid
-                                     {:status :succeeded
-                                      :results (:results res)}))
-                            (catch Exception e
-                              (error " got exception running prime job " e )
-                              (clojure.stacktrace/print-stack-trace e)
-                              (let [resp {:status :failed
-                                          :errorcode 8005
-                                          :description (str "Got exception " (.getMessage e))}]
-                                (swap! jobs assoc jobid resp)
-                                resp)))))
-        .start)
-      {:jobid jobid}))
-  
-  prot/PValidParams
-  (valid-args? [_ args]
-    {:valid? (sp/valid? ::params args)})
-  )

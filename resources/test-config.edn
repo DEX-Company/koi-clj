@@ -8,21 +8,21 @@
 
  :operation-registry
  {:hashing
-  {:handler "koi.examples.hashing-simple/sha-raw-hash"
+  {:handler "koi.examples.simple/sha-raw-hash"
    :metadata
    {:operation 
     {:results {:hash-val {:type "json", :position 0, :required true}}
      :params {:to-hash {:type "json", :position 0, :required true}}}}}
 
   :asset-hashing
-  {:handler "koi.examples.hashing-simple/sha-asset-hash"
+  {:handler "koi.examples.simple/sha-asset-hash"
    :metadata
    {:operation
     {:results {:hash-val {:type "asset", :position 0, :required true}}
      :params {:to-hash {:type "asset", :position 0, :required true}}}}}
 
   :fail
-  {:handler "koi.examples.hashing-simple/fail"
+  {:handler "koi.examples.simple/fail"
    :metadata
    {:operation
     {:results {} 

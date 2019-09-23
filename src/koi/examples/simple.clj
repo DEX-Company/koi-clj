@@ -1,4 +1,4 @@
-(ns koi.examples.hashing-simple
+(ns koi.examples.simple
   (:require
    [starfish.core :as s]))
 

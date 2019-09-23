@@ -5,6 +5,8 @@
             ;;to be removed
             [sieppari.core :as si]
             [koi.utils :refer [resolve-op]]
+            [koi.examples.simple :refer [sha-raw-hash sha-asset-hash
+                                         fail]]
             [koi.op-handler :as oph]
             [koi.interceptors :as ki]
             [clojure.data.json :as json]
@@ -23,12 +25,12 @@
 
 (use-fixtures :once my-test-fixture)
 
-(defn sha-raw-hash
+#_(defn sha-raw-hash
   "accepts a JSON object input against the to-hash key, and returns the hash value as a string"
   [{:keys [to-hash]}]
   {:hash-val (s/digest to-hash)})
 
-(defn sha-asset-hash
+#_(defn sha-asset-hash
   "accepts a starfish asset against the to-hash key, and returns a starfish asset as the value
   against the hash-val key"
   [{:keys [to-hash]}]
