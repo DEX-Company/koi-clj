@@ -5,16 +5,17 @@
             [clojure.data.json :as json]
             [starfish.core :as s]))
 
+
 (defn map-validator
   "return true if actual conforms to the map-spec"
-  [map-spec actual]
+  [map-spec actual predicate]
   (let [spec-resp
         (if (map? map-spec)
           (mapv (fn [[k {:keys [type required]}]]
                   (if required
                     (if-let [k1 (get actual k)]
                       (if (= :asset (keyword type))
-                        (s/asset? k1)
+                        (predicate k1)
                         ;;assumes that for non-asset type, any non-nil object is ok
                         (not (nil? k1)))
                       false)
@@ -22,6 +23,19 @@
                 map-spec)
           [false])]
     (every? identity spec-resp)))
+
+(defn asset-validator
+  "returns true if the value against the keys is a starfish asset.
+  Used for output validation"
+  [map-spec actual]
+  (map-validator map-spec actual (partial s/asset?)))
+
+(defn did-validator
+  "returns true if the asset is a map with a key :did and value string.
+  used for input validation"
+  [map-spec actual]
+  (map-validator map-spec actual (fn[i] (and (:did i)
+                                             (string? (:did i))))))
 
 (defn param-validator
   "validates the input param's map keys against the metadata.
@@ -31,16 +45,12 @@
   [param-spec]
   {:enter
    (fn [ctx]
+     ;(println " req "(get-in ctx [:request]) " spec " param-spec)
      (let [req (get-in ctx [:request])
-           all-keys-present? (map-validator param-spec req)]
-       #_(println " param-validator " req " param-spec " param-spec
-                " akp " all-keys-present?)
+           all-keys-present? (did-validator param-spec req)]
        (if all-keys-present?
          ctx
-         (assoc ctx :error (Exception. " mandatory params missing")))))
-   #_(fn[ctx] (-> ctx (dissoc :error)
-                       (update-in [:response :error]
-                                  (constantly {:cause " 234 mandatory params missing"}))))})
+         (assoc ctx :error (Exception. " mandatory params missing")))))})
 
 (defn wrap-error-cause 
   "remove the exception and wrap it in an error cause."
@@ -49,7 +59,10 @@
             (if-let [exception (:error ctx)]
               (-> ctx (dissoc :error)
                   (update-in [:response :error]
-                             (constantly {:cause (.getMessage exception)})))
+                             (constantly
+                              (do
+                                (clojure.stacktrace/print-stack-trace exception)
+                                {:cause (.getMessage exception)}))))
               ctx))})
 
 (defn result-validator
@@ -60,7 +73,7 @@
   [result-spec]
   {:leave
    (fn [ctx]
-     (let [all-keys-present? (map-validator result-spec (get-in ctx [:response]))]
+     (let [all-keys-present? (asset-validator result-spec (get-in ctx [:response]))]
        (if all-keys-present?
          ctx
          (assoc ctx :response {:error {:cause "mandatory result keys missing"}}))))})
@@ -156,8 +169,8 @@
          [
           (wrap-error-cause)
           (wrap-result)
-          (input-asset-retrieval ret-fn)
           (param-validator param-spec)
+          (input-asset-retrieval ret-fn)
           (output-asset-upload (asset-reg-upload ragent))
           (result-validator result-spec)
           ]

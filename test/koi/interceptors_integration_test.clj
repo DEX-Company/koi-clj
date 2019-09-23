@@ -8,15 +8,15 @@
             [koi.op-handler :as oph]
             [koi.interceptors :as ki]
             [clojure.data.json :as json]
-            [koi.config :as cf]
+            [koi.config :as cf :refer [get-config]]
             [clojure.java.io :as io])
   (:import [org.json.simple.parser JSONParser]))
 
 (def remote-agent (atom nil))
+
 (defn my-test-fixture [f]
-  (let [agent-conf {:agent-url "http://13.70.20.203:8090"
-                    :username "Aladdin"
-                    :password "OpenSesame"}]
+  (let [conf (get-config (clojure.java.io/resource "test-config.edn"))
+        agent-conf (:agent-conf conf)]
     (reset! remote-agent
             (:remote-agent (cf/get-remote-agent agent-conf))))
   (f))
@@ -102,7 +102,8 @@
 
 ;;run the same as above, but load the entire configuration from a single map
 (def config
-  {:operation-registry
+  (get-config (clojure.java.io/resource "test-config.edn"))
+  #_{:operation-registry
    {:hashing {:handler "koi.interceptors-integration-test/sha-asset-hash"
               :metadata
               {:results {:hash-val {:type "asset", :position 0, :required true}}
@@ -124,10 +125,11 @@
         wrapped-handler (ki/middleware-wrapped-handler config)]
 
     (testing "positive test case"
-      (let [op-handler (wrapped-handler :hashing)
+      (let [op-handler (wrapped-handler :asset-hashing)
             resp (->> (op-handler {:to-hash {:did asset-id}}))
-            did (-> resp :results :hash-val :did)]
-        resp
+            did (-> resp :results :hash-val :did)
+            ]
+        ;resp
         (is (string? did))
         (->> (s/get-asset ragent did) s/asset? is)))))
 

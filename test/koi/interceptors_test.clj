@@ -41,10 +41,14 @@
 
 (deftest param-validator-test
   (testing "simple"
-    (let [param-spec {:to-hash {:type "asset", :position 0, :required true}}]
-      (->> {:to-hash (s/memory-asset {:a :b} "content")}
+    (let [param-spec {:to-hash {:type "asset", :position 0, :required true}}
+          asset (s/memory-asset {:a :b} "content")
+          retrieval-fn {"asset1234" asset}]
+      (->> {:to-hash {:did "asset1234"}}
            ((ki/run-chain
-             [(ki/param-validator param-spec)]
+             [(ki/param-validator param-spec)
+              ;;need this to translate the did into a Starfish asset
+              (ki/input-asset-retrieval retrieval-fn)]
              sha-asset-hash))
            vals first s/asset? is)))
   (testing "failure case: invalid value for to-hash"
