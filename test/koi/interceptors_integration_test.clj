@@ -105,9 +105,8 @@
   {:operation-registry
    {:hashing {:handler "koi.interceptors-integration-test/sha-asset-hash"
               :metadata
-              {:operation 
-               {:results {:hash-val {:type "asset", :position 0, :required true}}
-                :params {:to-hash {:type "asset", :position 0, :required true}}}}}}
+              {:results {:hash-val {:type "asset", :position 0, :required true}}
+               :params {:to-hash {:type "asset", :position 0, :required true}}}}}
 
    :agent-conf
    {:agent-url "http://13.70.20.203:8090"
@@ -128,6 +127,7 @@
       (let [op-handler (wrapped-handler :hashing)
             resp (->> (op-handler {:to-hash {:did asset-id}}))
             did (-> resp :results :hash-val :did)]
+        resp
         (is (string? did))
         (->> (s/get-asset ragent did) s/asset? is)))))
 

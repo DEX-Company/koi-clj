@@ -63,7 +63,9 @@
                             (mock/content-type "application/json")
                             (mock/header "Authorization" (str "token " @token))
                             (mock/body (cheshire/generate-string {:to-hash input}))))
-          body     (parse-body (:body response))]
+          body     (parse-body (:body response))
+          ]
+      response
       (is (= hashval (-> body :results :hash-val)))
       (is (= (:status response) (:status (ok))))))
   (testing "Test unauthorized request to hash operation"

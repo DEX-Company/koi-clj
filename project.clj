@@ -38,12 +38,12 @@
                  ;;json schema
                  [metosin/scjsv "0.5.0"]
                  ;;starfish
-                 [sg.dex/starfish-clj "0.6.1-SNAPSHOT" :exclusions [com.fasterxml.jackson.core/jackson-annotations
+                 [sg.dex/starfish-clj "0.7.0" :exclusions [com.fasterxml.jackson.core/jackson-annotations
                                                            sg.dex/starfish-java
                                                            com.oceanprotocol/keeper-contracts
                                                            commons-codec
                                                            org.bouncycastle/bcprov-jdk15on]]
-                 [sg.dex/starfish-java "0.7.1"
+                 [sg.dex/starfish-java "0.7.3"
                   :exclusions [com.fasterxml.jackson.core/jackson-annotations
                                com.oceanprotocol/keeper-contracts
                                commons-codec
@@ -81,15 +81,6 @@
              :uberjar{:aot :all 
                       :jvm-opts ["-Dconfig.edn=resources/dev-config.edn"]
                       :main koi.api}}
-  :aot [koi.examples.hashing
-        ;koi.examples.prime-num
-        ;koi.examples.predict-iris
-        koi.examples.hashing-asset
-        ;koi.examples.filter-empty-rows
-        ;koi.examples.prov-tree-traversal
-        koi.examples.failing-asset
-        ;koi.examples.workshop-join
-        ]
   :main koi.api
-  ;:ring {:handler koi.api/app :init koi.api/app-init}
+  :ring {:handler koi.api/app :init koi.api/app-init}
 )

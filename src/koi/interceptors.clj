@@ -8,16 +8,19 @@
 (defn map-validator
   "return true if actual conforms to the map-spec"
   [map-spec actual]
-  (let [spec-resp (mapv (fn [[k {:keys [type required]}]]
-                          (if required
-                            (if-let [k1 (get actual k)]
-                              (if (= :asset (keyword type))
-                                (s/asset? k1)
-                                ;;assumes that for non-asset type, any non-nil object is ok
-                                (not (nil? k1)))
-                              false)
-                            false))
-                        map-spec)]
+  (let [spec-resp
+        (if (map? map-spec)
+          (mapv (fn [[k {:keys [type required]}]]
+                  (if required
+                    (if-let [k1 (get actual k)]
+                      (if (= :asset (keyword type))
+                        (s/asset? k1)
+                        ;;assumes that for non-asset type, any non-nil object is ok
+                        (not (nil? k1)))
+                      false)
+                    false))
+                map-spec)
+          [false])]
     (every? identity spec-resp)))
 
 (defn param-validator
@@ -30,6 +33,8 @@
    (fn [ctx]
      (let [req (get-in ctx [:request])
            all-keys-present? (map-validator param-spec req)]
+       #_(println " param-validator " req " param-spec " param-spec
+                " akp " all-keys-present?)
        (if all-keys-present?
          ctx
          (assoc ctx :error (Exception. " mandatory params missing")))))
@@ -134,8 +139,8 @@
   (fn [operation]
     (let [op-registry (:operation-registry config)
           agent-conf (:agent-conf config)
-          param-spec (get-in config [:operation-registry operation :metadata :operation :params])
-          result-spec (get-in config [:operation-registry operation :metadata :operation :results])
+          param-spec (get-in config [:operation-registry operation :metadata :params])
+          result-spec (get-in config [:operation-registry operation :metadata :results])
           remote-agent (cf/get-remote-agent agent-conf)
           ragent (:remote-agent remote-agent)
           ;;lets pre-register an asset that will be used
