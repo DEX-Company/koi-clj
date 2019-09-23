@@ -7,11 +7,11 @@
    [com.stuartsierra.component :as component]
    [koi.middleware :as km]
    [koi.utils :as ut :refer [async-handler]]
-   ;[koi.protocols :as prot :refer [invoke-sync invoke-async valid-args?]]
    [ring.util.http-response :as http-response :refer [ok header created unprocessable-entity
                                                       not-found]]
    [ring.util.http-status :as status]
    [clojure.java.io :as io]
+   [clojure.data.json :as json]
    [taoensso.timbre :as timbre
     :refer [log  trace  debug  info  warn  error  fatal  report
             logf tracef debugf infof warnf errorf fatalf reportf
@@ -129,11 +129,19 @@
 
 (defn get-handler
   "this method handles API calls to /meta/data:did. Returns the meta data for an operation "
-  [registry ]
-  (fn[inp]
-    (let [{:keys [did]} (:route-params inp) ]
-      (println " get-handler " registry " did " did  " - "(registry (keyword did)))
-      (if-let [{:keys [metadata]} (registry (keyword did))]
+  [config]
+  (let [registry (:operation-registry config)
+        ;;add the hash of the metadata as an additional key
+        registry (reduce-kv (fn[acc k v]
+                     (let [metadata (:metadata v)
+                           metadata-str (json/write-str metadata)
+                           asset-id (s/digest metadata-str)]
+                       (assoc acc k metadata
+                              asset-id metadata)))
+                   {}
+                   registry)]
+    (fn[did]
+      (if-let [metadata (registry (keyword did))]
         (ok metadata)
         (do (error " invalid operation did " did)
             (not-found (str "operation did " did " is not a valid resource ")))))))
@@ -142,8 +150,6 @@
   [op-config params]
   (let [mid (km/test-middleware op-config)
         resp (mid {:invoke-args params})]
-    (println " mid " mid " op-config " op-config " params "{:invoke-args params}
-             " resp " resp)
     resp))
 
 (defn invoke-handler
@@ -157,7 +163,7 @@
        (if-let [handler-fn (registry (keyword did))]
          (try
            (let [invres (handler-fn params)]
-             (println " invoke-response " invres )
+             (info " invoke-response " invres )
              (if (:error invres)
                (do
                  (error (str " invoke handler returned an error " ))

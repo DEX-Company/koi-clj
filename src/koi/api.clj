@@ -44,7 +44,8 @@
 
 (defn koi-routes
   [config]
-  (let [handler (ki/middleware-wrapped-handler config)]
+  (let [handler (ki/middleware-wrapped-handler config)
+        get-handler (oph/get-handler config)]
     (api
      {:swagger
       {:ui "/"
@@ -56,21 +57,18 @@
      (context "/api/v1" []
        :tags ["Invoke ocean service"]
        :coercion :spec
-       (comment 
-         (context "/meta/data/:did" []
-           :path-params [did :- string?]
-           :middleware [token-auth-mw authenticated-mw]
-           (sw/resource
-            {:get
-             {:summary "Get metadata for operation"
+       (context "/meta/data/:did" []
+         :path-params [did :- string?]
+         :middleware [token-auth-mw authenticated-mw]
+         (sw/resource
+          {:get
+           {:summary "Get metadata for operation"
                                         ;:parameters {:body ::params}
-              :responses {200 {:schema spec/any?}
-                          201 {:schema spec/any?}
-                          404 {:schema spec/any?}
-                          500 {:schema spec/any?}}
-              :handler (oph/get-handler operation-registry)}})
-           ))
-
+            :responses {200 {:schema spec/any?}
+                        201 {:schema spec/any?}
+                        404 {:schema spec/any?}
+                        500 {:schema spec/any?}}
+            :handler (get-handler did)}}))
 
        (context "/auth" []
 

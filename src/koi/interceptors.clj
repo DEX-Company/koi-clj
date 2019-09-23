@@ -152,8 +152,8 @@
   (fn [operation]
     (let [op-registry (:operation-registry config)
           agent-conf (:agent-conf config)
-          param-spec (get-in config [:operation-registry operation :metadata :params])
-          result-spec (get-in config [:operation-registry operation :metadata :results])
+          param-spec (get-in config [:operation-registry operation :metadata :operation  :params])
+          result-spec (get-in config [:operation-registry operation :metadata :operation  :results])
           remote-agent (cf/get-remote-agent agent-conf)
           ragent (:remote-agent remote-agent)
           ;;lets pre-register an asset that will be used

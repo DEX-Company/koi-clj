@@ -7,22 +7,26 @@
  :port 3001
 
  :operation-registry
- {:hashing {:handler "koi.examples.hashing-simple/sha-raw-hash"
-            :metadata
-            {:results {:hash-val {:type "json", :position 0, :required true}}
-             :params {:to-hash {:type "json", :position 0, :required true}}}}
+ {:hashing
+  {:handler "koi.examples.hashing-simple/sha-raw-hash"
+   :metadata
+   {:operation 
+    {:results {:hash-val {:type "json", :position 0, :required true}}
+     :params {:to-hash {:type "json", :position 0, :required true}}}}}
 
   :asset-hashing
   {:handler "koi.examples.hashing-simple/sha-asset-hash"
    :metadata
-   {:results {:hash-val {:type "asset", :position 0, :required true}}
-    :params {:to-hash {:type "asset", :position 0, :required true}}}}
+   {:operation
+    {:results {:hash-val {:type "asset", :position 0, :required true}}
+     :params {:to-hash {:type "asset", :position 0, :required true}}}}}
 
   :fail
   {:handler "koi.examples.hashing-simple/fail"
    :metadata
-   {:results {} 
-    :params {}}
+   {:operation
+    {:results {} 
+     :params {}}}
    }}
 
  }
