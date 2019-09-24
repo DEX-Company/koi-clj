@@ -1,9 +1,12 @@
 (ns koi.interceptors
   (:require [sieppari.core :as si]
             [clojure.java.io :as io]
+            [koi.utils :as ut]
             [koi.config :as cf]
             [clojure.data.json :as json]
-            [starfish.core :as s]))
+            [starfish.core :as s]
+            [koi.utils :as utils])
+  (:import [sg.dex.starfish.util JSON]))
 
 
 (defn map-validator
@@ -83,40 +86,68 @@
   the retrieved asset object. The retrieval-fn retrieves the assets, and may be configured to
   get it from a local or remote agent"
   [retrieval-fn]
-  {:enter
-   (fn [ctx]
-     (update-in ctx [:request]
-                #(reduce-kv
-                  (fn[acc k v]
-                    (assoc acc k
-                           (if-let [did (:did v)]
-                             (if-let [resp (retrieval-fn did)]
-                               resp
-                               (throw (Exception. " mandatory asset could not be retrieved")))
-                             v)))
-                  {} %)))
-   :error (fn[ctx] (-> ctx (dissoc :error)
-                       (update-in [:response :error]
-                                  (constantly {:cause (.getMessage (:error ctx))}))))})
+  (let [dependencies (atom [])]
+    {:enter
+     (fn [ctx]
+       (let [resp 
+             (update-in ctx [:request]
+                        #(reduce-kv
+                          (fn[acc k v]
+                            (assoc acc k
+                                   (if-let [did (:did v)]
+                                     (if-let [resp (retrieval-fn did)]
+                                       resp
+                                       (throw (Exception. " mandatory asset could not be retrieved")))
+                                     v)))
+                          {} %))
+             req (:request resp)
+             ]
+         ;;set the inputs so that they can be used in the outputs.
+         ;(reset! dependencies (vals req))
+         (println " inp-asset-retrieval " req)
+         (update-in resp [:request :dependencies] (fn[_] (vals req)))))
+     #_:leave
+     #_(fn [ctx]
+       (if-not (get-in ctx [:response :error])
+         (do
+           (update-in ctx [:response]
+                      #(assoc {} :dependencies dependencies)))
+         ctx))
+     
+     :error (fn[ctx] (-> ctx (dissoc :error)
+                         (update-in [:response :error]
+                                    (constantly {:cause (.getMessage (:error ctx))}))))}))
 
 (defn output-asset-upload
   "For operations that generate output asset(s),this interceptor
   a) registers and upload the asset using an agent,
   b)replaces the asset object with the did"
   [upload-fn]
-  {:leave
-   (fn [ctx]
-     (let [resp
-           (try 
-             (reduce-kv
-              (fn[acc k v]
-                (assoc acc k
-                       (if (s/asset? v)
-                         {:did (upload-fn v)} v)))
-              {} (:response ctx))
-             (catch Exception e
-               {:error {:cause "upload function threw an exception"}}))]
-       (assoc ctx :response resp)))})
+  (let [input-args (atom nil)]
+    ;;save the input-args before they get changed by other interceptors
+    ;;these are required at the time of generating provenance.
+    {:enter
+     (fn[ctx]
+       ;(println " output-asset-upload enter " (:request ctx))
+       (reset! input-args (:request ctx))
+       ctx)
+     :leave
+     (fn [ctx]
+       (let [dep (get-in ctx [:request :dependencies] )
+             _ (when dep (println "dep " dep))
+             resp
+             (try 
+               (reduce-kv
+                (fn[acc k v]
+                  (assoc acc k
+                         (if (s/asset? v)
+                           {:did (upload-fn v k dep
+                                            (deref input-args))}
+                           v)))
+                {} (:response ctx))
+               (catch Exception e
+                 {:error {:cause "upload function threw an exception"}}))]
+         (assoc ctx :response resp)))}))
 
 (defn wrap-result
   "wrap the result from the operation in an map against the :results key"
@@ -138,10 +169,30 @@
     ((-> handler symbol resolve) inp)))
 
 (defn asset-reg-upload
-  [ragent ]
+  [ragent]
   (fn[ast]
-    (do (s/register ragent ast)
-        (s/asset-id (s/upload ragent ast)))))
+    (do
+      (s/register ragent ast)
+      (s/asset-id (s/upload ragent ast)))))
+
+(defn add-prov
+  [ragent]
+  (fn[ast param-name dependency-list
+      params]
+    (let [upload-fn (asset-reg-upload (:remote-agent ragent))]
+      (try 
+        (if-not (or (nil? dependency-list)
+                    (empty? dependency-list))
+          (let[inv-metadata
+               (ut/invoke-metadata ragent (name param-name)
+                                   dependency-list (JSON/toString params))
+               ast (s/asset (s/memory-asset (merge (s/metadata ast)
+                                                   inv-metadata)
+                                            (s/content ast)))]
+            (upload-fn ast))
+          (upload-fn ast))
+        (catch Exception e
+          (clojure.stacktrace/print-stack-trace e))))))
 
 (defn run-chain
   [interceptors f]
@@ -169,9 +220,12 @@
          [
           (wrap-error-cause)
           (wrap-result)
+          (output-asset-upload (add-prov remote-agent))
           (param-validator param-spec)
+          ;;put output asset upload on the return trip after input-asset-retrieval
+          ;;because it has to add prov metadata
           (input-asset-retrieval ret-fn)
-          (output-asset-upload (asset-reg-upload ragent))
+          ;(output-asset-upload (asset-reg-upload ragent))
           (result-validator result-spec)
           ]
          (materialize-handler operation-var))))))

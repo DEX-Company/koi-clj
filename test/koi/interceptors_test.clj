@@ -14,22 +14,6 @@
             [clojure.java.io :as io])
   (:import [org.json.simple.parser JSONParser]))
 
-;(defn my-test-fixture [f] (f))
-
-;(use-fixtures :once my-test-fixture)
-
-#_(defn sha-raw-hash
-  "accepts a JSON object input against the to-hash key, and returns the hash value as a string"
-  [{:keys [to-hash]}]
-  {:hash-val (s/digest to-hash)})
-
-#_(defn sha-asset-hash
-  "accepts a starfish asset against the to-hash key, and returns a starfish asset as the value
-  against the hash-val key"
-  [{:keys [to-hash]}]
-  {:hash-val (s/asset (s/memory-asset {"meta" "data"}
-                                      (-> to-hash s/content s/to-string s/digest)))})
-
 (deftest direct-invocation
   (testing "create-var"
     (is (:hash-val (sha-raw-hash {:to-hash "abc"})))))

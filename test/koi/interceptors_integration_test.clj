@@ -15,27 +15,19 @@
   (:import [org.json.simple.parser JSONParser]))
 
 (def remote-agent (atom nil))
+(def remote-agent-map (atom nil))
 
 (defn my-test-fixture [f]
   (let [conf (get-config (clojure.java.io/resource "test-config.edn"))
-        agent-conf (:agent-conf conf)]
+        agent-conf (:agent-conf conf)
+        remagent (cf/get-remote-agent agent-conf)]
+    (reset! remote-agent-map
+            remagent)
     (reset! remote-agent
-            (:remote-agent (cf/get-remote-agent agent-conf))))
+            (:remote-agent remagent)))
   (f))
 
 (use-fixtures :once my-test-fixture)
-
-#_(defn sha-raw-hash
-  "accepts a JSON object input against the to-hash key, and returns the hash value as a string"
-  [{:keys [to-hash]}]
-  {:hash-val (s/digest to-hash)})
-
-#_(defn sha-asset-hash
-  "accepts a starfish asset against the to-hash key, and returns a starfish asset as the value
-  against the hash-val key"
-  [{:keys [to-hash]}]
-  {:hash-val (s/asset (s/memory-asset {"meta" "data"}
-                                      (-> to-hash s/content s/to-string s/digest)))})
 
 (deftest input-asset-retrieval-test
   (testing "positive case "
@@ -73,17 +65,19 @@
           test-input-asset (s/asset (s/memory-asset
                                      {"test" "metadata"}
                                      "content"))
-          upload-fn (ki/asset-reg-upload ragent)
-          asset-id (upload-fn test-input-asset )
+          asset-id ((ki/asset-reg-upload ragent) test-input-asset)
           ret-fn (partial s/get-asset ragent)
           resp (->> {:to-hash {:did asset-id}}
                ((ki/run-chain
-                 [(ki/input-asset-retrieval ret-fn)
-                  (ki/output-asset-upload upload-fn)]
-                 sha-asset-hash)))]
+                 [(ki/output-asset-upload (ki/add-prov (deref remote-agent-map)))
+                  (ki/input-asset-retrieval ret-fn)]
+                 sha-asset-hash)))
+          generated-asset(ret-fn (-> resp :hash-val :did))]
+      ;resp
       (is (map? resp))
       ;;verify that the generated asset is available via the agent
-      (is (s/asset? (ret-fn (-> resp :hash-val :did))))))
+      ;(println " metadata of returned asset " (s/metadata generated-asset))
+      (is (s/asset? generated-asset))))
 
   (testing "upload-fn fail case"
     (let [ragent (deref remote-agent)
@@ -120,7 +114,7 @@
       (let [op-handler (wrapped-handler :asset-hashing)
             resp (->> (op-handler {:to-hash {:did asset-id}}))
             did (-> resp :results :hash-val :did)]
-        ;resp
+        resp
         (is (string? did))
         (->> (s/get-asset ragent did) s/asset? is)))))
 
