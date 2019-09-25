@@ -9,18 +9,19 @@
  :port 3001
 
  :operation-registry
- {:hashing
+ {
+  :hashing
   {:handler "koi.examples.simple/sha-raw-hash"
    :metadata
    {:operation 
-    {:results {:hash-val {:type "json", :position 0, :required true}}
+    {:results {:hash-val {:type "json", :required true}}
      :params {:to-hash {:type "json", :position 0, :required true}}}}}
 
   :asset-hashing
   {:handler "koi.examples.simple/sha-asset-hash"
    :metadata
    {:operation
-    {:results {:hash-val {:type "asset", :position 0, :required true}}
+    {:results {:hash-val {:type "asset", :required true}}
      :params {:to-hash {:type "asset", :position 0, :required true}}}}}
 
   :primes
@@ -28,7 +29,7 @@
    :metadata
    {:operation
     {:params {:first-n {:type "json", :position 0, :required true}}
-     :results {:primes {:type "asset", :position 0, :required true}}}}}
+     :results {:primes {:type "asset", :required true}}}}}
 
   :fail
   {:handler "koi.examples.simple/fail"
@@ -36,7 +37,17 @@
    {:operation
     {:results {} 
      :params {}}}
-   }}
+   }
 
+  :merge-maps
+  {:handler "koi.examples.workshop-join/join-dataset"
+   :metadata
+   {:operation
+    {:params {:vehicle-dataset
+              {:type "asset", :position 0, :required true}
+              :workshop-dataset
+              {:type "asset", :position 1, :required true}}
+     :results {:joined-dataset {:type "asset", :required true}}}}}
+  }
  }
 

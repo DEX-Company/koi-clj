@@ -4,6 +4,10 @@
             [koi.utils :as ut]
             [koi.config :as cf]
             [clojure.data.json :as json]
+            [taoensso.timbre :as timbre
+             :refer [log  trace  debug  info  warn  error  fatal  report
+                     logf tracef debugf infof warnf errorf fatalf reportf
+                     spy get-env]]
             [starfish.core :as s]
             [koi.utils :as utils])
   (:import [sg.dex.starfish.util JSON]))
@@ -48,7 +52,7 @@
   [param-spec]
   {:enter
    (fn [ctx]
-     ;(println " req "(get-in ctx [:request]) " spec " param-spec)
+     (info " req "(get-in ctx [:request]) " spec " param-spec)
      (let [req (get-in ctx [:request])
            all-keys-present? (did-validator param-spec req)]
        (if all-keys-present?
@@ -64,7 +68,7 @@
                   (update-in [:response :error]
                              (constantly
                               (do
-                                (clojure.stacktrace/print-stack-trace exception)
+                                (error exception)
                                 {:cause (.getMessage exception)}))))
               ctx))})
 

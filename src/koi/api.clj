@@ -44,7 +44,7 @@
 
 (defn koi-routes
   [config]
-  (let [handler (ki/middleware-wrapped-handler config)
+  (let [registry (ki/middleware-wrapped-handler config)
         get-handler (oph/get-handler config)]
     (api
      {:swagger
@@ -57,9 +57,9 @@
      (context "/api/v1" []
        :tags ["Invoke ocean service"]
        :coercion :spec
-       (context "/meta/data/:did" []
-         :path-params [did :- string?]
-         :middleware [token-auth-mw authenticated-mw]
+       (context "/meta/data/:asset-id" []
+         :path-params [asset-id :- string?]
+         ;:middleware [token-auth-mw authenticated-mw]
          (sw/resource
           {:get
            {:summary "Get metadata for operation"
@@ -68,7 +68,7 @@
                         201 {:schema spec/any?}
                         404 {:schema spec/any?}
                         500 {:schema spec/any?}}
-            :handler (get-handler did)}}))
+            :handler get-handler}}))
 
        (context "/auth" []
 
@@ -85,7 +85,7 @@
 
        (context "/invoke/:did" []
          :path-params [did :- string?]
-         :middleware [token-auth-mw authenticated-mw]
+         ;:middleware [token-auth-mw authenticated-mw]
          (sw/resource
           {:post
            {:summary "Run an sync operation"
@@ -95,11 +95,11 @@
                         404 {:schema spec/any?}
                         500 {:schema spec/any?}
                         }
-            :handler (oph/invoke-handler handler)}}))
+            :handler (oph/invoke-handler registry)}}))
 
        (context "/invokeasync/:did" []
          :path-params [did :- string?]
-         :middleware [token-auth-mw authenticated-mw]
+         ;:middleware [token-auth-mw authenticated-mw]
          (sw/resource
           {
            :post
@@ -109,11 +109,11 @@
                         201 {:schema spec/any?}
                         404 {:schema spec/any?}
                         500 {:schema spec/any?}}
-            :handler (oph/invoke-async-handler handler)}}))
+            :handler (oph/invoke-async-handler registry)}}))
 
        (context "/jobs/:jobid" []
          :path-params [jobid :- int?]
-         :middleware [token-auth-mw authenticated-mw]
+         ;:middleware [token-auth-mw authenticated-mw]
          (sw/resource
           {:get
            {:summary "get the status of a job"

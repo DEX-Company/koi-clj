@@ -7,19 +7,54 @@
  :port 3001
 
  :operation-registry
- {:hashing {:handler "koi.examples.hashing-simple/sha-asset-hash"
-            :metadata
-            {:description "Computes prime numbers",
-             :tags ["primes"],
-             :license "CC-BY"
-             :name "Prime computation operation"
-             :type "operation"
-             :author "Primely Inc"
-             :inLanguage "en"
-             :dateCreated "2019-05-07T08:17:31.521445Z"
-             :modes [:sync :async]
-             :operation
-             {:results {:hash-val {:type "asset", :position 0, :required true}}
-              :params {:to-hash {:type "asset", :position 0, :required true}}}}}}
+ {
+  :hashing
+  {:handler "koi.examples.simple/sha-raw-hash"
+   :metadata
+   {:description "Computes prime numbers",
+    :tags ["primes"],
+    :license "CC-BY"
+    :name "Prime computation operation"
+    :type "operation"
+    :author "Primely Inc"
+    :inLanguage "en"
+    :dateCreated "2019-05-07T08:17:31.521445Z"
+    :modes [:sync :async]
+    :operation
+    {:results {:hash-val {:type "json", :position 0, :required true}}
+     :params {:to-hash {:type "json", :position 0, :required true}}}}}
+
+  :asset-hashing
+  {:handler "koi.examples.simple/sha-asset-hash"
+   :metadata
+   {
+    :description "Computes asset hashes",
+    :license "CC-BY"
+    :name "Asset hashing operation"
+    :type "operation"
+    :author "Hashers Inc"
+    :inLanguage "en"
+    :dateCreated "2019-05-08T08:17:31.521445Z"
+    :modes [:sync :async]
+    :operation
+    {:results {:hash-val {:type "asset", :position 0, :required true}}
+     :params {:to-hash {:type "asset", :position 0, :required true}}}}}
+
+  :primes
+  {:handler "koi.examples.prime-num/compute-primes"
+   :metadata
+   {
+    :description "Computes primes ",
+    :license "CC-BY"
+    :name "Prime finding operation"
+    :type "operation"
+    :author "primes Inc"
+    :inLanguage "en"
+    :dateCreated "2019-05-08T08:17:31.521445Z"
+    :modes [:sync :async]
+    :operation
+    {:params {:first-n {:type "json", :position 0, :required true}}
+     :results {:primes {:type "asset", :position 0, :required true}}}}}
+  }
  }
 

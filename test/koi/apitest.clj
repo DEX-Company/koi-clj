@@ -32,7 +32,7 @@
 
 (def iripath "/api/v1")
 
-(defn get-auth-token
+#_(defn get-auth-token
   "get the bearer token and use it for rest of the tests"
   [app]
   (let [;app (koi-routes op-registry )
@@ -44,23 +44,14 @@
     (reset! token body)
     (is (= (:status response) (:status (ok))))))
 
-(defn my-test-fixture [f]
-  (let [{:keys [conf remagent]} (load-agent "test-config.edn") 
-        ]
+(defn test-fixture [f]
+  (let [{:keys [conf remagent]} (load-agent "test-config.edn")]
     (reset! remote-agent
             (:remote-agent remagent))
-    ;(def system (api/default-system conf))
-                                        ;(alter-var-root #'system component/start)
-    (def app (koi-routes conf))
-    ;(def remote-agent (:agent (:agent system)))
-    ;(def storage (-> system :storage :storage))
-    )
-  ;(get-auth-token app)
-  (f)
-  ;(alter-var-root #'system component/stop)
-  )
+    (def app (koi-routes conf)))
+  (f))
 
-(use-fixtures :once my-test-fixture)
+(use-fixtures :once test-fixture)
 
 (deftest testerrorresponses
   (testing "Test request to hash operation"
@@ -75,7 +66,8 @@
       response
       (is (= hashval (-> body :results :hash-val)))
       (is (= (:status response) (:status (ok))))))
-  (testing "Test unauthorized request to hash operation"
+  ;;removed auth for now
+  #_(testing "Test unauthorized request to hash operation"
     (let [response (app (-> (mock/request :post (str iripath "/invoke/hashing"))
                             (mock/content-type "application/json")
                             ;(mock/header "Authorization" (str "token faketoken" ))
@@ -150,7 +142,6 @@
                           (mock/content-type "application/json")))]
       (is (= (:status jobres) (:status (not-found)))))))
 
-
 (deftest consuming-assets
     (testing "Test request to primes operation"
       (let [response (app (-> (mock/request :post (str iripath "/invoke/primes"))
@@ -187,17 +178,6 @@
                 dset-rows (clojure.string/split ret-dset #"\n")
                 first-row "sepal_length,sepal_width,petal_length,petal_width,species,predclass"]
             (is (= first-row (first dset-rows)))))))
-#_(deftest oper-registration
-  (testing "primes operation "
-    (do 
-      (let [prime-metadata (->> (clojure.java.io/resource "prime_asset_metadata.json")
-                                slurp
-                                cheshire/parse-string)
-            ast (s/memory-asset prime-metadata "abc")
-            remote-asset (s/register (:agent remote-agent) ast)
-            res (s/asset-id remote-asset)
-            rem-metadata (s/metadata remote-asset)]
-        (is (=  (s/asset-id ast) res))))))
 
 #_(deftest filterrows 
   (testing "Test request to filter rows"
@@ -223,33 +203,27 @@
       (is (= 153 (ifn 6)))
       )))
 
-#_(deftest prov-retrieval
-  (testing "retrieval"
+(deftest prov-retrieval
+  (testing "test that provenance is created"
     (let [vpath (io/resource "veh.json")
-              wpath (io/resource "workshop.json")
+          wpath (io/resource "workshop.json")
           veh-dset (s/memory-asset {"cars" "dataset"}
                                    (slurp vpath))
-              w-dset (s/memory-asset {"workshop" "dataset"}
-                                     (slurp wpath))
-              veh-id (put-asset (:agent remote-agent) veh-dset)
-              w-id (put-asset (:agent remote-agent) w-dset)
+          w-dset (s/memory-asset {"workshop" "dataset"}
+                                 (slurp wpath))
+          upload-fn (ki/asset-reg-upload (deref remote-agent))
+          veh-id (upload-fn veh-dset)
 
-              response (app (-> (mock/request :post (str iripath "/invoke/workshop-join-cars"))
-                                (mock/content-type "application/json")
-                                (mock/header "Authorization" (str "token " @token))
-                                (mock/body (cheshire/generate-string
-                                            {:vehicle-dataset {:did veh-id}
-                                             :workshop-dataset {:did w-id}}))))
+          w-id (upload-fn w-dset)
+
+          response (app (-> (mock/request :post (str iripath "/invoke/merge-maps"))
+                            (mock/content-type "application/json")
+                            (mock/header "Authorization" (str "token " @token))
+                            (mock/body (cheshire/generate-string
+                                        {:vehicle-dataset {:did veh-id}
+                                         :workshop-dataset {:did w-id}}))))
           body     (parse-body (:body response))
           _ (println " body returned in prov-retrieval " body)
-              resp-did (-> body :results :joined-dataset :did) 
-              res (s/metadata (s/get-asset (:agent remote-agent) resp-did))
-              response2 (app (-> (mock/request :post (str iripath "/invoke/prov"))
-                                (mock/content-type "application/json")
-                                (mock/header "Authorization" (str "token " @token))
-                                (mock/body (cheshire/generate-string
-                                            {:asset {:did resp-did}}))))
-          body     (parse-body (:body response2))]
-      (is (not (nil? (-> body :results :prov-tree))))
-      (is (not (nil? ((json/read-str (-> body :results :prov-tree))
-                      "derived-from")))))))
+          resp-did (-> body :results :joined-dataset :did)
+          res (s/metadata (s/get-asset (deref remote-agent) resp-did))]
+      (is (-> res :provenance nil? not )))))

@@ -136,15 +136,17 @@
                      (let [metadata (:metadata v)
                            metadata-str (json/write-str metadata)
                            asset-id (s/digest metadata-str)]
+                       (info " registering operation " k " against hash " asset-id)
                        (assoc acc k metadata
                               asset-id metadata)))
                    {}
                    registry)]
-    (fn[did]
-      (if-let [metadata (registry (keyword did))]
-        (ok metadata)
-        (do (error " invalid operation did " did)
-            (not-found (str "operation did " did " is not a valid resource ")))))))
+    (fn [inp]
+      (let [{:keys [asset-id]} (:route-params inp)]
+        (if-let [metadata (registry (keyword asset-id))]
+          (ok metadata)
+          (do (error " invalid operation did " asset-id)
+              (not-found (str "operation did " asset-id " is not a valid resource "))))))))
 
 (defn inv-sync
   [op-config params]
