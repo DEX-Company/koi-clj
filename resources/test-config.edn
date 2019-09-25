@@ -1,8 +1,8 @@
 {
  :agent-conf
  {:agent-url #or
-  ;[#env AGENT_URL  "http://13.70.20.203:8090"]
-  [#env AGENT_URL  "http://localhost:8080"]
+  [#env AGENT_URL  "http://13.70.20.203:8090"]
+  ;[#env AGENT_URL  "http://localhost:8080"]
   :username "Aladdin"
   :password "OpenSesame"}
 
