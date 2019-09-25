@@ -143,39 +143,41 @@
                           (mock/content-type "application/json")))]
       (is (= (:status jobres) (:status (not-found)))))))
 
-(comment 
-  (deftest consuming-assets
-    #_(testing "Test request to asset hash operation"
-      (let [ast (s/memory-asset {"hello" "world"} "abc")
-            remid (put-asset storage ast)
-            response (app (-> (mock/request :post (str iripath "/invoke/asset-hashing"))
+
+(deftest consuming-assets
+    (testing "Test request to primes operation"
+      (let [response (app (-> (mock/request :post (str iripath "/invoke/primes"))
                               (mock/content-type "application/json")
                               (mock/header "Authorization" (str "token " @token))
-                              (mock/body (cheshire/generate-string {:to-hash {:did remid}}))))
+                              (mock/body (cheshire/generate-string {:first-n "20"}))))
             body     (parse-body (:body response))]
-        (is (string? (-> body :results :hash-value :did)))))
-    #_(testing "Test request to primes operation"
-        (let [response (app (-> (mock/request :post (str iripath "/invoke/primes"))
+        body
+        (is (string? (-> body :results :primes :did)))))
+    (comment 
+      (testing "Test request to asset hash operation"
+        (let [ast (s/memory-asset {"hello" "world"} "abc")
+              remid (put-asset storage ast)
+              response (app (-> (mock/request :post (str iripath "/invoke/asset-hashing"))
                                 (mock/content-type "application/json")
                                 (mock/header "Authorization" (str "token " @token))
-                                (mock/body (cheshire/generate-string {:first-n "20"}))))
+                                (mock/body (cheshire/generate-string {:to-hash {:did remid}}))))
               body     (parse-body (:body response))]
-          (is (string? (-> body :results :primes :did)))))
-    #_(testing "Test request to iris prediction "
-        (let [dset (slurp "https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/d546eaee765268bf2f487608c537c05e22e4b221/iris.csv")
-              ast (s/memory-asset {"iris" "prediction"} dset)
-              remid (put-asset (:agent remote-agent) ast)
+          (is (string? (-> body :results :hash-value :did)))))
+      
+      (testing "Test request to iris prediction "
+          (let [dset (slurp "https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/d546eaee765268bf2f487608c537c05e22e4b221/iris.csv")
+                ast (s/memory-asset {"iris" "prediction"} dset)
+                remid (put-asset (:agent remote-agent) ast)
 
-              response (app (-> (mock/request :post (str iripath "/invoke/irisprediction"))
-                                (mock/content-type "application/json")
-                                (mock/header "Authorization" (str "token " @token))
-                                (mock/body (cheshire/generate-string {:dataset {:did remid}}))))
-              body     (parse-body (:body response))
-              ret-dset (s/to-string (s/content (s/get-asset (:agent remote-agent) (-> body :results :predictions :did))))
-              dset-rows (clojure.string/split ret-dset #"\n")
-              first-row "sepal_length,sepal_width,petal_length,petal_width,species,predclass"]
-          (is (= first-row (first dset-rows)))))))
-
+                response (app (-> (mock/request :post (str iripath "/invoke/irisprediction"))
+                                  (mock/content-type "application/json")
+                                  (mock/header "Authorization" (str "token " @token))
+                                  (mock/body (cheshire/generate-string {:dataset {:did remid}}))))
+                body     (parse-body (:body response))
+                ret-dset (s/to-string (s/content (s/get-asset (:agent remote-agent) (-> body :results :predictions :did))))
+                dset-rows (clojure.string/split ret-dset #"\n")
+                first-row "sepal_length,sepal_width,petal_length,petal_width,species,predclass"]
+            (is (= first-row (first dset-rows)))))))
 #_(deftest oper-registration
   (testing "primes operation "
     (do 

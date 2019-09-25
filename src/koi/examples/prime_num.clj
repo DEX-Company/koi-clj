@@ -7,17 +7,7 @@
     :refer [log  trace  debug  info  warn  error  fatal  report
             logf tracef debugf infof warnf errorf fatalf reportf
             spy get-env]]
-   [koi.protocols :as prot 
-    :refer [invoke-sync
-            invoke-async
-            valid-args?]]
-   [koi.invokespec :as ispec]
-   [clojure.java.io :as io]
-   [aero.core :refer (read-config)]
-   [spec-tools.json-schema :as jsc]))
-
-(sp/def ::first-n string?)
-(sp/def ::params (sp/keys :req-un [::first-n]))
+   [clojure.java.io :as io]))
 
 (defn sieve-primes [n]
   (loop [p 2 ; First prime
@@ -41,14 +31,8 @@
         (recur next-p (into marked mults) new-primes)))))
 
 (defn compute-primes
-  [agent {:keys [first-n]}]
-  (fn []
-    (let [list-of-primes (sieve-primes (cond (int? first-n) first-n
-                                             :default (Integer/parseInt first-n)))
-          primes-str (clojure.string/join "\n" list-of-primes)
-          res {:dependencies []
-               :results [{:param-name :primes
-                          :type :asset
-                          :content primes-str}]}]
-      (info " result of execfn " res)
-      res)))
+  [{:keys [first-n]}]
+  (let [list-of-primes (sieve-primes (cond (int? first-n) first-n
+                                           :default (Integer/parseInt first-n)))
+        primes-str (clojure.string/join "\n" list-of-primes)]
+    {:primes (s/asset (s/memory-asset primes-str))}))

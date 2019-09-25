@@ -105,7 +105,8 @@
          ;;set the inputs so that they can be used in the outputs.
          ;(reset! dependencies (vals req))
          (println " inp-asset-retrieval " req)
-         (update-in resp [:request :dependencies] (fn[_] (vals req)))))
+         (update-in resp [:request :dependencies]
+                    (fn[_] (filterv s/asset? (vals req))))))
      #_:leave
      #_(fn [ctx]
        (if-not (get-in ctx [:response :error])
@@ -225,7 +226,6 @@
           ;;put output asset upload on the return trip after input-asset-retrieval
           ;;because it has to add prov metadata
           (input-asset-retrieval ret-fn)
-          ;(output-asset-upload (asset-reg-upload ragent))
           (result-validator result-spec)
           ]
          (materialize-handler operation-var))))))
