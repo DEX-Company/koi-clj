@@ -23,7 +23,6 @@
                  [metosin/compojure-api "2.0.0-alpha28"]
 
                  ;;components
-                 ;[mount "0.1.12"]
                  [com.stuartsierra/component "0.4.0"]
 
                  [ring "1.6.3"]
@@ -39,16 +38,9 @@
                  [metosin/scjsv "0.5.0"]
                  ;;starfish
                  [sg.dex/starfish-clj "0.7.0" :exclusions [com.fasterxml.jackson.core/jackson-annotations
-                                                           sg.dex/starfish-java
                                                            com.oceanprotocol/keeper-contracts
                                                            commons-codec
-                                                           org.bouncycastle/bcprov-jdk15on]]
-                 [sg.dex/starfish-java "0.7.3"
-                  :exclusions [com.fasterxml.jackson.core/jackson-annotations
-                               com.oceanprotocol/keeper-contracts
-                               commons-codec
-                               org.bouncycastle/bcprov-jdk15on]
-                  ]
+                                                           ]]
                  [com.googlecode.json-simple/json-simple "1.1.1"]
                  ;;configuration management
                  [aero "1.1.3"]
@@ -56,7 +48,6 @@
 
                  ;;auth
                  [buddy/buddy-auth "2.1.0" :exclusions [org.clojure/clojure org.bouncycastle/bcprov-jdk15on]]
-                 [org.bouncycastle/bcprov-jdk15on "1.61"]
 
                  ;;csv manipulation
                  [net.mikera/core.matrix "0.58.0"]

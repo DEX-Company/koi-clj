@@ -8,7 +8,6 @@
             logf tracef debugf infof warnf errorf fatalf reportf
             spy get-env]]
    [koi.config :as config :refer [get-config get-remote-agent]]
-   [mount.core :refer [defstate]]
    [cheshire.core :as ch]
    [clojure.java.io :as io])
   (:import [sg.dex.crypto Hash]
@@ -26,7 +25,7 @@
                           params 
                           param-name))
 
-(defn process
+#_(defn process
   "this takes a map of input arguments, and a function to execute which returns a map with 2 keys: a
   list of Asset dependencies and results, which is a map of result params names and the value is content.
 

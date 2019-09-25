@@ -29,7 +29,6 @@
    [koi.middleware.token-auth :refer [token-auth-mw]]
    [koi.route-functions.auth.get-auth-credentials :refer [auth-credentials-response]]
    [koi.config :as config :refer [get-config get-remote-agent]]
-   [koi.middleware :as km]
    [koi.op-handler :as oph]
    [koi.interceptors :as ki])
   (:import [java.util UUID])
@@ -150,29 +149,11 @@
   (map->WebServer {:port port})
   )
 
-(defrecord StorageAgent [agent]
-  component/Lifecycle
-
-  (start [component]
-    (let [ag (:agent agent)
-          storage (koi.utils.RemoteStorage. ag) 
-          res (assoc component :storage storage)]
-      (info ";; Starting storage agent " agent)
-      res))
-
-  (stop [component]
-    (info ";; Stopping storage agent ")
-    (assoc component :storage nil)))
-
 (defn default-system
   [config]
   (let [{:keys [port]} config]
     (component/system-map
      :config config
-     ;:agent (oph/new-agent config)
-     ;:storage (component/using (map->StorageAgent {}) {:agent :agent})
-     #_:operation-registry #_(component/using (km/load-operation-config (:operations config))
-                                          {:agent :agent :storage :storage})
      :app (component/using
            (new-webserver port)
            {:config :config}))))

@@ -16,11 +16,7 @@
                                 async-handler
                                 process]]
    [aero.core :refer (read-config)]
-   [spec-tools.json-schema :as jsc])
-  (:import [sg.dex.crypto Hash]
-           [java.util UUID]
-           [sg.dex.starfish.util Hex JSON]
-           [org.bouncycastle.jcajce.provider.digest Keccak$Digest512 ]))
+   [spec-tools.json-schema :as jsc]))
 
 (sp/def ::dataset ::ispec/asset)
 

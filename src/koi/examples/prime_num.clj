@@ -1,13 +1,6 @@
 (ns koi.examples.prime-num
   (:require
-   [clojure.spec.alpha :as sp]
-   [starfish.core :as s]
-   [koi.utils :as utils :refer [process]]
-   [taoensso.timbre :as timbre
-    :refer [log  trace  debug  info  warn  error  fatal  report
-            logf tracef debugf infof warnf errorf fatalf reportf
-            spy get-env]]
-   [clojure.java.io :as io]))
+   [starfish.core :as s]))
 
 (defn sieve-primes [n]
   (loop [p 2 ; First prime
