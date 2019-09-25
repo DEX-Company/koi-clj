@@ -104,17 +104,8 @@
              ]
          ;;set the inputs so that they can be used in the outputs.
          ;(reset! dependencies (vals req))
-         (println " inp-asset-retrieval " req)
          (update-in resp [:request :dependencies]
                     (fn[_] (filterv s/asset? (vals req))))))
-     #_:leave
-     #_(fn [ctx]
-       (if-not (get-in ctx [:response :error])
-         (do
-           (update-in ctx [:response]
-                      #(assoc {} :dependencies dependencies)))
-         ctx))
-     
      :error (fn[ctx] (-> ctx (dissoc :error)
                          (update-in [:response :error]
                                     (constantly {:cause (.getMessage (:error ctx))}))))}))
@@ -135,7 +126,6 @@
      :leave
      (fn [ctx]
        (let [dep (get-in ctx [:request :dependencies] )
-             _ (when dep (println "dep " dep))
              resp
              (try 
                (reduce-kv

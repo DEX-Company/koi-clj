@@ -7,7 +7,11 @@
                                                                 not-found
                                                                 bad-request]]
              [ring.mock.request :as mock]
-             [koi.utils :as utils :refer [keccak512]]
+             [koi.utils :as utils ]
+             [koi.test-utils :as tu :refer [remote-agent remote-agent-map
+                                            agent-setup-fixture
+                                            load-agent]]
+             [koi.interceptors :as ki]
              [clojure.walk :refer [keywordize-keys]]
              [koi.op-handler :as oph :refer [operation-registry ]]
              [koi.protocols :as prot :refer [get-asset put-asset]]
@@ -41,9 +45,12 @@
     (is (= (:status response) (:status (ok))))))
 
 (defn my-test-fixture [f]
-  (let [conf (get-config (clojure.java.io/resource "test-config.edn"))]
+  (let [{:keys [conf remagent]} (load-agent "test-config.edn") 
+        ]
+    (reset! remote-agent
+            (:remote-agent remagent))
     ;(def system (api/default-system conf))
-    ;(alter-var-root #'system component/start)
+                                        ;(alter-var-root #'system component/start)
     (def app (koi-routes conf))
     ;(def remote-agent (:agent (:agent system)))
     ;(def storage (-> system :storage :storage))
@@ -153,16 +160,18 @@
             body     (parse-body (:body response))]
         body
         (is (string? (-> body :results :primes :did)))))
+  (testing "Test request to asset hash operation"
+    (let [ast (s/asset (s/memory-asset {"hello" "world"} "abc"))
+          remid ((ki/asset-reg-upload (deref remote-agent)) ast)
+          response (app (-> (mock/request :post (str iripath "/invoke/asset-hashing"))
+                            (mock/content-type "application/json")
+                            (mock/header "Authorization" (str "token " @token))
+                            (mock/body (cheshire/generate-string {:to-hash {:did remid}}))))
+          body     (parse-body (:body response))]
+      body
+      (is (string? (-> body :results :hash-val :did)))))
     (comment 
-      (testing "Test request to asset hash operation"
-        (let [ast (s/memory-asset {"hello" "world"} "abc")
-              remid (put-asset storage ast)
-              response (app (-> (mock/request :post (str iripath "/invoke/asset-hashing"))
-                                (mock/content-type "application/json")
-                                (mock/header "Authorization" (str "token " @token))
-                                (mock/body (cheshire/generate-string {:to-hash {:did remid}}))))
-              body     (parse-body (:body response))]
-          (is (string? (-> body :results :hash-value :did)))))
+      
       
       (testing "Test request to iris prediction "
           (let [dset (slurp "https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/d546eaee765268bf2f487608c537c05e22e4b221/iris.csv")

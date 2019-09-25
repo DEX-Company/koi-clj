@@ -2,32 +2,21 @@
   (:require [clojure.test :as t
              :refer [deftest is testing use-fixtures]]
             [starfish.core :as s]
-            ;;to be removed
             [sieppari.core :as si]
             [koi.utils :refer [resolve-op]]
             [koi.examples.simple :refer [sha-raw-hash sha-asset-hash
                                          fail]]
             [koi.op-handler :as oph]
             [koi.interceptors :as ki]
+            [koi.test-utils :as tu :refer [remote-agent remote-agent-map
+                                           agent-setup-fixture
+                                           ]]
             [clojure.data.json :as json]
             [koi.config :as cf :refer [get-config]]
             [clojure.java.io :as io])
   (:import [org.json.simple.parser JSONParser]))
 
-(def remote-agent (atom nil))
-(def remote-agent-map (atom nil))
-
-(defn my-test-fixture [f]
-  (let [conf (get-config (clojure.java.io/resource "test-config.edn"))
-        agent-conf (:agent-conf conf)
-        remagent (cf/get-remote-agent agent-conf)]
-    (reset! remote-agent-map
-            remagent)
-    (reset! remote-agent
-            (:remote-agent remagent)))
-  (f))
-
-(use-fixtures :once my-test-fixture)
+(use-fixtures :once agent-setup-fixture)
 
 (deftest input-asset-retrieval-test
   (testing "positive case "

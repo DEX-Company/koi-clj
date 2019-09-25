@@ -13,39 +13,7 @@
    [clojure.java.io :as io])
   (:import [sg.dex.crypto Hash]
            [java.util UUID]
-           [sg.dex.starfish.util Hex JSON]
-           [org.bouncycastle.jcajce.provider.digest Keccak$Digest512 ]))
-
-(deftype RemoteStorage
-    [agent]
-  prot/PAssetStorage
-  (put-asset
-    [_ asset]
-    (println " agent is " agent)
-    (let [ag (:agent agent)
-          remote-asset (s/register ag asset)]
-      (s/upload ag asset)
-      (s/asset-id remote-asset)))
-
-  (get-asset
-    [_ asset-param]
-    (->> asset-param
-         :did
-         (s/get-asset (:agent agent)))))
-
-(defn keccak512
-  "returns the keccak512 digest"
-  [cont]
-  (let [byt (.getBytes cont "UTF-8")
-        di (doto (new Keccak$Digest512)
-             (.update byt 0 (alength byt)))]
-    (Hex/toString (.digest di))))
-
-#_(def prime-metadata 
-  (->> (clojure.java.io/resource "prime_asset_metadata.json") slurp))
-
-;;(defstate remote-agent :start (get-remote-agent))
-
+           [sg.dex.starfish.util Hex JSON]))
 
 (defn invoke-metadata
   "creates invoke metadata given result parameter name, a list of dependencies (which are Assets),
