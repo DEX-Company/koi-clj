@@ -14,7 +14,7 @@ In order to implement a new operation, a developer must
 
   - The metadata defines the input and outputs, as well as their types. 
 
-Lets look at the implementation of an [iris prediction](). This is an example of a machine learning classifier which is trained on the Iris dataset. The implementation is dummy predictor which takes in an instance from the [iris dataset](https://en.wikipedia.org/wiki/Iris_flower_data_set) and always predicts `setosa` as the predicted class.
+Lets look at the implementation of an Iris Predictor. This is an example of a machine learning classifier which is trained on the Iris dataset. The implementation is dummy predictor which takes in an instance from the [iris dataset](https://en.wikipedia.org/wiki/Iris_flower_data_set) and always predicts `setosa` as the predicted class.
 
 
 ### Function that runs the operation.
@@ -71,5 +71,5 @@ Example of metadata for this operation:
 
 `config.edn` maintains a list of operations. On startup, Koi will
 
-- registers the metadata for each operation using an Agent. 
+- register the metadata for each operation using an Agent. 
 - register a rest endpoint corresponding to the ID of the operation. 
