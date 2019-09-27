@@ -48,6 +48,14 @@
               :workshop-dataset
               {:type "asset", :position 1, :required true}}
      :results {:joined-dataset {:type "asset", :required true}}}}}
+
+  :iris-predictor
+  {:handler "koi.examples.predict-iris/predict-class"
+   :metadata
+   {:operation
+    {:params {:dataset {:type "asset", :position 0, :required true}}
+     :modes [:sync :async]
+     :results {:predictions {:type "asset", :required true}}}}}
   }
  }
 
