@@ -4,76 +4,72 @@ In this document, we'll discuss using koi-clj as a template to implement a new o
 
 In order to implement a new operation, a developer must 
 
-- Implement the protocols declared [protocols.clj](https://github.com/DEX-Company/koi-clj/blob/develop/src/koi/protocols.clj)
-- Create the metadata, which is discussed in detail [here](#) 
+- Write a Clojure function that satisfies the following constraints
 
-The protocol declares three methods
+  - It must accept a single argument which is a map
+  - the keys must be keywords and the value could be one of a)Starfish Asset b)JSON encoded as Clojure
+  - It must return a map as a result. The response map follows the same constraints as the input.
 
-* `invoke-sync` This method is called for the synchronous invocation of an operation. 
-* `invoke-async` This method is called for the asynchronous invocation of an operation. It must return immediately, and return a job id.
-* `get-params` This method returns the metadata (input and output) for the operation.
+- Define metadata. 
 
-Lets look at the implementation of an [iris predictor](https://github.com/DEX-Company/koi-clj/blob/develop/src/koi/examples/predict_iris.clj). This is an example of a machine learning classifier which is trained on the Iris dataset. The implementation is dummy predictor which takes in an instance from the [iris dataset](https://en.wikipedia.org/wiki/Iris_flower_data_set) and always predicts `setosa` as the predicted class.
+  - The metadata defines the input and outputs, as well as their types. 
 
-### Creating a deftype 
+Lets look at the implementation of an [iris prediction](). This is an example of a machine learning classifier which is trained on the Iris dataset. The implementation is dummy predictor which takes in an instance from the [iris dataset](https://en.wikipedia.org/wiki/Iris_flower_data_set) and always predicts `setosa` as the predicted class.
 
-First, we need to create a [deftype](https://clojuredocs.org/clojure.core/deftype) that implements the protocol abstractions.
-
-
-Note that:
-
--  the `invoke-*` methods call the *process* function (explained later)
-- `get-params` is a clojure.spec compliant definition of the inputs
-
-```clj
-
-(deftype PredictIrisClass [jobs jobids]
-
-  prot/PSyncInvoke
-  (invoke-sync [_ args]
-    (process args predict-class))
-
-  prot/PAsyncInvoke
-  (invoke-async [_ args]
-    (async-handler jobids jobs #(process args predict-class)))
-
-  prot/PParams
-  (get-params [_]
-    ::params))
-
-```
 
 ### Function that runs the operation.
 
 ```clj
 (defn predict-class
-  [agent {:keys [dataset]}]
+  [{:keys [dataset]}]
   ;;get the content of the input dataset.
- ;;this would be a test dataset with iris instances
+  ;;this would be a test dataset with iris instances
+  (let [cont (-> dataset s/content s/to-string)
+        isp (clojure.string/split cont #"\n" )
+        ;;create predictions, which adds the value for predicted class
+         predictions (->> (into [(str (first isp) ",predclass")]
+                                 (mapv #(str % ",setosa") (rest isp)))
+                           (clojure.string/join "\n"))
+         ;;return a map with the parametername (predictions) and 
+         ;;an asset contains the content with a new column
+         res {:predictions (s/asset (s/memory-asset
+                                      {"iris" "predictions"}
+                                      predictions))}]
+      res))
+```
 
-  (let [ast (get-asset agent dataset)
-        cont (-> ast s/content s/to-string)]
-    ;;this should return a function
-    (fn []
-      (let [isp (clojure.string/split cont #"\n" )
-      ;;create predictions, which adds the value for predicted class
-            predictions (->> (into [(str (first isp) ",predclass")]
-                       (mapv #(str % ",setosa") (rest isp)))
-                 (clojure.string/join "\n"))
-                 ;;;return a map with the parametername (predictions) and the content
-            res {:results [{:param-name :predictions
-                            :type :asset
-                            :content predictions}]}]
-        ;(info " result of predict-class " res)
-        res))))
+### Define metadata 
+
+This metadata helps the middleware to test if
+
+- The input and output arguments are valid
+- If the arguments are references to asset ids, the middleware will retrieve and create them (as Starfish assets)
+- It does the same with the response
+
+Example of metadata for this operation:
+
+```clj
+  ;;the key in the operation-registry map identifying the operation with a simple name
+  :iris-predictor
+  ;;the map value contains the configuration required
+  {
+  ;;the class name and the function
+  :handler "koi.examples.predict-iris/predict-class"
+   :metadata
+   {:operation
+    {
+	;;the input parameters
+	:params {:dataset {:type "asset", :position 0, :required true}}
+	;;which modes are supported
+     	:modes [:sync :async]
+	;;the result parameters
+     	:results {:predictions {:type "asset", :required true}}}}}
+
 ```
 
 ### Adding it to the list of operations.
 
-`op_handler.clj` maintains a list of operations. On Koi startup, the operation handler
+`config.edn` maintains a list of operations. On startup, Koi will
 
 - registers the metadata for each operation using an Agent. 
-- registers a rest endpoint corresponding to the ID of the operation. 
-
-
-The complete source can be found [here](https://github.com/DEX-Company/koi-clj/blob/develop/src/koi/examples/predict_iris.clj)
+- register a rest endpoint corresponding to the ID of the operation. 
