@@ -4,7 +4,7 @@
   :username "Aladdin"
   :password "OpenSesame"}
 
- :port 3001
+ :port 8191
 
  :operation-registry
  {
@@ -19,9 +19,10 @@
     :author "Primely Inc"
     :inLanguage "en"
     :dateCreated "2019-05-07T08:17:31.521445Z"
-    :modes [:sync :async]
     :operation
-    {:results {:hash-val {:type "json", :position 0, :required true}}
+    {
+     :results {:hash-val {:type "json", :position 0, :required true}}
+     :modes [:sync :async]
      :params {:to-hash {:type "json", :position 0, :required true}}}}}
 
   :asset-hashing
@@ -35,9 +36,9 @@
     :author "Hashers Inc"
     :inLanguage "en"
     :dateCreated "2019-05-08T08:17:31.521445Z"
-    :modes [:sync :async]
     :operation
     {:results {:hash-val {:type "asset", :position 0, :required true}}
+     :modes [:sync :async]
      :params {:to-hash {:type "asset", :position 0, :required true}}}}}
 
   :primes
@@ -51,9 +52,9 @@
     :author "primes Inc"
     :inLanguage "en"
     :dateCreated "2019-05-08T08:17:31.521445Z"
-    :modes [:sync :async]
     :operation
     {:params {:first-n {:type "json", :position 0, :required true}}
+     :modes [:sync :async]
      :results {:primes {:type "asset", :position 0, :required true}}}}}
   }
  }

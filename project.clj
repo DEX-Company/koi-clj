@@ -73,5 +73,5 @@
                       :jvm-opts ["-Dconfig.edn=resources/dev-config.edn"]
                       :main koi.api}}
   :main koi.api
-  :ring {:handler koi.api/app :init koi.api/app-init}
+  ;:ring {:handler koi.api/app :init koi.api/app-init}
 )
