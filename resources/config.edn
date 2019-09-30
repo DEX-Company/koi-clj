@@ -56,6 +56,40 @@
     {:params {:first-n {:type "json", :position 0, :required true}}
      :modes [:sync :async]
      :results {:primes {:type "asset", :position 0, :required true}}}}}
+
+  :merge-maps
+  {:handler "koi.examples.workshop-join/join-dataset"
+   :metadata
+   {
+    :description "Merge maps by key",
+    :license "CC-BY"
+    :name "Merge operation"
+    :type "operation"
+    :author "Merge Inc"
+    :inLanguage "en"
+    :dateCreated "2019-05-08T08:17:31.521445Z"
+    :operation
+    {:params {:vehicle-dataset
+              {:type "asset", :position 0, :required true}
+              :workshop-dataset
+              {:type "asset", :position 1, :required true}}
+     :results {:joined-dataset {:type "asset", :required true}}}}}
+
+  :iris-predictor
+  {:handler "koi.examples.predict-iris/predict-class"
+   :metadata
+   {
+    :description "Iris label predictor",
+    :license "CC-BY"
+    :name "Predict Iris label operation"
+    :type "operation"
+    :author "Prediction Inc"
+    :inLanguage "en"
+    :dateCreated "2019-05-08T08:17:31.521445Z"
+    :operation
+    {:params {:dataset {:type "asset", :position 0, :required true}}
+     :modes [:sync :async]
+     :results {:predictions {:type "asset", :required true}}}}}
   }
  }
 
