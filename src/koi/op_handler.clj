@@ -138,7 +138,7 @@
                            asset-id (s/digest metadata-str)]
                        (info " registering operation " k " against hash " asset-id)
                        (assoc acc k metadata
-                              asset-id metadata)))
+                              (keyword asset-id) metadata)))
                    {}
                    registry)]
     (fn [inp]

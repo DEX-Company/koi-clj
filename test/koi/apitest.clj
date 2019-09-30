@@ -142,6 +142,20 @@
                           (mock/content-type "application/json")))]
       (is (= (:status jobres) (:status (not-found)))))))
 
+(deftest get-handler-test
+  (testing "positive case: existing operation"
+    (let [response (app (-> (mock/request :get (str iripath "/meta/data/primes"))
+                            (mock/content-type "application/json")))
+          body     (parse-body (:body response))]
+      (-> body map? is)
+      (let  [ast-hash (-> body json/write-str s/digest)
+             resp2
+             (app (-> (mock/request :get (str iripath "/meta/data/" ast-hash))
+                      (mock/content-type "application/json")))]
+        ;;hash the metadata and use it as asset id
+        ;;it should return the same map
+        (is (= body (parse-body (:body resp2))))))))
+
 (deftest consuming-assets
     (testing "Test request to primes operation"
       (let [response (app (-> (mock/request :post (str iripath "/invoke/primes"))
