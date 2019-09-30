@@ -32,7 +32,7 @@
 
 (def iripath "/api/v1")
 
-#_(defn get-auth-token
+(defn get-auth-token
   "get the bearer token and use it for rest of the tests"
   [app]
   (let [;app (koi-routes op-registry )
@@ -67,7 +67,7 @@
       (is (= hashval (-> body :results :hash-val)))
       (is (= (:status response) (:status (ok))))))
   ;;removed auth for now
-  #_(testing "Test unauthorized request to hash operation"
+  (testing "Test unauthorized request to hash operation"
     (let [response (app (-> (mock/request :post (str iripath "/invoke/hashing"))
                             (mock/content-type "application/json")
                             ;(mock/header "Authorization" (str "token faketoken" ))
@@ -179,7 +179,7 @@
                 remid ((ki/asset-reg-upload (deref remote-agent)) ast)
                 response (app (-> (mock/request :post (str iripath "/invoke/iris-predictor"))
                                   (mock/content-type "application/json")
-                                  ;(mock/header "Authorization" (str "token " @token))
+                                  (mock/header "Authorization" (str "token " @token))
                                   (mock/body (cheshire/generate-string {:dataset {:did remid}}))))
                 body     (parse-body (:body response))
                 ret-dset (s/to-string (s/content (s/get-asset (deref remote-agent)

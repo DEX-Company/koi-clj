@@ -58,7 +58,7 @@
        :coercion :spec
        (context "/meta/data/:asset-id" []
          :path-params [asset-id :- string?]
-         ;:middleware [token-auth-mw authenticated-mw]
+         :middleware [token-auth-mw authenticated-mw]
          (sw/resource
           {:get
            {:summary "Get metadata for operation"
@@ -84,7 +84,7 @@
 
        (context "/invoke/:did" []
          :path-params [did :- string?]
-         ;:middleware [token-auth-mw authenticated-mw]
+         :middleware [basic-auth-mw token-auth-mw authenticated-mw]
          (sw/resource
           {:post
            {:summary "Run an sync operation"
@@ -98,7 +98,7 @@
 
        (context "/invokeasync/:did" []
          :path-params [did :- string?]
-         ;:middleware [token-auth-mw authenticated-mw]
+         :middleware [basic-auth-mw token-auth-mw authenticated-mw]
          (sw/resource
           {
            :post
@@ -112,7 +112,7 @@
 
        (context "/jobs/:jobid" []
          :path-params [jobid :- int?]
-         ;:middleware [token-auth-mw authenticated-mw]
+         :middleware [token-auth-mw authenticated-mw]
          (sw/resource
           {:get
            {:summary "get the status of a job"
