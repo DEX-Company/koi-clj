@@ -82,8 +82,8 @@
                          `username` however we will accept a valid username or email as a value for this key."
            (auth-credentials-response request)))
 
-       (context "/invoke/:did" []
-         :path-params [did :- string?]
+       (context "/invoke/:operation-id" []
+         :path-params [operation-id :- string?]
          :middleware [basic-auth-mw token-auth-mw authenticated-mw]
          (sw/resource
           {:post
@@ -96,8 +96,8 @@
                         }
             :handler (oph/invoke-handler registry)}}))
 
-       (context "/invokeasync/:did" []
-         :path-params [did :- string?]
+       (context "/invokeasync/:operation-id" []
+         :path-params [operation-id :- string?]
          :middleware [basic-auth-mw token-auth-mw authenticated-mw]
          (sw/resource
           {

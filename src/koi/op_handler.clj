@@ -5,7 +5,7 @@
    [starfish.core :as s]
    [clojure.spec.alpha :as sp]
    [com.stuartsierra.component :as component]
-   ;[koi.middleware :as km]
+                                        ;[koi.middleware :as km]
    [koi.utils :as ut :refer [async-handler]]
    [ring.util.http-response :as http-response :refer [ok header created unprocessable-entity
                                                       not-found]]
@@ -16,7 +16,8 @@
     :refer [log  trace  debug  info  warn  error  fatal  report
             logf tracef debugf infof warnf errorf fatalf reportf
             spy get-env]]
-   [koi.config :as config :refer [get-config get-remote-agent]]))
+   [koi.config :as config :refer [get-config get-remote-agent]]
+   [koi.interceptors :as ki]))
 
 ;;the jobs are stored as in-memory atoms. A production setup might
 ;;want to store the jobs in persisten (e.g db) storage
@@ -132,15 +133,7 @@
   [config]
   (let [registry (:operation-registry config)
         ;;add the hash of the metadata as an additional key
-        registry (reduce-kv (fn[acc k v]
-                     (let [metadata (:metadata v)
-                           metadata-str (json/write-str metadata)
-                           asset-id (s/digest metadata-str)]
-                       (info " registering operation " k " against hash " asset-id)
-                       (assoc acc k metadata
-                              (keyword asset-id) metadata)))
-                   {}
-                   registry)]
+        registry (ki/add-metadata-hash registry)]
     (fn [inp]
       (let [{:keys [asset-id]} (:route-params inp)]
         (if-let [metadata (registry (keyword asset-id))]
@@ -161,8 +154,14 @@
   ([registry]
    (fn [inp]
      (let [params (or (:body-params inp) (:body inp))
-           {:keys [did]} (:route-params inp) ]
-       (if-let [handler-fn (registry (keyword did))]
+           {:keys [operation-id]} (:route-params inp) ]
+       (info (str "got invoke request for " operation-id " params " params
+                  " \n route-params " (:route-params inp)
+                  " \n registry keys " (registry (keyword operation-id))
+                  " \n get registry "
+                  (get registry (keyword operation-id))
+                  ))
+       (if-let [handler-fn (registry (keyword operation-id))]
          (try
            (let [invres (handler-fn params)]
              (info " invoke-response " invres )
@@ -179,15 +178,15 @@
                (error (str " got error in invoke " e))
                (clojure.stacktrace/print-stack-trace e)
                (http-response/internal-server-error " server error executing operation "))))
-         (do (error " invalid operation did " did)
-             (not-found (str "operation did " did " is a valid resource "))))))))
+         (do (error " invalid operation did " operation-id)
+             (not-found (str "operation did " operation-id " is not a valid resource "))))))))
 
 (defn invoke-async-handler
   [handler]
   (fn [inp]
      (let [params (or (:body-params inp) (:body inp))
-           {:keys [did]} (:route-params inp) ]
-       (if-let [handler-fn (handler (keyword did))]
+           {:keys [operation-id]} (:route-params inp) ]
+       (if-let [handler-fn (handler (keyword operation-id))]
          (try
            (let [invres (async-handler jobids jobs
                                        (fn[] (handler-fn params)))]
@@ -198,8 +197,8 @@
                (error (str " got error in invoke " e))
                (clojure.stacktrace/print-stack-trace e)
                (http-response/internal-server-error " server error executing operation "))))
-         (do (error " invalid operation did " did)
-             (not-found (str "operation did " did " is a valid resource ")))))))
+         (do (error " invalid operation did " operation-id)
+             (not-found (str "operation did " operation-id " is not a valid resource ")))))))
 
 (defn result-handler
   ([inp]

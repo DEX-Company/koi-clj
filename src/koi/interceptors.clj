@@ -193,36 +193,49 @@
   [interceptors f]
   (partial si/execute (conj interceptors f)))
 
+(defn add-metadata-hash
+  [registry]
+  (reduce-kv (fn[acc k v]
+               (let [metadata (:metadata v)
+                     metadata-str (json/write-str metadata)
+                     asset-id (s/digest metadata-str)]
+                 (info " registering operation " k " against hash " asset-id)
+                 (assoc acc k v
+                        (keyword asset-id) v)))
+             {}
+             registry))
+
 (defn middleware-wrapped-handler
   [config]
-  (fn [operation]
-    (let [op-registry (:operation-registry config)
-          agent-conf (:agent-conf config)
-          param-spec (get-in config [:operation-registry operation :metadata :operation  :params])
-          result-spec (get-in config [:operation-registry operation :metadata :operation  :results])
-          remote-agent (cf/get-remote-agent agent-conf)
-          ragent (:remote-agent remote-agent)
-          ;;lets pre-register an asset that will be used
-          ret-fn (partial s/get-asset ragent)
-          operation-var (get-in op-registry [operation :handler])]
-      ;;when operation is invalid, return nil
-      ;;the sequence is:
-      ;;first to last all the :enter fns are run
-      ;;then the handler is run
-      ;;last to first :leave fns are run
-      (when operation-var
-        (run-chain
-         [
-          (wrap-error-cause)
-          (wrap-result)
-          (output-asset-upload (add-prov remote-agent))
-          (param-validator param-spec)
-          ;;put output asset upload on the return trip after input-asset-retrieval
-          ;;because it has to add prov metadata
-          (input-asset-retrieval ret-fn)
-          (result-validator result-spec)
-          ]
-         (materialize-handler operation-var))))))
+  (let [op-registry (-> config :operation-registry add-metadata-hash)
+        agent-conf (:agent-conf config)
+        remote-agent (cf/get-remote-agent agent-conf)
+        ragent (:remote-agent remote-agent)
+        ;;lets pre-register an asset that will be used
+        ret-fn (partial s/get-asset ragent)]
+    (fn [operation]
+      (let [param-spec (get-in op-registry [operation :metadata :operation  :params])
+            result-spec (get-in op-registry [operation :metadata :operation  :results])
+            operation-var (get-in op-registry [operation :handler])
+            ]
+        ;;when operation is invalid, return nil
+        ;;the sequence is:
+        ;;first to last all the :enter fns are run
+        ;;then the handler is run
+        ;;last to first :leave fns are run
+        (when operation-var
+          (run-chain
+           [
+            (wrap-error-cause)
+            (wrap-result)
+            (output-asset-upload (add-prov remote-agent))
+            (param-validator param-spec)
+            ;;put output asset upload on the return trip after input-asset-retrieval
+            ;;because it has to add prov metadata
+            (input-asset-retrieval ret-fn)
+            (result-validator result-spec)
+            ]
+           (materialize-handler operation-var)))))))
 
 (comment
   (def i-metadata (-> (io/resource "hashing_asset_metadata.json")
@@ -252,3 +265,4 @@
                (fn[_] {})]
               {:to-hash "abcd"})
   )
+
