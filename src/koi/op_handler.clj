@@ -5,7 +5,7 @@
    [starfish.core :as s]
    [clojure.spec.alpha :as sp]
    [com.stuartsierra.component :as component]
-   [koi.middleware :as km]
+   ;[koi.middleware :as km]
    [koi.utils :as ut :refer [async-handler]]
    [ring.util.http-response :as http-response :refer [ok header created unprocessable-entity
                                                       not-found]]
@@ -148,7 +148,7 @@
           (do (error " invalid operation did " asset-id)
               (not-found (str "operation did " asset-id " is not a valid resource "))))))))
 
-(defn inv-sync
+#_(defn inv-sync
   [op-config params]
   (let [mid (km/test-middleware op-config)
         resp (mid {:invoke-args params})]
