@@ -11,5 +11,5 @@
 (deftest get-hashing
   (testing "positive case"
     (let [res ((oph/get-handler config) {:route-params {:asset-id "hashing"}})]
-      (-> res :body :metadata map? is))))
+      (-> res :body :operation map? is))))
 

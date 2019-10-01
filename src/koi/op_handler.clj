@@ -133,7 +133,15 @@
   [config]
   (let [registry (:operation-registry config)
         ;;add the hash of the metadata as an additional key
-        registry (ki/add-metadata-hash registry)]
+        registry (reduce-kv (fn[acc k v]
+                              (let [metadata (:metadata v)
+                                    metadata-str (json/write-str metadata)
+                                    asset-id (s/digest metadata-str)]
+                                (info " registering operation " k " against hash " asset-id)
+                                (assoc acc k metadata
+                                       (keyword asset-id) metadata)))
+                            {}
+                            registry)]
     (fn [inp]
       (let [{:keys [asset-id]} (:route-params inp)]
         (if-let [metadata (registry (keyword asset-id))]

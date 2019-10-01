@@ -58,7 +58,7 @@
        :coercion :spec
        (context "/meta/data/:asset-id" []
          :path-params [asset-id :- string?]
-         :middleware [token-auth-mw authenticated-mw]
+         :middleware [basic-auth-mw token-auth-mw authenticated-mw]
          (sw/resource
           {:get
            {:summary "Get metadata for operation"
@@ -82,7 +82,7 @@
                          `username` however we will accept a valid username or email as a value for this key."
            (auth-credentials-response request)))
 
-       (context "/invoke/:operation-id" []
+       (context "/invoke/sync/:operation-id" []
          :path-params [operation-id :- string?]
          :middleware [basic-auth-mw token-auth-mw authenticated-mw]
          (sw/resource
@@ -96,7 +96,7 @@
                         }
             :handler (oph/invoke-handler registry)}}))
 
-       (context "/invokeasync/:operation-id" []
+       (context "/invoke/async/:operation-id" []
          :path-params [operation-id :- string?]
          :middleware [basic-auth-mw token-auth-mw authenticated-mw]
          (sw/resource
@@ -110,7 +110,7 @@
                         500 {:schema spec/any?}}
             :handler (oph/invoke-async-handler registry)}}))
 
-       (context "/jobs/:jobid" []
+       (context "/invoke/jobs/:jobid" []
          :path-params [jobid :- int?]
          :middleware [token-auth-mw authenticated-mw]
          (sw/resource

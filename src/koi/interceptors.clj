@@ -199,7 +199,6 @@
                (let [metadata (:metadata v)
                      metadata-str (json/write-str metadata)
                      asset-id (s/digest metadata-str)]
-                 (info " registering operation " k " against hash " asset-id)
                  (assoc acc k v
                         (keyword asset-id) v)))
              {}
