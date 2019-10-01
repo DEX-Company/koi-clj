@@ -35,11 +35,9 @@
 (defn get-auth-token
   "get the bearer token and use it for rest of the tests"
   [app]
-  (let [;app (koi-routes op-registry )
-        response (app
+  (let [response (app
                   (-> (mock/request :post (str iripath "/auth/token"))
-                      (mock/header "Authorization" "Basic QWxhZGRpbjpPcGVuU2VzYW1l"))
-                  )
+                      (mock/header "Authorization" "Basic QWxhZGRpbjpPcGVuU2VzYW1l")))
         body     (parse-body (:body response))]
     (reset! token body)
     (is (= (:status response) (:status (ok))))))
@@ -63,13 +61,12 @@
                             (mock/body (cheshire/generate-string {:to-hash input}))))
           body     (parse-body (:body response))
           ]
-      response
       (is (= hashval (-> body :results :hash-val)))
       (is (= (:status response) (:status (ok))))))
-  ;;removed auth for now
   (testing "Test unauthorized request to hash operation"
     (let [response (app (-> (mock/request :post (str iripath "/invoke/hashing"))
                             (mock/content-type "application/json")
+                            ;;no auth header
                             ;(mock/header "Authorization" (str "token faketoken" ))
                             (mock/body (cheshire/generate-string {:to-hash ""}))))
           body     (parse-body (:body response))]

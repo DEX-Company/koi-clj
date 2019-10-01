@@ -37,10 +37,7 @@
                  ;;json schema
                  [metosin/scjsv "0.5.0"]
                  ;;starfish
-                 [sg.dex/starfish-clj "0.7.0" :exclusions [com.fasterxml.jackson.core/jackson-annotations
-                                                           com.oceanprotocol/keeper-contracts
-                                                           commons-codec
-                                                           ]]
+                 [sg.dex/starfish-clj "0.7.3"]
                  [com.googlecode.json-simple/json-simple "1.1.1"]
                  ;;configuration management
                  [aero "1.1.3"]
@@ -73,5 +70,4 @@
                       :jvm-opts ["-Dconfig.edn=resources/dev-config.edn"]
                       :main koi.api}}
   :main koi.api
-  ;:ring {:handler koi.api/app :init koi.api/app-init}
 )

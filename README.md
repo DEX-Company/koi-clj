@@ -60,7 +60,7 @@ Steps:
 ``` bash 
 git clone https://github.com/DEX-Company/koi-clj/
 cd koi-clj
-lein ring server
+lein run
 ```
 
 Navigate to localhost:8191
