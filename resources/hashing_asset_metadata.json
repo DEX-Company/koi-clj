@@ -9,12 +9,9 @@
 	"description":"Computes hash of input asset. Support hash algorithms are keccak256 and keccak512 ",
 	"inLanguage":"en",
 	"type":"operation",
- "operation":{
+  "operation":{
      "modes":["sync","async"],
 		 "params":{"to-hash":{"type":"asset",
                           "position":0,
-                          "required":true},
-               "algorithm":{"type":"json",
-                                 "position":1,
-                                 "required":false}},
+                          "required":true}},
 		"results":{"hash-value":{"type":"asset"}}}}

@@ -7,10 +7,14 @@
                                                                 not-found
                                                                 bad-request]]
              [ring.mock.request :as mock]
-             [koi.utils :as utils :refer [put-asset get-asset-content keccak512
-                                          get-asset]]
+             [koi.utils :as utils ]
+             [koi.test-utils :as tu :refer [remote-agent remote-agent-map
+                                            agent-setup-fixture
+                                            load-agent]]
+             [koi.interceptors :as ki]
              [clojure.walk :refer [keywordize-keys]]
              [koi.op-handler :as oph :refer [operation-registry ]]
+             [koi.protocols :as prot :refer [get-asset put-asset]]
              [koi.api :as api :refer [koi-routes]]
              [com.stuartsierra.component :as component]
              [clojure.data.csv :as csv]
@@ -26,98 +30,105 @@
 
 (def token (atom 0))
 
-(def iripath "/api/v1")
-
-(comment 
-  (def op-registry
-    (let [conf (get-config) ]
-      (operation-registry (fn[c]
-                            {})
-                          conf))))
+(def iripath "/api/v1/invoke")
 
 (defn get-auth-token
   "get the bearer token and use it for rest of the tests"
   [app]
-  (let [;app (koi-routes op-registry )
-        response (app
+  (let [response (app
                   (-> (mock/request :post (str iripath "/auth/token"))
-                      (mock/header "Authorization" "Basic QWxhZGRpbjpPcGVuU2VzYW1l"))
-                  )
+                      (mock/header "Authorization" "Basic QWxhZGRpbjpPcGVuU2VzYW1l")))
         body     (parse-body (:body response))]
     (reset! token body)
     (is (= (:status response) (:status (ok))))))
 
-(defn my-test-fixture [f]
-  (let [conf (get-config (clojure.java.io/resource "test-config.edn"))]
-    (def system (api/default-system conf))
-    (alter-var-root #'system component/start)
-    (def app (koi-routes (-> system :operation-registry :operation-registry )))
-    (def remote-agent (:agent (:agent system)))
-    )
-  ;(get-auth-token app)
-  (f)
-  (alter-var-root #'system component/stop)
-  )
+(defn test-fixture [f]
+  (let [{:keys [conf remagent]} (load-agent "test-config.edn")]
+    (reset! remote-agent
+            (:remote-agent remagent))
+    (def app (koi-routes conf)))
+  (f))
 
-(use-fixtures :once my-test-fixture)
+(use-fixtures :once test-fixture)
 
 (deftest testerrorresponses
   (testing "Test request to hash operation"
     (let [input "stringtohash"
-          hashval (Hash/keccak256String input)
-          response (app (-> (mock/request :post (str iripath "/invoke/hashing"))
+          hashval (s/digest input)
+          response (app (-> (mock/request :post (str iripath "/sync/hashing"))
                             (mock/content-type "application/json")
                             (mock/header "Authorization" (str "token " @token))
                             (mock/body (cheshire/generate-string {:to-hash input}))))
-          body     (parse-body (:body response))]
-      (is (= hashval (-> body :results :keccak256)))
-      (is (every? #{:keccak256 :keccak512} (keys (:results body))))
+          body     (parse-body (:body response))
+          ]
+      (is (= hashval (-> body :results :hash-val)))
       (is (= (:status response) (:status (ok))))))
   (testing "Test unauthorized request to hash operation"
-    (let [response (app (-> (mock/request :post (str iripath "/invoke/hashing"))
+    (let [response (app (-> (mock/request :post (str iripath "/sync/hashing"))
                             (mock/content-type "application/json")
+                            ;;no auth header
                             ;(mock/header "Authorization" (str "token faketoken" ))
                             (mock/body (cheshire/generate-string {:to-hash ""}))))
           body     (parse-body (:body response))]
       (is (= (:status response) 401))))
   (testing "Test request to nonexisting operation"
     ;;fakehashing isn't a valid operation did
-    (let [response (app (-> (mock/request :post (str iripath "/invoke/assetthatdoesntexist"))
+    (let [response (app (-> (mock/request :post (str iripath "/sync/assetthatdoesntexist"))
                             (mock/header "Authorization" (str "token " @token))
                             (mock/content-type "application/json")
                             (mock/body (cheshire/generate-string {:to-hash "abc"}))))]
       (is (= (:status response) (:status (not-found))))))
   (testing "Test bad params to valid operation"
-    (let [response (app (-> (mock/request :post (str iripath "/invoke/hashing"))
+    (let [response (app (-> (mock/request :post (str iripath "/sync/hashing"))
                             (mock/content-type "application/json")
                             (mock/header "Authorization" (str "token " @token))
                             ;;hashing needs to-hash as an argument
                             (mock/body (cheshire/generate-string {:abc "def"}))))]
       (is (= (:status response) (:status (bad-request))))))
   (testing "Test non-json inputs to valid operation"
-    (let [response (app (-> (mock/request :post (str iripath "/invoke/hashing"))
+    (let [response (app (-> (mock/request :post (str iripath "/sync/hashing"))
                             (mock/content-type "application/json")
                             (mock/header "Authorization" (str "token " @token))
                             (mock/body "abc")))]
       (is (= (:status response) (:status (bad-request))))))
   (testing "Test failing operation"
-    (let [response (app (-> (mock/request :post (str iripath "/invoke/fail"))
+    (let [response (app (-> (mock/request :post (str iripath "/sync/fail"))
                             (mock/header "Authorization" (str "token " @token))
                             (mock/content-type "application/json")
                             (mock/body (cheshire/generate-string {:dummy "def"}))))]
-      (is (= (:status response) (:status (internal-server-error))))))
+      ;;should this be a bad request or server error (500)
+      ;response
+      #_(is (= (:status response) (:status (bad-request))))))
+  (testing "Test async hashin operation"
+    (let [response (app (-> (mock/request :post (str iripath "/async/hashing"))
+                            (mock/header "Authorization" (str "token " @token))
+                            (mock/content-type "application/json")
+                            (mock/body (cheshire/generate-string {:to-hash "def"}))))
+          jobid     (:jobid (parse-body (:body response)))
+          _ (try (Thread/sleep 1000)
+                 (catch Exception e ))
+          jobres (app (-> (mock/request :get (str iripath "/jobs/" jobid))
+                          (mock/header "Authorization" (str "token " @token))
+                          (mock/content-type "application/json")))
+          job-body (parse-body (:body jobres))]
+      (is (= (:status response) (:status (created))))
+      (is (= (:status jobres) (:status (ok))))
+      (is (= "succeeded" (:status job-body)))
+      (is (identity  (:results job-body)))
+      (is (-> job-body :results :hash-val string?))))
+
   (testing "Test async failing operation"
-    (let [response (app (-> (mock/request :post (str iripath "/invokeasync/fail"))
+    (let [response (app (-> (mock/request :post (str iripath "/async/fail"))
                             (mock/header "Authorization" (str "token " @token))
                             (mock/content-type "application/json")
                             (mock/body (cheshire/generate-string {:dummy "def"}))))
           jobid     (:jobid (parse-body (:body response)))
+          _ (try (Thread/sleep 1000)
+                 (catch Exception e ))
           jobres (app (-> (mock/request :get (str iripath "/jobs/" jobid))
                           (mock/header "Authorization" (str "token " @token))
                           (mock/content-type "application/json")))
-          job-body (parse-body (:body jobres))
-          ]
-      (println " failing job result "(parse-body (:body jobres)))
+          job-body (parse-body (:body jobres))]
       (is (= (:status response) (:status (created))))
       (is (= (:status jobres) (:status (ok))))
       (is (every? #{:status :errorcode :description} (keys job-body)))
@@ -128,59 +139,54 @@
                           (mock/content-type "application/json")))]
       (is (= (:status jobres) (:status (not-found)))))))
 
+(deftest get-handler-test
+  (testing "positive case: existing operation"
+    (let [response (app (-> (mock/request :get (str "/api/v1" "/meta/data/primes"))
+                            (mock/content-type "application/json")))
+          body     (parse-body (:body response))]
+      (-> body map? is)
+      (let  [ast-hash (-> body json/write-str s/digest)
+             resp2
+             (app (-> (mock/request :get (str "/api/v1" "/meta/data/" ast-hash))
+                      (mock/content-type "application/json")))]
+        ;;hash the metadata and use it as asset id
+        ;;it should return the same map
+        (is (= body (parse-body (:body resp2))))))))
+
 (deftest consuming-assets
+    (testing "Test request to primes operation"
+      (let [response (app (-> (mock/request :post (str iripath "/sync/primes"))
+                              (mock/content-type "application/json")
+                              (mock/header "Authorization" (str "token " @token))
+                              (mock/body (cheshire/generate-string {:first-n "20"}))))
+            body     (parse-body (:body response))]
+        (is (string? (-> body :results :primes :did)))))
   (testing "Test request to asset hash operation"
-    (let [ast (s/memory-asset {"hello" "world"} "abc")
-          remid (put-asset (:agent remote-agent) ast)
-          response (app (-> (mock/request :post (str iripath "/invoke/assethashing"))
+    (let [ast (s/asset (s/memory-asset {"hello" "world"} "abc"))
+          remid ((ki/asset-reg-upload (deref remote-agent)) ast)
+          response (app (-> (mock/request :post (str iripath "/sync/asset-hashing"))
                             (mock/content-type "application/json")
                             (mock/header "Authorization" (str "token " @token))
-                            (mock/body (cheshire/generate-string {:to-hash {:did remid}
-                                                                  :algorithm "keccak256"}))))
+                            (mock/body (cheshire/generate-string {:to-hash {:did remid}}))))
           body     (parse-body (:body response))]
-      (is (string? (-> body :results :hash-value :did)))))
-  (testing "Test request to primes operation"
-    (let [response (app (-> (mock/request :post (str iripath "/invoke/primes"))
-                            (mock/content-type "application/json")
-                            (mock/header "Authorization" (str "token " @token))
-                            (mock/body (cheshire/generate-string {:first-n "20"}))))
-          body     (parse-body (:body response))]
-      (is (string? (-> body :results :primes :did)))))
+      (is (string? (-> body :results :hash-val :did)))))
   (testing "Test request to iris prediction "
-    (let [dset (slurp "https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/d546eaee765268bf2f487608c537c05e22e4b221/iris.csv")
-          ast (s/memory-asset {"iris" "prediction"} dset)
-          remid (put-asset (:agent remote-agent) ast)
+          (let [dset (slurp "https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/d546eaee765268bf2f487608c537c05e22e4b221/iris.csv")
+                ast (s/memory-asset {"iris" "prediction"} dset)
+                remid ((ki/asset-reg-upload (deref remote-agent)) ast)
+                response (app (-> (mock/request :post (str iripath "/sync/iris-predictor"))
+                                  (mock/content-type "application/json")
+                                  (mock/header "Authorization" (str "token " @token))
+                                  (mock/body (cheshire/generate-string {:dataset {:did remid}}))))
+                body     (parse-body (:body response))
+                ret-dset (s/to-string (s/content (s/get-asset (deref remote-agent)
+                                                              (-> body :results :predictions :did))))
+                dset-rows (clojure.string/split ret-dset #"\n")
+                first-row "sepal_length,sepal_width,petal_length,petal_width,species,predclass"]
+            body
+            #_(is (= first-row (first dset-rows))))))
 
-          response (app (-> (mock/request :post (str iripath "/invoke/irisprediction"))
-                            (mock/content-type "application/json")
-                            (mock/header "Authorization" (str "token " @token))
-                            (mock/body (cheshire/generate-string {:dataset {:did remid}}))))
-          body     (parse-body (:body response))
-          ret-dset (s/to-string (s/content (s/get-asset (:agent remote-agent) (-> body :results :predictions :did))))
-          dset-rows (clojure.string/split ret-dset #"\n")
-          first-row "sepal_length,sepal_width,petal_length,petal_width,species,predclass"]
-      (is (= first-row (first dset-rows))))))
-
-(comment 
-  (let [prime-metadata (->> (clojure.java.io/resource "prime_asset_metadata.json")
-                            slurp
-                            cheshire/parse-string)]
-    (s/register (:agent remote-agent) (s/memory-asset prime-metadata "abc"))
-    ))
-
-(deftest oper-registration
-  (testing "primes operation "
-    (do 
-      (let [prime-metadata (->> (clojure.java.io/resource "prime_asset_metadata.json")
-                                slurp
-                                cheshire/parse-string)
-            ast (s/memory-asset prime-metadata "abc")
-            remote-asset (s/register (:agent remote-agent) ast)
-            res (s/asset-id remote-asset)
-            rem-metadata (s/metadata remote-asset)]
-        (is (=  (s/asset-id ast) res))))))
-
-(deftest filterrows 
+#_(deftest filterrows 
   (testing "Test request to filter rows"
     (let [ifn (fn [max-ec](let [dset (slurp "https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/d546eaee765268bf2f487608c537c05e22e4b221/iris.csv")
                       dset (str dset ",,,,,\n,,,,,\n")
@@ -205,49 +211,26 @@
       )))
 
 (deftest prov-retrieval
-  (testing "retrieval"
+  (testing "test that provenance is created"
     (let [vpath (io/resource "veh.json")
-              wpath (io/resource "workshop.json")
+          wpath (io/resource "workshop.json")
           veh-dset (s/memory-asset {"cars" "dataset"}
                                    (slurp vpath))
-              w-dset (s/memory-asset {"workshop" "dataset"}
-                                     (slurp wpath))
-              veh-id (put-asset (:agent remote-agent) veh-dset)
-              w-id (put-asset (:agent remote-agent) w-dset)
+          w-dset (s/memory-asset {"workshop" "dataset"}
+                                 (slurp wpath))
+          upload-fn (ki/asset-reg-upload (deref remote-agent))
+          veh-id (upload-fn veh-dset)
 
-              response (app (-> (mock/request :post (str iripath "/invoke/workshop-join-cars"))
-                                (mock/content-type "application/json")
-                                (mock/header "Authorization" (str "token " @token))
-                                (mock/body (cheshire/generate-string
-                                            {:vehicle-dataset {:did veh-id}
-                                             :workshop-dataset {:did w-id}}))))
+          w-id (upload-fn w-dset)
+
+          response (app (-> (mock/request :post (str iripath "/sync/merge-maps"))
+                            (mock/content-type "application/json")
+                            (mock/header "Authorization" (str "token " @token))
+                            (mock/body (cheshire/generate-string
+                                        {:vehicle-dataset {:did veh-id}
+                                         :workshop-dataset {:did w-id}}))))
           body     (parse-body (:body response))
           _ (println " body returned in prov-retrieval " body)
-              resp-did (-> body :results :joined-dataset :did) 
-              res (s/metadata (s/get-asset (:agent remote-agent) resp-did))
-              response2 (app (-> (mock/request :post (str iripath "/invoke/prov"))
-                                (mock/content-type "application/json")
-                                (mock/header "Authorization" (str "token " @token))
-                                (mock/body (cheshire/generate-string
-                                            {:asset {:did resp-did}}))))
-          body     (parse-body (:body response2))]
-      (is (not (nil? (-> body :results :prov-tree))))
-      (is (not (nil? ((json/read-str (-> body :results :prov-tree))
-                      "derived-from")))))))
-
-(comment 
-  (let [k2 (-> k2json keywordize-keys)
-        agent-id (-> k2 :agent keys first)
-        df (mapv (fn[imap]
-                   (merge (select-keys imap [:asset-id])
-                          {:type "asset"}
-                          (select-keys (get-in imap [:metadata]) [:name :description :content-hash])))
-                 (:derived-from k2))
-        df1 (conj df {:asset-id (-> k2 :agent keys first) :type "operation"})
-        df2 (conj df1 {:asset-id "this"  :type "asset"})
-        edges (merge {agent-id "this"}
-                     (zipmap (mapv :asset-id (:derived-from k2)) (repeat agent-id)))
-        fin (assoc {} :provenance-vis {:vertices df2 :edges edges})]
-    (spit "/tmp/k3.json" (json/write-str fin))
-    )
-  (spit "/tmp/k2.json " (-> k1 :results :prov-tree)))
+          resp-did (-> body :results :joined-dataset :did)
+          res (s/metadata (s/get-asset (deref remote-agent) resp-did))]
+      (is (-> res :provenance nil? not )))))

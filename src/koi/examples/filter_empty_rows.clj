@@ -7,7 +7,7 @@
    [clojure.core.matrix.dataset :as cd]
   [clojure.data.csv :as csv]
    [starfish.core :as s ]
-   [koi.utils :as utils :refer [put-asset get-asset-content process async-handler
+   [koi.utils :as utils :refer [process async-handler
                                 get-asset]]
    [taoensso.timbre :as timbre
     :refer [log  trace  debug  info  warn  error  fatal  report

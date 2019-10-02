@@ -1,0 +1,5 @@
+{
+ :hashing {:handler "src/koi/examples/hashing_simple.clj"
+           :metadata-path "hashing_asset_metadata.json"
+           :fn "compute-hash"}
+ }

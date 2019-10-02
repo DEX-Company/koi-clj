@@ -6,32 +6,14 @@
     :refer [log  trace  debug  info  warn  error  fatal  report
             logf tracef debugf infof warnf errorf fatalf reportf
             spy get-env]]
-   [koi.protocols :as prot 
-    :refer [invoke-sync
-            invoke-async
-            valid-args?]]
-   [koi.invokespec :as ispec]
    [clojure.java.io :as io]
-   [koi.utils :as utils :refer [put-asset get-asset-content get-asset keccak512
-                                async-handler
-                                process]]
-   [aero.core :refer (read-config)]
-   [clojure.data.json :as json]
-   [spec-tools.json-schema :as jsc])
-  (:import [sg.dex.crypto Hash]
-           [java.util UUID]
+   [clojure.data.json :as json])
+  (:import [java.util UUID]
            [sg.dex.starfish.util Hex JSON]
-           [org.bouncycastle.jcajce.provider.digest Keccak$Digest512 ]))
-
-(sp/def ::vehicle-dataset ::ispec/asset)
-(sp/def ::workshop-dataset ::ispec/asset)
-
-
-(sp/def ::params (sp/keys :req-un [::vehicle-dataset
-                                   ::workshop-dataset]))
+           ))
 
 (def join-key "vin")
-(defn join-datasets
+(defn- join-raw-datasets
   [veh-dset workshop-dset]
   (let [veh (json/read-str veh-dset)
         wksp (json/read-str workshop-dset)
@@ -41,33 +23,11 @@
              (mapv #(dissoc % join-key)))]
     (json/write-str (assoc veh "maintenance" wksp-data))))
 
-(defn join-dataset-fn 
-  [agent {:keys [vehicle-dataset workshop-dataset]}]
-  (fn []
-    (let [assets (mapv #(get-asset agent %)
-                       [vehicle-dataset workshop-dataset])
-          [veh-dset wksp-dset] (mapv #(->> % s/content s/to-string)
-                                     assets)
-          joined-dset (join-datasets veh-dset wksp-dset)
-          res {:dependencies assets 
-               :results [{:param-name :joined-dataset
-                          :type :asset
-                          :metadata (-> assets first s/metadata)
-                          :content joined-dset}]}]
-      (info " result of join-dataset " res)
-      res)))
-
-(deftype JoinCarsDatasetClass [agent jobs jobids]
-  :load-ns true
-  prot/PSyncInvoke
-  (invoke-sync [_ args]
-    (process agent args join-dataset-fn))
-
-  prot/PAsyncInvoke
-  (invoke-async [_ args]
-    (async-handler jobids jobs #(process agent args join-dataset-fn)))
-
-  prot/PValidParams
-  (valid-args? [_ args]
-    {:valid? (sp/valid? ::params args)})
-  )
+(defn join-dataset
+  [{:keys [vehicle-dataset workshop-dataset] :as assets}]
+  (let [[veh-dset wksp-dset] (mapv #(->> % s/content s/to-string)
+                                   [vehicle-dataset workshop-dataset])
+        joined-dset (join-raw-datasets veh-dset wksp-dset)
+        resp-dset (s/asset (s/memory-asset joined-dset))
+        res {:joined-dataset resp-dset}]
+    res))

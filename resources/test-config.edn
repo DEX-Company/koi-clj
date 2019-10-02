@@ -1,20 +1,61 @@
 {
- :agent-url #or [#env AGENT_URL "http://52.187.164.74:8080" ]
- :username "Aladdin"
- :password "OpenSesame"
+ :agent-conf
+ {:agent-url #or
+  [#env AGENT_URL  "http://13.70.20.203:8090"]
+  ;[#env AGENT_URL  "http://localhost:8080"]
+  :username "Aladdin"
+  :password "OpenSesame"}
+
  :port 3001
- :operations
+
+ :operation-registry
  {
-  ;;note that path name with hyphen (-) must be replaced with underscore, since java doesn't allow hyphens
-  :primes {:classname "koi.examples.prime_num.PrimeNumbers" :metadata "prime_asset_metadata.json"}
-  :assethashing {:classname "koi.examples.hashing_asset.HashingAsset" :metadata "hashing_asset_metadata.json"}
-  :hashing {:classname "koi.examples.hashing.Hashing" :metadata "hashing_metadata.json"}
-  :irisprediction {:classname "koi.examples.predict_iris.PredictIrisClass" :metadata "irisprediction_metadata.json"}
- ; :translation {:classname "koi.examples.translate_german_to_en.TranslateClass" :metadata "translate_german_to_en_metadata.json"}
-  :filter-rows {:classname "koi.examples.filter_empty_rows.FilterRowsClass" :metadata "filter_rows_metadata.json"}
-  :workshop-join-cars {:classname "koi.examples.workshop_join.JoinCarsDatasetClass" :metadata "join_cars_metadata.json"}
-  :prov {:classname "koi.examples.prov_tree_traversal.ProvTraversalClass" :metadata "prov_tree_metadata.json"}
-  ;;a testing asset that throws exception
- :fail {:classname "koi.examples.failing_asset.FailingAsset" :metadata "prov_tree_metadata.json"}
-  }}
+  :hashing
+  {:handler "koi.examples.simple/sha-raw-hash"
+   :metadata
+   {:operation 
+    {:results {:hash-val {:type "json", :required true}}
+     :params {:to-hash {:type "json", :position 0, :required true}}}}}
+
+  :asset-hashing
+  {:handler "koi.examples.simple/sha-asset-hash"
+   :metadata
+   {:operation
+    {:results {:hash-val {:type "asset", :required true}}
+     :params {:to-hash {:type "asset", :position 0, :required true}}}}}
+
+  :primes
+  {:handler "koi.examples.prime-num/compute-primes"
+   :metadata
+   {:operation
+    {:params {:first-n {:type "json", :position 0, :required true}}
+     :results {:primes {:type "asset", :required true}}}}}
+
+  :fail
+  {:handler "koi.examples.simple/fail"
+   :metadata
+   {:operation
+    {:results {} 
+     :params {}}}
+   }
+
+  :merge-maps
+  {:handler "koi.examples.workshop-join/join-dataset"
+   :metadata
+   {:operation
+    {:params {:vehicle-dataset
+              {:type "asset", :position 0, :required true}
+              :workshop-dataset
+              {:type "asset", :position 1, :required true}}
+     :results {:joined-dataset {:type "asset", :required true}}}}}
+
+  :iris-predictor
+  {:handler "koi.examples.predict-iris/predict-class"
+   :metadata
+   {:operation
+    {:params {:dataset {:type "asset", :position 0, :required true}}
+     :modes [:sync :async]
+     :results {:predictions {:type "asset", :required true}}}}}
+  }
+ }
 
