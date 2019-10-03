@@ -31,12 +31,13 @@
     {:params {:first-n {:type "json", :position 0, :required true}}
      :results {:primes {:type "asset", :required true}}}}}
 
-  :fail
-  {:handler "koi.examples.simple/fail"
+  :filter-rows
+  {:handler "koi.examples.filter-empty-rows/filter-rows"
    :metadata
    {:operation
-    {:results {} 
-     :params {}}}
+    {:results {:filtered-dataset {:type "asset", :required true}}
+     :params {:dataset {:type "asset", :required true :position 0}
+              :max-empty-columns {:type "json" :position 1 :required false}}}}
    }
 
   :merge-maps
@@ -56,6 +57,12 @@
     {:params {:dataset {:type "asset", :position 0, :required true}}
      :modes [:sync :async]
      :results {:predictions {:type "asset", :required true}}}}}
-  }
- }
 
+  :fail
+  {:handler "koi.examples.simple/fail"
+   :metadata
+   {:operation 
+    {:results {:abcd {:type "json", :required true}}
+     :params {:def {:type "json" :position 0 :required true}}}}}
+ }
+}

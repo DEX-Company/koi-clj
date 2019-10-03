@@ -24,11 +24,15 @@
                       (if (= :asset (keyword type))
                         (predicate k1)
                         ;;assumes that for non-asset type, any non-nil object is ok
-                        (not (nil? k1)))
+                        (do
+                          (println " not-asset " k " k1 " k1)
+                          (not (nil? k1))))
                       false)
-                    false))
+                    true))
                 map-spec)
           [false])]
+    (println " map-validator  " map-spec
+             " -- " spec-resp)
     (every? identity spec-resp)))
 
 (defn asset-validator
