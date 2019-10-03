@@ -18,12 +18,13 @@ Koi-clj is a reference implementation of the [DEP-6](https://github.com/DEX-Comp
 It provides 
 
 - [REST API Endpoints](https://github.com/DEX-Company/DEPs/tree/master/6#methods) compliant with the methods described in DEP-6.
-- Examples of operations
-  - hashing: an Operation that returns a hash of an Asset
-  - filterrows: an Operation that removes rows in a csv dataset if it has more than N empty columns, where N is a configuration option.
-
+- Sample operations
+  - Hashing: an Operation that returns a hash of an Asset
+  - Asset hashing: an Operation that accepts an input asset, hashes it, and returns the hash content as a new asset.
+  - Finding Prime Numbers: an Operation that returns a list of prime numbers below a given number.
+  - Iris Predictor: an example of a machine learning classifier that predicts a single class each instance of the Iris dataset.
+  
 Example of execution of an operation:
-
   
 #### Cleaning empty rows
 
@@ -63,7 +64,7 @@ cd koi-clj
 lein run
 ```
 
-Navigate to localhost:8191
+Navigate to <hostname>:8191
 
 # Configuration
 
