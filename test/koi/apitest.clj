@@ -98,7 +98,7 @@
                             (mock/body (cheshire/generate-string {:dummy "def"}))))]
       ;;should this be a bad request or server error (500)
       ;response
-      #_(is (= (:status response) (:status (bad-request))))))
+      (is (= (:status response) (:status (bad-request))))))
   (testing "Test async hashin operation"
     (let [response (app (-> (mock/request :post (str iripath "/async/hashing"))
                             (mock/header "Authorization" (str "token " @token))
@@ -122,9 +122,9 @@
                             (mock/header "Authorization" (str "token " @token))
                             (mock/content-type "application/json")
                             (mock/body (cheshire/generate-string {:dummy "def"}))))
+
           jobid     (:jobid (parse-body (:body response)))
-          _ (try (Thread/sleep 1000)
-                 (catch Exception e ))
+          _ (try (Thread/sleep 1000) (catch Exception e ))
           jobres (app (-> (mock/request :get (str iripath "/jobs/" jobid))
                           (mock/header "Authorization" (str "token " @token))
                           (mock/content-type "application/json")))
@@ -183,31 +183,38 @@
                                                               (-> body :results :predictions :did))))
                 dset-rows (clojure.string/split ret-dset #"\n")
                 first-row "sepal_length,sepal_width,petal_length,petal_width,species,predclass"]
-            body
-            #_(is (= first-row (first dset-rows))))))
+            ;body
+            (is (= first-row (first dset-rows))))))
 
-#_(deftest filterrows 
+#_(deftest filterrows
   (testing "Test request to filter rows"
-    (let [ifn (fn [max-ec](let [dset (slurp "https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/d546eaee765268bf2f487608c537c05e22e4b221/iris.csv")
-                      dset (str dset ",,,,,\n,,,,,\n")
-                      ast (s/memory-asset {"test" "dataset"} dset)
-                      remid (put-asset (:agent remote-agent) ast)
+    (let [ifn
+          (fn [max-ec]
+            (let [dset (slurp "https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/d546eaee765268bf2f487608c537c05e22e4b221/iris.csv")
+                  dset (str dset ",,,,,\n,,,,,\n")
+                  ast (s/memory-asset {"test" "dataset"} dset)
+                  remid ((ki/asset-reg-upload (deref remote-agent)) ast)
 
-                      response (app (-> (mock/request :post (str iripath "/invoke/filter-rows"))
-                                        (mock/content-type "application/json")
-                                        (mock/header "Authorization" (str "token " @token))
-                                        (mock/body (cheshire/generate-string {:dataset {:did remid}
-                                                                              :max-empty-columns max-ec}))))
-                      body     (parse-body (:body response))
-                      ret-dset (s/to-string (s/content (s/get-asset (:agent remote-agent) (-> body :results :filtered-dataset :did))))
-                      dset-rows (clojure.string/split ret-dset #"\n")]
-                            (count dset-rows)))]
+                  response (app (-> (mock/request :post (str iripath "/sync/filter-rows"))
+                                    (mock/content-type "application/json")
+                                    (mock/header "Authorization" (str "token " @token))
+                                    (mock/body (cheshire/generate-string {:dataset {:did remid}
+                                                                          :max-empty-columns max-ec}))))
+                  ;body     (parse-body (:body response))
+                  ;ret-dset (s/to-string (s/content (s/get-asset (deref remote-agent) (-> body :results :filtered-dataset :did))))
+                 ; dset-rows (clojure.string/split ret-dset #"\n")
+                  ]
+              ;(count dset-rows)
+              ;body
+              response
+              ))]
+      (ifn 1)
       ;;added 2 rows that are empty
       ;;if max-empty-columns is 1, it should remove the 2 rows
-      (is (= 151 (ifn 1)))
+      ;;(is (= 151 (ifn 1)))
 
       ;;if max-empty-columns is 6, it should keep the 2 rows
-      (is (= 153 (ifn 6)))
+      ;;(is (= 153 (ifn 6)))
       )))
 
 (deftest prov-retrieval
