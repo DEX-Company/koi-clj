@@ -190,6 +190,9 @@
              (not-found (str "operation did " operation-id " is not a valid resource "))))))))
 
 (defn invoke-async-handler
+  "handler for async operation.
+  Returns a function that is passed the body of the request.
+  "
   [handler]
   (fn [inp]
      (let [params (or (:body-params inp) (:body inp))
@@ -208,17 +211,36 @@
          (do (error " invalid operation did " operation-id)
              (not-found (str "operation did " operation-id " is not a valid resource ")))))))
 
-(defn result-handler
-  ([inp]
+(defn- get-results
+  ([sel-fn inp]
    (let [{:keys [jobid]} (:route-params inp)]
-     (info " result-handler " jobid " " @jobs)
      (try
        (let [parsed-jobid (Integer/parseInt jobid)
              job (get @jobs parsed-jobid)]
+         (info " get jobs " job)
          (if job
-           (ok job)
+           (ok (sel-fn job))
            (not-found (str " Job with id: " jobid " not found "))))
        (catch Exception e
          (do
            (error (str " got error in getting job results " e))
            (clojure.stacktrace/print-stack-trace e)))))))
+
+(defn status-handler
+  "returns the status of the job."
+  ([inp]
+   (let [res (get-results
+              #(select-keys % [:status])
+              inp)]
+     (println " status handler " res)
+     res)))
+
+(defn result-handler
+  "returns the result of the job."
+  ([inp]
+   (let [res (get-results
+              #(do
+                 (select-keys % [:results]))
+              inp)]
+     (println " result handler " res)
+     res)))
