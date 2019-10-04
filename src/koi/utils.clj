@@ -71,14 +71,16 @@
                              {:status :succeeded
                               :results (:results res)}
                              {:status :failed
-                              :errorcode 8005
-                              :description (str "Got exception " (:error res))})))
+                              :results (merge res
+                                              {:errorcode 8005
+                                               :description (str "Error running operation " )})})))
                   (catch Exception e
                     (error " Caught exception running async job " (.getMessage e))
                     (swap! jobs assoc jobid
                            {:status :failed
-                            :errorcode 8005
-                            :description (str "Got exception " (.getMessage e))})))))
+                            :results
+                            {:errorcode 8005
+                             :description (str "Got exception " (.getMessage e))}})))))
       .start)
     {:jobid jobid}))
 
