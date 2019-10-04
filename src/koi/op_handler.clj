@@ -232,7 +232,6 @@
    (let [res (get-results
               #(select-keys % [:status])
               inp)]
-     (println " status handler " res)
      res)))
 
 (defn result-handler
@@ -242,5 +241,4 @@
               #(do
                  (select-keys % [:results]))
               inp)]
-     (println " result handler " res)
      res)))
