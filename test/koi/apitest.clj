@@ -106,7 +106,7 @@
                             (mock/body (cheshire/generate-string {:to-hash "def"}))))
           jobid     (:jobid (parse-body (:body response)))]
       (-> jobid number? is)))
-  (testing "Test async hashing operation status"
+  #_(testing "Test async hashing operation status"
     (let [response (app (-> (mock/request :post (str iripath "/async/hashing"))
                             (mock/header "Authorization" (str "token " @token))
                             (mock/content-type "application/json")
@@ -114,7 +114,23 @@
           jobid     (:jobid (parse-body (:body response)))
           _ (try (Thread/sleep 1000)
                  (catch Exception e ))
-          jobres (app (-> (mock/request :get (str iripath "/job/status/" jobid))
+          jobres (app (-> (mock/request :get (str iripath "/jobs/status/" jobid))
+                          (mock/header "Authorization" (str "token " @token))
+                          (mock/content-type "application/json")))
+          job-body (parse-body (:body jobres))
+          ]
+      (is (= (:status response) (:status (created))))
+      (is (= (:status jobres) (:status (ok))))
+      (is (= "succeeded" (:status job-body)))))
+  (testing "Test async hashing operation combined status and response "
+    (let [response (app (-> (mock/request :post (str iripath "/async/hashing"))
+                            (mock/header "Authorization" (str "token " @token))
+                            (mock/content-type "application/json")
+                            (mock/body (cheshire/generate-string {:to-hash "def"}))))
+          jobid     (:jobid (parse-body (:body response)))
+          _ (try (Thread/sleep 1000)
+                 (catch Exception e ))
+          jobres (app (-> (mock/request :get (str iripath "/jobs/" jobid))
                           (mock/header "Authorization" (str "token " @token))
                           (mock/content-type "application/json")))
           job-body (parse-body (:body jobres))
@@ -122,9 +138,9 @@
       (is (= (:status response) (:status (created))))
       (is (= (:status jobres) (:status (ok))))
       (is (= "succeeded" (:status job-body)))
+      (is (= #{:status :results} (-> job-body keys set)))
       ))
-
-  (testing "Test async hashing operation result"
+  #_(testing "Test async hashing operation result"
     (let [response (app (-> (mock/request :post (str iripath "/async/hashing"))
                             (mock/header "Authorization" (str "token " @token))
                             (mock/content-type "application/json")
@@ -132,16 +148,19 @@
           jobid     (:jobid (parse-body (:body response)))
           _ (try (Thread/sleep 1000)
                  (catch Exception e ))
-          jobres (app (-> (mock/request :get (str iripath "/job/status/" jobid))
+          jobres (app (-> (mock/request :get (str iripath "/jobs/status/" jobid))
                           (mock/header "Authorization" (str "token " @token))
                           (mock/content-type "application/json")))
-          job-body (parse-body (:body jobres))
-          jobres (when (= "succeeded" (:status job-body))
-                  (app (-> (mock/request :get (str iripath "/job/result/" jobid))
+          ;job-body (parse-body (:body jobres))
+          #_jobres2 #_(when (= "succeeded" (:status job-body))
+                  (app (-> (mock/request :get (str iripath "/jobs/result/" jobid))
                            (mock/header "Authorization" (str "token " @token))
                            (mock/content-type "application/json"))))
-          job-body (parse-body (:body jobres))]
-      (-> job-body :results :hash-val string? is)))
+          #_job-body2 #_(parse-body (:body jobres2))]
+      jobres
+      ;job-body
+     ; (-> job-body :results :hash-val string? is)
+      ))
 
   (testing "Test async failing operation"
     (let [response (app (-> (mock/request :post (str iripath "/async/fail"))
@@ -151,18 +170,18 @@
 
           jobid     (:jobid (parse-body (:body response)))
           _ (try (Thread/sleep 1000) (catch Exception e ))
-          jobstat (app (-> (mock/request :get (str iripath "/job/status/" jobid))
+          jobstat (app (-> (mock/request :get (str iripath "/jobs/" jobid))
                           (mock/header "Authorization" (str "token " @token))
                           (mock/content-type "application/json")))
           job-stat-body (parse-body (:body jobstat))
-          jobres (app (-> (mock/request :get (str iripath "/job/result/" jobid))
+          #_jobres #_(app (-> (mock/request :get (str iripath "/jobs/result/" jobid))
                           (mock/header "Authorization" (str "token " @token))
                           (mock/content-type "application/json")))
-          job-body (parse-body (:body jobres))]
-      (is (= (:status jobres) (:status (ok))))
-      (is (every? (set (keys (:results job-body))) [:error :errorcode :description]))))
+          #_job-body #_(parse-body (:body jobres))]
+      (is (= (:status jobstat) (:status (ok))))
+      (is (every? (set (keys (:results job-stat-body))) [:error :errorcode :description]))))
   (testing "Test nonexistent job"
-    (let [jobres (app (-> (mock/request :get (str iripath "/job/status/1234" ))
+    (let [jobres (app (-> (mock/request :get (str iripath "/jobs/1234" ))
                           (mock/header "Authorization" (str "token " @token))
                           (mock/content-type "application/json")))]
       (is (= (:status jobres) (:status (not-found)))))))
