@@ -226,6 +226,13 @@
            (error (str " got error in getting job results " e))
            (clojure.stacktrace/print-stack-trace e)))))))
 
+(defn combined-handler
+  "returns the status and the result of the job."
+  ([inp]
+   (let [res (get-results identity inp)]
+     (info (str " combined handler returns " res))
+     res)))
+
 (defn status-handler
   "returns the status of the job."
   ([inp]

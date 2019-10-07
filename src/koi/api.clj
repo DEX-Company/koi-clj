@@ -111,11 +111,23 @@
                           :handler (oph/invoke-async-handler registry)}}))
 
               (context
-                  "/invoke/job" []
+                  "/invoke/jobs" []
                   :tags ["job details"]
                   :coercion :spec
 
-                  (context "/status/:jobid" []
+                  (context "/:jobid" []
+                    :path-params [jobid :- int?]
+                    :middleware [basic-auth-mw token-auth-mw authenticated-mw]
+                    (sw/resource
+                     {:get
+                      {:summary "get the status of a job"
+                       :responses {200 {:schema spec/any?}
+                                   422 {:schema spec/any?}
+                                   404 {:schema spec/any?}
+                                   500 {:schema spec/any?}}
+                       :handler oph/combined-handler}}))
+
+                  #_(context "/status/:jobid" []
                     :path-params [jobid :- int?]
                     :middleware [basic-auth-mw token-auth-mw authenticated-mw]
                     (sw/resource
@@ -126,18 +138,25 @@
                                    404 {:schema spec/any?}
                                    500 {:schema spec/any?}}
                        :handler oph/status-handler}}))
+                  #_(context "/status" []
+                    :tags ["job details"]
+                    :coercion :spec
+                    )
 
-                  (context "/result/:jobid" []
-                    :path-params [jobid :- int?]
-                    :middleware [basic-auth-mw token-auth-mw authenticated-mw]
-                    (sw/resource
-                     {:get
-                      {:summary "get the result of a job"
-                       :responses {200 {:schema spec/any?}
-                                   404 {:schema spec/any?}
-                                   400 {:schema spec/any?}
-                                   500 {:schema spec/any?}}
-                       :handler oph/result-handler}})))
+                  #_(context "/result" []
+                    :tags ["job details"]
+                    :coercion :spec
+                    (context "/:jobid" []
+                      :path-params [jobid :- int?]
+                      :middleware [basic-auth-mw token-auth-mw authenticated-mw]
+                      (sw/resource
+                       {:get
+                        {:summary "get the result of a job"
+                         :responses {200 {:schema spec/any?}
+                                     404 {:schema spec/any?}
+                                     400 {:schema spec/any?}
+                                     500 {:schema spec/any?}}
+                         :handler oph/result-handler}}))))
               ))))
 
 (defrecord WebServer [port config]
