@@ -52,6 +52,9 @@
 
                  ;;interceptors
                  [metosin/sieppari "0.0.0-alpha7"]
+
+                 ;;docker client
+                 [lispyclouds/clj-docker-client "0.3.2"]
                  ]
   :plugins [[lein-codox "0.10.7"]]
   :codox {:output-path "codox"}
@@ -59,10 +62,11 @@
   :test-paths ["test/"]
   :profiles {:test {;:jvm-opts ["-Dconfig.edn=resources/test-config.edn"]
                     :dependencies [[ring/ring-mock "0.3.2"]]
-                    }
+                    :resource-paths ["test/resources/"]}
              :prod {:jvm-opts ["-Dconfig.edn=resources/prod-config.edn"]}
              :default {:dependencies [[javax.servlet/javax.servlet-api "3.1.0"]]
                        :plugins [[lein-ring "0.12.5"] ]
+                       :resource-paths ["test/resources/"]
                        :jvm-opts ["-Dconfig.edn=resources/dev-config.edn"]
                        }
              :dev [:default :test]

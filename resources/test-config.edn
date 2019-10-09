@@ -64,5 +64,19 @@
    {:operation 
     {:results {:abcd {:type "json", :required true}}
      :params {:def {:type "json" :position 0 :required true}}}}}
+
+  :run-notebook
+  {:handler "koi.examples.jupynb/run-notebook"
+   :metadata
+   {:operation 
+    {:results {:output-file {:type "json", :required true}}
+     :params {
+              :notebook {:type "asset" :position 0 :required true}
+              :input-asset {:type "asset" :position 1 :required true}
+              :notebook-name {:type "json" :position 2 :required true}
+              :input-asset-name {:type "json" :position 3 :required true}
+              :result-asset-name {:type "json" :position 4 :required true}
+              }}}}
+
  }
 }

@@ -200,6 +200,30 @@
         ;;it should return the same map
         (is (= body (parse-body (:body resp2))))))))
 
+(deftest run-notebook-test
+  (testing "positive case: run notebook operation"
+    (let [input-asset-name "train.csv"
+          notebook-name "test.ipynb"
+          result-asset-name "train2.csv"
+          ;;upload the input asset
+          input-asset (s/asset (s/file-asset (io/file (io/resource input-asset-name))))
+          ast1 ((ki/asset-reg-upload (deref remote-agent)) input-asset)
+
+          ;;upload the notebook
+          notebook (s/asset (s/file-asset (io/file (io/resource notebook-name))))
+          nb1 ((ki/asset-reg-upload (deref remote-agent)) notebook)
+
+          response (app (-> (mock/request :post (str iripath "/sync/run-notebook"))
+                            (mock/header "Authorization" (str "token " @token))
+                            (mock/content-type "application/json")
+                            (mock/body (cheshire/generate-string
+                                        {:input-asset {:did ast1}
+                                         :notebook {:did nb1}
+                                         :notebook-name notebook-name
+                                         :input-asset-name input-asset-name
+                                         :result-asset-name result-asset-name}))))]
+      (-> (parse-body (:body response)) :results :output-file :did string? is))))
+
 (deftest consuming-assets
     (testing "Test request to primes operation"
       (let [response (app (-> (mock/request :post (str iripath "/sync/primes"))
