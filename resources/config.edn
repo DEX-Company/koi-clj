@@ -11,7 +11,7 @@
   :hashing
   {:handler "koi.examples.simple/sha-raw-hash"
    :metadata
-   {:description "Computes prime numbers",
+   {:description "Computes sha hashes of the JSON against the to-hash key",
     :tags ["primes"],
     :license "CC-BY"
     :name "Prime computation operation"
@@ -29,7 +29,7 @@
   {:handler "koi.examples.simple/sha-asset-hash"
    :metadata
    {
-    :description "Computes asset hashes",
+    :description "Computes sha hashes of the asset against the to-hash  key",
     :license "CC-BY"
     :name "Asset hashing operation"
     :type "operation"
