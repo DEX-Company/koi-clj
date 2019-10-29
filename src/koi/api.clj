@@ -116,7 +116,7 @@
                   :coercion :spec
 
                   (context "/:jobid" []
-                    :path-params [jobid :- int?]
+                    :path-params [jobid :- string?]
                     :middleware [basic-auth-mw token-auth-mw authenticated-mw]
                     (sw/resource
                      {:get
