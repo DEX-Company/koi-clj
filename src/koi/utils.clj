@@ -63,7 +63,7 @@
   (let [jobid (swap! jobids inc)]
     (doto (Thread.
            (fn []
-             (swap! jobs assoc jobid {:status :accepted})
+             (swap! jobs assoc jobid {:status :scheduled})
              (try (let [res (exec-fn)]
                     (println " async-handler res " res)
                     (swap! jobs assoc jobid
@@ -82,7 +82,7 @@
                             {:errorcode 8005
                              :description (str "Got exception " (.getMessage e))}})))))
       .start)
-    {:jobid jobid}))
+    {:jobid (str jobid)}))
 
 (defn resolve-op
   "Takes an string representation of a var and returns it as a function.
