@@ -105,8 +105,8 @@
                             (mock/content-type "application/json")
                             (mock/body (cheshire/generate-string {:to-hash "def"}))))
           jobid     (:jobid (parse-body (:body response)))]
-      (-> jobid number? is)))
-  #_(testing "Test async hashing operation status"
+      (-> jobid string? is)))
+  (testing "Test async hashing operation status"
     (let [response (app (-> (mock/request :post (str iripath "/async/hashing"))
                             (mock/header "Authorization" (str "token " @token))
                             (mock/content-type "application/json")
@@ -114,7 +114,7 @@
           jobid     (:jobid (parse-body (:body response)))
           _ (try (Thread/sleep 1000)
                  (catch Exception e ))
-          jobres (app (-> (mock/request :get (str iripath "/jobs/status/" jobid))
+          jobres (app (-> (mock/request :get (str iripath "/jobs/" jobid))
                           (mock/header "Authorization" (str "token " @token))
                           (mock/content-type "application/json")))
           job-body (parse-body (:body jobres))
