@@ -1,0 +1,29 @@
+[
+  {
+    "Date/Time GMT + 8:00": "01/11/2019 12:00",
+    "Lat": 1.355,
+    "Lng": 103.988,
+    "Address": "Singapore Changi Airport, Singapore",
+    "Battery": 1,
+    "Signal": 1,
+    "Tilt": 0,
+    "Temperature": 26.5,
+    "Temp Probe": 27.5,
+    "Shock": 0,
+    "Humidity": 47,
+    "Pressure": 95,
+    "Light": 1,
+    "Ir Light": 1,
+    "Gps Jam": 0,
+    "Voltage": 9,
+    "IOT Engine Stand Temperature Range Low": 21,
+    "IOT Engine Stand Temperature Range High": 28,
+    "IOT Engine Stand Pressure Range Low": "74 kPa",
+    "IOT Engine Stand Pressure Range High": "90 kPa",
+    "IOT Engine Stand Humidity Range": "25%",
+    "IOT Engine Stand Humidity Range__1": "50%",
+    "Temperature Comment": "within Range",
+    "Humidity Comment": "within Range",
+    "Pressure Comment": "5kPa above range"
+  }
+]

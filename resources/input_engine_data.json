@@ -1,0 +1,21 @@
+[
+  {
+    "Engine Serial Number": "BICX1",
+    "Engine type": "XX:KXKX",
+    "Aircraft registration": "A380-XXXX",
+    "POSN": "POSN-XXXX",
+    "Date of removal": "10/24/2019 1:00:00",
+    "Station": "Changi",
+    "Reason for removal": "Maintenance",
+    "Airframe hours as at removal": 4000,
+    "Airframe cycles as at removal": 800,
+    "Time since fitted": 42958,
+    "Cycles since fitted": 27366,
+    "Time since shopvisit": 5932,
+    "Cycles since shopvisit": 329,
+    "Total time since new": 42958,
+    "Total cycles since new": 23329,
+    "Actual hours or cycles as at": 43808,
+    "Estimated Date of Completion": "11/02/2019 1:00:00"
+  }
+]
