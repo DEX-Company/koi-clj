@@ -65,7 +65,6 @@
            (fn []
              (swap! jobs assoc jobid {:status :scheduled})
              (try (let [res (exec-fn)]
-                    (println " async-handler res " res)
                     (swap! jobs assoc jobid
                            (if (:results res)
                              {:status :succeeded

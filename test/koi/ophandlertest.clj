@@ -10,6 +10,6 @@
 
 (deftest get-hashing
   (testing "positive case"
-    (let [res ((oph/get-handler config) {:route-params {:asset-id "hashing"}})]
+    (let [res ((-> config oph/meta-handler :get-handler) {:route-params {:asset-id "hashing"}})]
       (-> res :body :operation map? is))))
 

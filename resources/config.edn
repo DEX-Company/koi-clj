@@ -109,7 +109,8 @@
               :dataset3 {:type "asset", :position 0, :required true}
               }
      :modes [:sync :async]
-     :results {:concatenated-dataset {:type "asset", :required true}}}}}
+     :results {:concatenated-dataset {:type "asset", :required true}
+               :onchain-did {:type "json", :required false}}}}}
   }
  }
 

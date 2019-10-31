@@ -1,7 +1,9 @@
 (ns koi.examples.concat-datasets
   (:require [starfish.core :as s]
             [clojure.data.json :as json]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io])
+  (:import [sg.dex.starfish.impl.squid SquidResolverImpl SquidAgent]
+           [sg.dex.starfish.util DID]))
 
 (defn merge-maps
   "merge maps, which is wrapped by a vector"
@@ -15,9 +17,22 @@
   (let [slurp-fn #(->> % s/content s/to-string json/read-str)
         merged-map (merge-maps [dataset1 dataset2 dataset3] slurp-fn)
         resp-dset (s/asset (s/memory-asset (json/write-str merged-map)))
-        res {:concatenated-dataset resp-dset}]
-    res))
+        res {:concatenated-dataset resp-dset}
+        _ (println " generated concat dataset, now registering with blockchain ")
+        squid-agent (SquidAgent/create (SquidResolverImpl.) (DID/createRandom))
+        r2 (s/register squid-agent resp-dset)
+        ]
+    (println " registered with blockchain " (str r2))
+    (merge res
+           {:onchain-did
+            (str (.getDID r2))})))
 
+#_(let [
+      resp-dset (s/asset (s/memory-asset {} "memory asset"))
+      squid-agent (SquidAgent/create (SquidResolverImpl.) (DID/createRandom))
+      r2 (s/register squid-agent resp-dset)
+      ]
+    (str (.getDID r2)))
 (def inp-datasets
   ["input_service_data.json"
    "input_engine_data.json"
