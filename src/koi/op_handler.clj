@@ -128,7 +128,7 @@
   [config]
   (map->OperationRegistry {:config config}))
 
-(defn get-handler
+(defn meta-handler
   "this method handles API calls to /meta/data:did. Returns the meta data for an operation "
   [config]
   (let [registry (:operation-registry config)
@@ -142,12 +142,17 @@
                                        (keyword asset-id) metadata)))
                             {}
                             registry)]
-    (fn [inp]
-      (let [{:keys [asset-id]} (:route-params inp)]
-        (if-let [metadata (registry (keyword asset-id))]
-          (ok metadata)
-          (do (error " invalid operation did " asset-id)
-              (not-found (str "operation did " asset-id " is not a valid resource "))))))))
+    {:get-handler
+     (fn [inp]
+       (let [{:keys [asset-id]} (:route-params inp)]
+         (if-let [metadata (registry (keyword asset-id))]
+           (ok metadata)
+           (do (error " invalid operation did " asset-id)
+               (not-found (str "operation did " asset-id " is not a valid resource "))))))
+     :list-handler
+     (fn [inp2]
+       (ok (->> (keys registry)
+                (filterv #(= 64 (count (name %)))))))}))
 
 #_(defn inv-sync
   [op-config params]
