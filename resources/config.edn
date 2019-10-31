@@ -95,21 +95,21 @@
   {:handler "koi.examples.concat-datasets/concat-dataset"
    :metadata
    {
-    :description "Concatenate JSON inputs ",
+    :name "Engine maintenance dashboard"
+    :description "Operation to create Engine maintenance dashboard by concatenating Engine data inputs ",
     :license "CC-BY"
-    :name "Concat JSON operation"
     :type "operation"
-    :author "Concat Inc"
+    :author "Data Processor Inc"
     :inLanguage "en"
     :dateCreated "2019-05-08T08:17:31.521445Z"
     :operation
     {:params {
-              :dataset1 {:type "asset", :position 0, :required true}
-              :dataset2 {:type "asset", :position 0, :required true}
-              :dataset3 {:type "asset", :position 0, :required true}
+              :engine-logbook {:type "asset", :position 0, :required true}
+              :engine-removal-notification {:type "asset", :position 1, :required true}
+              :engine-shop-visit-report {:type "asset", :position 2, :required true}
               }
      :modes [:sync :async]
-     :results {:concatenated-dataset {:type "asset", :required true}
+     :results {:engine-maintenance-dashboard {:type "asset", :required true}
                :onchain-did {:type "json", :required false}}}}}
   }
  }
