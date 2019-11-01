@@ -6,6 +6,7 @@
    [compojure.api.sweet :as sw :refer [api context
                                        undocumented
                                        GET PUT POST DELETE]]
+   [ring.middleware.cors :refer [wrap-cors]]
    [compojure.api.coercion.spec :as spec-coercion]
    [com.stuartsierra.component :as component]
    [ring.middleware.cors :refer [wrap-cors]]
@@ -44,168 +45,181 @@
 (defn koi-routes
   [config]
   (let [registry (ki/middleware-wrapped-handler config)
-        {:keys [get-handler list-handler]} (oph/meta-handler config)]
-    (api
-     {:swagger
-      {:ui "/"
-       :spec "/swagger1.json"
-       :data {:info {:title "invoke-api "
-                     :description "Invoke with Ocean "}
-              :tags [{:name "invoke service", :description "invoke Ocean services"}]}}}
+        {:keys [get-handler list-handler]} (oph/meta-handler config)
+        cors-mw (fn [handler]
+                  (let [cors-resp
+                        (wrap-cors handler
+                                   :access-control-allow-origin #".*"
+                                   :access-control-allow-credentials true
+                                   :access-control-allow-methods [:get :put :post :delete :options])]
+                    (println " cors-resp " cors-resp)
+                    cors-resp))]
+    (-> (api
+         {:swagger
+          {:ui "/"
+           :spec "/swagger1.json"
+           :data {:info {:title "invoke-api "
+                         :description "Invoke with Ocean "}
+                  :tags [{:name "invoke service", :description "invoke Ocean services"}]}}}
 
-     (context "/api" []
-              :tags ["Invoke ocean service"]
-              :coercion :spec
-              (context "/v1" []
-                :coercion :spec
+         (context "/api" []
+           :tags ["Invoke ocean service"]
+           :coercion :spec
+           (context "/v1" []
+             :coercion :spec
 
-                (context "/meta" []
-                  :tags ["Meta service"]
-                  :coercion :spec
-                  
-                  (context "/data/:asset-id" []
-                    :path-params [asset-id :- string?]
-                    :middleware [basic-auth-mw token-auth-mw authenticated-mw]
-                    (sw/resource
-                     {:get
-                      {:summary "Get metadata for operation"
+             (context "/meta" []
+               :tags ["Meta service"]
+               :coercion :spec
+               
+               (context "/data/:asset-id" []
+                 :path-params [asset-id :- string?]
+                 :middleware [basic-auth-mw token-auth-mw authenticated-mw cors-mw]
+                 (sw/resource
+                  {:get
+                   {:summary "Get metadata for operation"
                                         ;:parameters {:body ::params}
-                       :responses {200 {:schema spec/any?}
-                                   201 {:schema spec/any?}
-                                   404 {:schema spec/any?}
-                                   500 {:schema spec/any?}}
-                       :handler get-handler}}))
-                  (context "/data/" []
-                    :middleware [basic-auth-mw token-auth-mw authenticated-mw]
-                    (sw/resource
-                     {:get
-                      {:summary "List operations"
-                       :responses {200 {:schema spec/any?}
-                                   201 {:schema spec/any?}
-                                   404 {:schema spec/any?}
-                                   500 {:schema spec/any?}}
-                       :handler list-handler}})))
+                    :responses {200 {:schema spec/any?}
+                                201 {:schema spec/any?}
+                                404 {:schema spec/any?}
+                                500 {:schema spec/any?}}
+                    :handler get-handler}}))
+               (context "/data/" []
+                        :middleware [basic-auth-mw token-auth-mw authenticated-mw cors-mw]
+                 (sw/resource
+                  {:get
+                   {:summary "List operations"
+                    :responses {200 {:schema spec/any?}
+                                201 {:schema spec/any?}
+                                404 {:schema spec/any?}
+                                500 {:schema spec/any?}}
+                    :handler list-handler}})))
 
-                (context "/auth" []
+             (context "/auth" []
 
-                  (POST "/token" {:as request}
-                    :tags ["Auth"]
-                    :return ::auth-response
-                    :header-params [authorization :- ::auth-header]
-                    :middleware [basic-auth-mw authenticated-mw]
-                    :summary "Returns auth info given a username and password in the '`Authorization`' header."
-                    :description "Authorization header expects '`Basic username:password`' where `username:password`
+               (POST "/token" {:as request}
+                 :tags ["Auth"]
+                 :return ::auth-response
+                 :header-params [authorization :- ::auth-header]
+                 :middleware [basic-auth-mw authenticated-mw cors-mw]
+                 :summary "Returns auth info given a username and password in the '`Authorization`' header."
+                 :description "Authorization header expects '`Basic username:password`' where `username:password`
                          is base64 encoded. To adhere to basic auth standards we have to use a field called
                          `username` however we will accept a valid username or email as a value for this key."
-                    (auth-credentials-response request)))
+                 (auth-credentials-response request)))
 
 
-                (context "/invoke" []
-                  :tags ["Invoke service"]
-                  :coercion :spec
-                  
+             (context "/invoke" []
+               :tags ["Invoke service"]
+               :coercion :spec
+               
 
-                  (context "/sync/:operation-id" []
-                    :path-params [operation-id :- string?]
-                    :middleware [basic-auth-mw token-auth-mw authenticated-mw]
-                    (sw/resource
-                     {:post
-                      {:summary "Run an sync operation"
-                       :parameters {:body ::params}
-                       :responses {200 {:schema spec/any?}
-                                   201 {:schema spec/any?}
-                                   404 {:schema spec/any?}
-                                   500 {:schema spec/any?}
-                                   }
-                       :handler (oph/invoke-handler registry)}}))
+               (context "/sync/:operation-id" []
+                 :path-params [operation-id :- string?]
+                 :middleware [basic-auth-mw token-auth-mw authenticated-mw cors-mw]
+                 (sw/resource
+                  {:post
+                   {:summary "Run an sync operation"
+                    :parameters {:body ::params}
+                    :responses {200 {:schema spec/any?}
+                                201 {:schema spec/any?}
+                                404 {:schema spec/any?}
+                                500 {:schema spec/any?}
+                                }
+                    :handler (oph/invoke-handler registry)}}))
 
-                  (context "/async/:operation-id" []
-                    :path-params [operation-id :- string?]
-                    :middleware [basic-auth-mw token-auth-mw authenticated-mw]
-                    (sw/resource
-                     {
-                      :post
-                      {:summary "Run an async operation"
-                       :parameters {:body ::params}
-                       :responses {200 {:schema spec/any?}
-                                   201 {:schema spec/any?}
-                                   404 {:schema spec/any?}
-                                   500 {:schema spec/any?}}
-                       :handler (oph/invoke-async-handler registry)}}))
+               (context "/async/:operation-id" []
+                 :path-params [operation-id :- string?]
+                 :middleware [basic-auth-mw token-auth-mw authenticated-mw cors-mw]
+                 (sw/resource
+                  {
+                   :post
+                   {:summary "Run an async operation"
+                    :parameters {:body ::params}
+                    :responses {200 {:schema spec/any?}
+                                201 {:schema spec/any?}
+                                404 {:schema spec/any?}
+                                500 {:schema spec/any?}}
+                    :handler (oph/invoke-async-handler registry)}}))
 
-                  (context
-                  "/jobs" []
-                  :tags ["Job details"]
-                  :coercion :spec
+               (context
+                   "/jobs" []
+                 :tags ["Job details"]
+                 :coercion :spec
 
-                  (context "/:jobid" []
-                    :path-params [jobid :- string?]
-                    :middleware [basic-auth-mw token-auth-mw authenticated-mw]
-                    (sw/resource
-                     {:get
-                      {:summary "get the status of a job"
-                       :responses {200 {:schema spec/any?}
-                                   422 {:schema spec/any?}
-                                   404 {:schema spec/any?}
-                                   500 {:schema spec/any?}}
-                       :handler oph/combined-handler}}))
+                 (context "/:jobid" []
+                   :path-params [jobid :- string?]
+                   :middleware [basic-auth-mw token-auth-mw authenticated-mw cors-mw]
+                   (sw/resource
+                    {:get
+                     {:summary "get the status of a job"
+                      :responses {200 {:schema spec/any?}
+                                  422 {:schema spec/any?}
+                                  404 {:schema spec/any?}
+                                  500 {:schema spec/any?}}
+                      :handler oph/combined-handler}}))
 
-                  #_(context "/status/:jobid" []
-                    :path-params [jobid :- int?]
-                    :middleware [basic-auth-mw token-auth-mw authenticated-mw]
-                    (sw/resource
-                     {:get
-                      {:summary "get the status of a job"
-                       :responses {200 {:schema spec/any?}
-                                   422 {:schema spec/any?}
-                                   404 {:schema spec/any?}
-                                   500 {:schema spec/any?}}
-                       :handler oph/status-handler}}))
-                  #_(context "/status" []
-                    :tags ["job details"]
-                    :coercion :spec
-                    )
+                 #_(context "/status/:jobid" []
+                     :path-params [jobid :- int?]
+                     :middleware [basic-auth-mw token-auth-mw authenticated-mw]
+                     (sw/resource
+                      {:get
+                       {:summary "get the status of a job"
+                        :responses {200 {:schema spec/any?}
+                                    422 {:schema spec/any?}
+                                    404 {:schema spec/any?}
+                                    500 {:schema spec/any?}}
+                        :handler oph/status-handler}}))
+                 #_(context "/status" []
+                     :tags ["job details"]
+                     :coercion :spec
+                     )
 
-                  #_(context "/result" []
-                    :tags ["job details"]
-                    :coercion :spec
-                    (context "/:jobid" []
-                      :path-params [jobid :- int?]
-                      :middleware [basic-auth-mw token-auth-mw authenticated-mw]
-                      (sw/resource
-                       {:get
-                        {:summary "get the result of a job"
-                         :responses {200 {:schema spec/any?}
-                                     404 {:schema spec/any?}
-                                     400 {:schema spec/any?}
-                                     500 {:schema spec/any?}}
-                         :handler oph/result-handler}}))))
-                  )
-                )
+                 #_(context "/result" []
+                     :tags ["job details"]
+                     :coercion :spec
+                     (context "/:jobid" []
+                       :path-params [jobid :- int?]
+                       :middleware [basic-auth-mw token-auth-mw authenticated-mw]
+                       (sw/resource
+                        {:get
+                         {:summary "get the result of a job"
+                          :responses {200 {:schema spec/any?}
+                                      404 {:schema spec/any?}
+                                      400 {:schema spec/any?}
+                                      500 {:schema spec/any?}}
+                          :handler oph/result-handler}}))))
+               )
+             )
 
-              (context "/status" []
-                :tags ["Status "]
-                :middleware [basic-auth-mw token-auth-mw authenticated-mw]
-                (sw/resource
-                 {:get
-                  {:summary "get the status for this agent"
-                   :responses {200 {:schema spec/any?}
-                               422 {:schema spec/any?}
-                               404 {:schema spec/any?}
-                               500 {:schema spec/any?}}
-                   :handler oph/server-status-handler}}))
+           (context "/status" []
+             :tags ["Status "]
+             :middleware [basic-auth-mw token-auth-mw authenticated-mw cors-mw]
+             (sw/resource
+              {:get
+               {:summary "get the status for this agent"
+                :responses {200 {:schema spec/any?}
+                            422 {:schema spec/any?}
+                            404 {:schema spec/any?}
+                            500 {:schema spec/any?}}
+                :handler oph/server-status-handler}}))
 
-              (context "/ddo" []
-                :tags ["DDO"]
-                :middleware [basic-auth-mw token-auth-mw authenticated-mw]
-                (sw/resource
-                 {:get
-                  {:summary "get the ddo for this agent"
-                   :responses {200 {:schema spec/any?}
-                               422 {:schema spec/any?}
-                               404 {:schema spec/any?}
-                               500 {:schema spec/any?}}
-                   :handler (oph/ddo-handler config)}}))))))
+           (context "/ddo" []
+             :tags ["DDO"]
+             :middleware [basic-auth-mw token-auth-mw authenticated-mw
+                          cors-mw]
+             (sw/resource
+              {:get
+               {:summary "get the ddo for this agent"
+                :responses {200 {:schema spec/any?}
+                            422 {:schema spec/any?}
+                            404 {:schema spec/any?}
+                            500 {:schema spec/any?}}
+                :handler (oph/ddo-handler config)}}))))
+
+        #_(wrap-cors :access-control-allow-origin #".*"
+                   :access-control-allow-credentials true
+                   :access-control-allow-methods [:get :put :post :delete :options]))))
 
 (defrecord WebServer [port config]
   component/Lifecycle
