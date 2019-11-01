@@ -6,7 +6,6 @@
    [compojure.api.sweet :as sw :refer [api context
                                        undocumented
                                        GET PUT POST DELETE]]
-   [ring.middleware.cors :refer [wrap-cors]]
    [compojure.api.coercion.spec :as spec-coercion]
    [com.stuartsierra.component :as component]
    [ring.middleware.cors :refer [wrap-cors]]
@@ -45,16 +44,8 @@
 (defn koi-routes
   [config]
   (let [registry (ki/middleware-wrapped-handler config)
-        {:keys [get-handler list-handler]} (oph/meta-handler config)
-        cors-mw (fn [handler]
-                  (let [cors-resp
-                        (wrap-cors handler
-                                   :access-control-allow-origin #".*"
-                                   :access-control-allow-credentials true
-                                   :access-control-allow-methods [:get :put :post :delete :options])]
-                    (println " cors-resp " cors-resp)
-                    cors-resp))]
-    (-> (api
+        {:keys [get-handler list-handler]} (oph/meta-handler config)]
+    (api
          {:swagger
           {:ui "/"
            :spec "/swagger1.json"
@@ -74,7 +65,7 @@
                
                (context "/data/:asset-id" []
                  :path-params [asset-id :- string?]
-                 :middleware [basic-auth-mw token-auth-mw authenticated-mw cors-mw]
+                 :middleware [basic-auth-mw token-auth-mw authenticated-mw]
                  (sw/resource
                   {:get
                    {:summary "Get metadata for operation"
@@ -85,7 +76,7 @@
                                 500 {:schema spec/any?}}
                     :handler get-handler}}))
                (context "/data/" []
-                        :middleware [basic-auth-mw token-auth-mw authenticated-mw cors-mw]
+                        :middleware [basic-auth-mw token-auth-mw authenticated-mw ]
                  (sw/resource
                   {:get
                    {:summary "List operations"
@@ -101,7 +92,7 @@
                  :tags ["Auth"]
                  :return ::auth-response
                  :header-params [authorization :- ::auth-header]
-                 :middleware [basic-auth-mw authenticated-mw cors-mw]
+                 :middleware [basic-auth-mw authenticated-mw]
                  :summary "Returns auth info given a username and password in the '`Authorization`' header."
                  :description "Authorization header expects '`Basic username:password`' where `username:password`
                          is base64 encoded. To adhere to basic auth standards we have to use a field called
@@ -116,7 +107,7 @@
 
                (context "/sync/:operation-id" []
                  :path-params [operation-id :- string?]
-                 :middleware [basic-auth-mw token-auth-mw authenticated-mw cors-mw]
+                 :middleware [basic-auth-mw token-auth-mw authenticated-mw]
                  (sw/resource
                   {:post
                    {:summary "Run an sync operation"
@@ -130,7 +121,7 @@
 
                (context "/async/:operation-id" []
                  :path-params [operation-id :- string?]
-                 :middleware [basic-auth-mw token-auth-mw authenticated-mw cors-mw]
+                 :middleware [basic-auth-mw token-auth-mw authenticated-mw]
                  (sw/resource
                   {
                    :post
@@ -149,7 +140,7 @@
 
                  (context "/:jobid" []
                    :path-params [jobid :- string?]
-                   :middleware [basic-auth-mw token-auth-mw authenticated-mw cors-mw]
+                   :middleware [basic-auth-mw token-auth-mw authenticated-mw]
                    (sw/resource
                     {:get
                      {:summary "get the status of a job"
@@ -194,7 +185,7 @@
 
            (context "/status" []
              :tags ["Status "]
-             :middleware [basic-auth-mw token-auth-mw authenticated-mw cors-mw]
+             :middleware [basic-auth-mw token-auth-mw authenticated-mw]
              (sw/resource
               {:get
                {:summary "get the status for this agent"
@@ -206,8 +197,7 @@
 
            (context "/ddo" []
              :tags ["DDO"]
-             :middleware [basic-auth-mw token-auth-mw authenticated-mw
-                          cors-mw]
+             :middleware [basic-auth-mw token-auth-mw authenticated-mw]
              (sw/resource
               {:get
                {:summary "get the ddo for this agent"
@@ -215,11 +205,7 @@
                             422 {:schema spec/any?}
                             404 {:schema spec/any?}
                             500 {:schema spec/any?}}
-                :handler (oph/ddo-handler config)}}))))
-
-        #_(wrap-cors :access-control-allow-origin #".*"
-                   :access-control-allow-credentials true
-                   :access-control-allow-methods [:get :put :post :delete :options]))))
+                :handler (oph/ddo-handler config)}}))))))
 
 (defrecord WebServer [port config]
   component/Lifecycle
@@ -227,7 +213,13 @@
     (info " start jetty at " port " config " config)
     (try
       (let [server (run-jetty
-                    (koi-routes config)
+                    (-> (koi-routes config)
+                        (wrap-cors :access-control-allow-origin #".*"
+                                   :access-control-allow-headers #{:accept :content-type :connection :user-agent :referer :accept-encoding :authorization :origin}  
+                                   ;:access-control-allow-credentials true
+                                   :access-control-allow-methods
+                                   [:get :put :post :delete :options])
+                        )
                     {:join? false
                      :port (Integer/valueOf (or (System/getenv "port") port))})]
         (assoc this :http-server server))
