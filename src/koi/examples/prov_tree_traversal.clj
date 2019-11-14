@@ -9,8 +9,7 @@
    [koi.invokespec :as ispec]
    [clojure.walk :refer [keywordize-keys]]
    [clojure.java.io :as io]
-   [koi.utils :as utils :refer [async-handler
-                                process]]
+   [koi.utils :as utils :refer [async-handler]]
    [clojure.data.json :as json]))
 
 (comment

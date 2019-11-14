@@ -20,7 +20,12 @@
                  [cheshire "5.8.0"]
 
                  ;;swagger
-                 [metosin/compojure-api "2.0.0-alpha28"]
+                 [metosin/compojure-api "2.0.0-alpha28"
+                  :exclusions
+                  [
+                   [com.fasterxml.jackson.core/jackson-annotations]
+                   [com.fasterxml.jackson.core/jackson-databind]
+                   ]]
 
                  ;;components
                  [com.stuartsierra/component "0.4.0"]
@@ -30,14 +35,19 @@
                  [metosin/muuntaja "0.5.0"]
                  [ring-cors "0.1.12"]
                  ;;schema tools such as descriptions
-                 [metosin/spec-tools "0.8.2"]
+                 [metosin/spec-tools "0.8.2"
+                  :exclusions
+                  [
+                   [com.fasterxml.jackson.core/jackson-annotations]
+                   [com.fasterxml.jackson.core/jackson-databind]]
+                  ]
                  [mount "0.1.15"]
                  [org.apache.httpcomponents/httpclient "4.5.5" :exclusions [commons-logging]]
 
                  ;;json schema
                  [metosin/scjsv "0.5.0"]
                  ;;starfish
-                 [sg.dex/starfish-clj "0.7.3"]
+                 [sg.dex/starfish-clj "0.7.5"]
                  [com.googlecode.json-simple/json-simple "1.1.1"]
                  ;;configuration management
                  [aero "1.1.3"]

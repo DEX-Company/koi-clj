@@ -128,7 +128,32 @@
   [config]
   (map->OperationRegistry {:config config}))
 
-(defn get-handler
+(defn server-status-handler
+  [inp]
+  (ok {"name" "Invoke Test Server"
+       "description" "Data Ecosystem Agent deployed for testing purposes. No guarantees or SLAs provided. The database may be periodically refreshed and cleared at any time."
+       "api-versions" ["v1"]
+       "custom" {"server-type" "Koi"}}))
+
+(def did (s/random-did))
+(defn ddo-handler
+  [config]
+  (fn [_]
+    (let [agent-url (get-in config [:agent-conf :agent-url])
+          port (:port config)
+          url (str (clojure.string/join ":"(take 2 (.split agent-url ":")))
+                   ":" port)]
+      (ok {(keyword "@context") "https://www.w3.org/2019/did/v1"
+           :id (str did)
+           :service 
+           [{:type "Ocean.Invoke.v1"
+             :serviceEndpoint (str url "/api/v1/invoke")}
+            {:type "Ocean.Meta.v1"
+             :serviceEndpoint (str url "/api/v1/meta")}
+            {:type "Ocean.Auth.v1"
+             :serviceEndpoint (str url "/api/v1/auth")}]}))))
+
+(defn meta-handler
   "this method handles API calls to /meta/data:did. Returns the meta data for an operation "
   [config]
   (let [registry (:operation-registry config)
@@ -142,12 +167,17 @@
                                        (keyword asset-id) metadata)))
                             {}
                             registry)]
-    (fn [inp]
-      (let [{:keys [asset-id]} (:route-params inp)]
-        (if-let [metadata (registry (keyword asset-id))]
-          (ok metadata)
-          (do (error " invalid operation did " asset-id)
-              (not-found (str "operation did " asset-id " is not a valid resource "))))))))
+    {:get-handler
+     (fn [inp]
+       (let [{:keys [asset-id]} (:route-params inp)]
+         (if-let [metadata (registry (keyword asset-id))]
+           (ok metadata)
+           (do (error " invalid operation did " asset-id)
+               (not-found (str "operation did " asset-id " is not a valid resource "))))))
+     :list-handler
+     (fn [inp2]
+       (ok (->> (keys registry)
+                (filterv #(= 64 (count (name %)))))))}))
 
 #_(defn inv-sync
   [op-config params]

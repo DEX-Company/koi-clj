@@ -1,6 +1,6 @@
 {
  :agent-conf
- {:agent-url #or [#env AGENT_URL  "http://13.70.20.203:8090"]
+ {:agent-url #or [#env AGENT_URL  "http://13.70.20.203:8092"]
   :username "Aladdin"
   :password "OpenSesame"}
 
@@ -11,7 +11,7 @@
   :hashing
   {:handler "koi.examples.simple/sha-raw-hash"
    :metadata
-   {:description "Computes prime numbers",
+   {:description "Computes sha hashes of the JSON against the to-hash key",
     :tags ["primes"],
     :license "CC-BY"
     :name "Prime computation operation"
@@ -29,7 +29,7 @@
   {:handler "koi.examples.simple/sha-asset-hash"
    :metadata
    {
-    :description "Computes asset hashes",
+    :description "Computes sha hashes of the asset against the to-hash  key",
     :license "CC-BY"
     :name "Asset hashing operation"
     :type "operation"
@@ -90,6 +90,27 @@
     {:params {:dataset {:type "asset", :position 0, :required true}}
      :modes [:sync :async]
      :results {:predictions {:type "asset", :required true}}}}}
+
+  :concatenate-datasets
+  {:handler "koi.examples.concat-datasets/concat-dataset"
+   :metadata
+   {
+    :name "Engine maintenance dashboard"
+    :description "Operation to create Engine maintenance dashboard by concatenating Engine data inputs ",
+    :license "CC-BY"
+    :type "operation"
+    :author "Data Processor Inc"
+    :inLanguage "en"
+    :dateCreated "2019-05-08T08:17:31.521445Z"
+    :operation
+    {:params {
+              :engine-logbook {:type "asset", :position 0, :required true}
+              :engine-removal-notification {:type "asset", :position 1, :required true}
+              :engine-shop-visit-report {:type "asset", :position 2, :required true}
+              }
+     :modes [:sync :async]
+     :results {:engine-maintenance-dashboard {:type "asset", :required true}
+               :onchain-did {:type "json", :required false}}}}}
   }
  }
 

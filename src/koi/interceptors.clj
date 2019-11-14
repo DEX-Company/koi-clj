@@ -25,14 +25,11 @@
                         (predicate k1)
                         ;;assumes that for non-asset type, any non-nil object is ok
                         (do
-                          (println " not-asset " k " k1 " k1)
                           (not (nil? k1))))
                       false)
                     true))
                 map-spec)
           [false])]
-    (println " map-validator  " map-spec
-             " -- " spec-resp)
     (every? identity spec-resp)))
 
 (defn asset-validator
@@ -128,7 +125,6 @@
     ;;these are required at the time of generating provenance.
     {:enter
      (fn[ctx]
-       ;(println " output-asset-upload enter " (:request ctx))
        (reset! input-args (:request ctx))
        ctx)
      :leave
