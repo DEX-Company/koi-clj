@@ -47,7 +47,7 @@
                  ;;json schema
                  [metosin/scjsv "0.5.0"]
                  ;;starfish
-                 [sg.dex/starfish-clj "0.7.4-SNAPSHOT"]
+                 [sg.dex/starfish-clj "0.7.5"]
                  [com.googlecode.json-simple/json-simple "1.1.1"]
                  ;;configuration management
                  [aero "1.1.3"]
