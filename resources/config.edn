@@ -1,6 +1,6 @@
 {
  :agent-conf
- {:agent-url #or [#env AGENT_URL  "http://13.70.20.203:8090"]
+ {:agent-url #or [#env AGENT_URL  "http://13.70.20.203:8092"]
   :username "Aladdin"
   :password "OpenSesame"}
 
