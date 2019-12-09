@@ -1,6 +1,6 @@
 #!/bin/sh
 
-./scripts/wait_for_surfer.sh ${AGENT_URL}
+#./scripts/wait_for_surfer.sh ${AGENT_URL}
 
 VERSION=0.1.7-SNAPSHOT
 
