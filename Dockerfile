@@ -1,5 +1,6 @@
 FROM clojure
 RUN mkdir -p /usr/src/app
+RUN lein uberjar
 WORKDIR /usr/src/app
 COPY project.clj /usr/src/app/
 COPY . /usr/src/app
