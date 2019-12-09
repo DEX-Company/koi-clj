@@ -180,7 +180,9 @@
                 (filterv #(= 64 (count (name %)))))))
      :meta-index-handler
      (fn [_]
-       (ok registry))}))
+       (ok (->> registry 
+                (filterv (fn[[k v]] (= 64 (count (name k)))))
+                (apply merge))))}))
 
 #_(defn inv-sync
   [op-config params]

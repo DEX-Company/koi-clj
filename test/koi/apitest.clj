@@ -198,7 +198,12 @@
                       (mock/content-type "application/json")))]
         ;;hash the metadata and use it as asset id
         ;;it should return the same map
-        (is (= body (parse-body (:body resp2))))))))
+        (is (= body (parse-body (:body resp2)))))))
+  (testing "positive case: meta "
+    (let [response (app (-> (mock/request :get (str "/api/v1" "/meta/index"))
+                            (mock/content-type "application/json")))
+          body     (parse-body (:body response))]
+      (-> body map? is))))
 
 (deftest consuming-assets
     (testing "Test request to primes operation"
