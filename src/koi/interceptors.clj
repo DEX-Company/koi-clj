@@ -30,6 +30,7 @@
                     true))
                 map-spec)
           [false])]
+    (info " map-validator  " map-spec " actual " actual " test response " spec-resp)
     (every? identity spec-resp)))
 
 (defn asset-validator
