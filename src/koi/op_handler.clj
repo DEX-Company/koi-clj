@@ -182,6 +182,7 @@
      (fn [_]
        (ok (->> registry 
                 (filterv (fn[[k v]] (= 64 (count (name k)))))
+                (mapv (fn[[k v]] {k v}))
                 (apply merge))))}))
 
 #_(defn inv-sync
