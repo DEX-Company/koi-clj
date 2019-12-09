@@ -177,7 +177,10 @@
      :list-handler
      (fn [inp2]
        (ok (->> (keys registry)
-                (filterv #(= 64 (count (name %)))))))}))
+                (filterv #(= 64 (count (name %)))))))
+     :meta-index-handler
+     (fn []
+       (ok registry))}))
 
 #_(defn inv-sync
   [op-config params]

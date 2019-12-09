@@ -44,7 +44,7 @@
 (defn koi-routes
   [config]
   (let [registry (ki/middleware-wrapped-handler config)
-        {:keys [get-handler list-handler]} (oph/meta-handler config)]
+        {:keys [get-handler list-handler meta-index-handler]} (oph/meta-handler config)]
     (api
          {:swagger
           {:ui "/"
@@ -84,7 +84,19 @@
                                 201 {:schema spec/any?}
                                 404 {:schema spec/any?}
                                 500 {:schema spec/any?}}
-                    :handler list-handler}})))
+                    :handler list-handler}}))
+               
+              (context "index" []
+                        :middleware [basic-auth-mw token-auth-mw authenticated-mw ]
+                 (sw/resource
+                  {:get
+                   {:summary "Get Index "
+                    :responses {200 {:schema spec/any?}
+                                201 {:schema spec/any?}
+                                404 {:schema spec/any?}
+                                500 {:schema spec/any?}}
+                    :handler meta-index-handler}})) 
+               )
 
              (context "/auth" []
 
