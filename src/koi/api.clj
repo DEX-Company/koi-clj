@@ -86,7 +86,7 @@
                                 500 {:schema spec/any?}}
                     :handler list-handler}}))
                
-              (context "index" []
+              (context "/index" []
                         :middleware [basic-auth-mw token-auth-mw authenticated-mw ]
                  (sw/resource
                   {:get

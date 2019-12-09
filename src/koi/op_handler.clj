@@ -179,7 +179,7 @@
        (ok (->> (keys registry)
                 (filterv #(= 64 (count (name %)))))))
      :meta-index-handler
-     (fn []
+     (fn [_]
        (ok registry))}))
 
 #_(defn inv-sync
