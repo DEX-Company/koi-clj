@@ -8,7 +8,7 @@
                  ;;configuration
                  [com.outpace/config "0.10.0"]
                  ;;error handling
-                 [promenade "0.5.1"]
+                 ;;[promenade "0.5.1"]
 
                  ;;http requests
                  [http-kit "2.2.0"]
