@@ -5,8 +5,8 @@ on:
       - '**.md'
         
 env:
-  CONTAINER_NAME: dexcontainerregistry.azurecr.io/koi:develop
-  CONTAINER_LOGIN_SERVER: dexcontainerregistry.azurecr.io
+  CONTAINER_NAME: dexcontainer.azurecr.io/koi:develop
+  CONTAINER_LOGIN_SERVER: dexcontainer.azurecr.io
   
 jobs:
   build:
