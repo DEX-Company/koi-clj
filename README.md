@@ -19,7 +19,7 @@ It provides
 
 - [REST API Endpoints](https://github.com/DEX-Company/DEPs/tree/master/6#methods) compliant with the methods described in DEP-6.
 - Sample operations
-  - Hashing: an Operation that returns a hash of an Asset
+  - Hashing: an Operation that returns a hash of an Asset.
   - Asset hashing: an Operation that accepts an input asset, hashes it, and returns the hash content as a new asset.
   - Finding Prime Numbers: an Operation that returns a list of prime numbers below a given number.
   - Iris Predictor: an example of a machine learning classifier that predicts a single class each instance of the Iris dataset.
