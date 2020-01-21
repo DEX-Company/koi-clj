@@ -169,7 +169,7 @@
   (fn[ast]
     (let [reg-ast (s/register ragent ast)]
       (s/upload ragent ast)
-      (.toString (s/did reg-ast)))))
+      (str (s/did reg-ast)))))
 
 (defn add-prov
   [ragent]
