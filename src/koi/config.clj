@@ -16,7 +16,7 @@
   ([] (get-remote-agent (get-config)))
   ([config]
    (let [agent-url (:agent-url config)
-         did (s/random-did)
+         did (:did config)
          ddo (s/create-ddo agent-url)
          res 
          {:did did :ddo ddo :remote-agent
