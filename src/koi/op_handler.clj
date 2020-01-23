@@ -135,7 +135,7 @@
        "api-versions" ["v1"]
        "custom" {"server-type" "Koi"}}))
 
-(def did (s/random-did))
+;;(def did (s/random-did))
 (defn ddo-handler
   [config]
   (fn [_]
@@ -144,7 +144,7 @@
           url (str (clojure.string/join ":"(take 2 (.split agent-url ":")))
                    ":" port)]
       (ok {(keyword "@context") "https://www.w3.org/2019/did/v1"
-           :id (str did)
+           :id (str (get-in config [:agent-conf :did]))
            :service 
            [{:type "Ocean.Invoke.v1"
              :serviceEndpoint (str url "/api/v1/invoke")}
