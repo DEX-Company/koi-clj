@@ -11,8 +11,8 @@
   "type":"operation",
   "operation":{
      "modes":["sync","async"],
-		  "params":{"vehicle-dataset":{"type":"asset", "position":0, "required":true},
+		  "inputs":{"vehicle-dataset":{"type":"asset", "position":0, "required":true},
                 "workshop-dataset":{"type":"asset", "position":1, "required":true}
                },
-		 "results":{"joined-dataset":{"type":"asset"}}}
+		 "outputs":{"joined-dataset":{"type":"asset"}}}
   }

@@ -11,8 +11,8 @@
 	"type":"operation",
   "operation":{
      "modes":["sync","async"],
-		 "params":{"dataset":{"type":"asset",
+		 "inputs":{"dataset":{"type":"asset",
                           "position":0,
                           "required":true},
                "max-empty-columns":{"type":"json", "position":1, "required":false}},
-		 "results":{"filtered-dataset":{"type":"asset"}}}}
+		 "outputs":{"filtered-dataset":{"type":"asset"}}}}
