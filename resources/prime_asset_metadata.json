@@ -11,5 +11,5 @@
 	"type":"operation",
  "operation":{
      "modes":["sync","async"],
-		"params":{"first-n":{"type":"json"}},
-		"results":{"primes":{"type":"asset"}}}}
+		"inputs":{"first-n":{"type":"json"}},
+		"outputs":{"primes":{"type":"asset"}}}}

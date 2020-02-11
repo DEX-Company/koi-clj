@@ -12,6 +12,6 @@
  "type":"operation",
 "operation":{
       "modes":["sync","async"],
-      "params":{"asset":{"type":"asset", "position":0, "required":true}},
-		 "results":{"prov-tree":{"type":"json"}}}
+      "inputs":{"asset":{"type":"asset", "position":0, "required":true}},
+		 "outputs":{"prov-tree":{"type":"json"}}}
   }

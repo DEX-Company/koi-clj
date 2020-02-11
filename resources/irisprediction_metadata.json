@@ -11,5 +11,5 @@
 	"type":"operation",
  "operation":{
      "modes":["sync","async"],
-		 "params":{"dataset":{"type":"asset"}},
-		 "results":{"predictions":{"type":"asset"}}}}
+		 "inputs":{"dataset":{"type":"asset"}},
+		 "outputs":{"predictions":{"type":"asset"}}}}

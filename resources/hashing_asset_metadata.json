@@ -11,7 +11,7 @@
 	"type":"operation",
   "operation":{
      "modes":["sync","async"],
-		 "params":{"to-hash":{"type":"asset",
+		 "inputs":{"to-hash":{"type":"asset",
                           "position":0,
                           "required":true}},
-		"results":{"hash-value":{"type":"asset"}}}}
+		"outputs":{"hash-value":{"type":"asset"}}}}
